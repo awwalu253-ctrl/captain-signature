@@ -3,29 +3,772 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Track Your Order</h4>
+        <div class="col-md-8 col-lg-6">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="mb-4" data-aos="fade-down">
+                <ol class="breadcrumb bg-transparent p-0">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="gold-text">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Track Order</li>
+                </ol>
+            </nav>
+
+            <!-- Main Tracking Card -->
+            <div class="tracking-card" data-aos="fade-up" data-aos-duration="800">
+                <div class="text-center mb-5">
+                    <div class="icon-wrapper mb-4">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h2 class="section-title">Track Your Order</h2>
+                    <p class="text-muted">Enter your order details below to track your package</p>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('track_order_page') }}">
-                        <div class="mb-3">
-                            <label for="order_number" class="form-label">Order Number</label>
-                            <input type="text" class="form-control" id="order_number" name="order_number" 
-                                   placeholder="e.g., ORD-20240213-ABC123" required>
-                            <small class="text-muted">Enter your order number (found in your order confirmation email)</small>
+
+                <form method="POST" action="{{ url_for('track_order_page') }}" class="tracking-form">
+                    <!-- Order Number Field -->
+                    <div class="form-group mb-4" data-aos="fade-up" data-aos-delay="100">
+                        <label for="order_number" class="form-label">
+                            <i class="fas fa-hashtag me-2"></i>Order Number
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="order_number" 
+                                   name="order_number" 
+                                   placeholder="ORD-20240213-ABC123" 
+                                   required>
+                            <i class="fas fa-copy input-icon" onclick="copyToClipboard('order_number')" title="Copy example"></i>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" 
-                                   placeholder="Enter the email used for the order" required>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Found in your order confirmation email
+                        </small>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-group mb-5" data-aos="fade-up" data-aos-delay="200">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>Email Address
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   placeholder="you@example.com" 
+                                   required>
+                            <i class="fas fa-check-circle input-validator" id="emailValidator"></i>
                         </div>
-                        <button type="submit" class="btn btn-primary">Track Order</button>
-                    </form>
+                        <small class="text-muted">
+                            <i class="fas fa-lock me-1"></i>
+                            Your information is secure
+                        </small>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+                        <button type="submit" class="btn btn-track" id="trackBtn">
+                            <span class="btn-text">Track Order</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <div class="btn-loader" style="display: none;">
+                                <div class="spinner"></div>
+                            </div>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Help Section -->
+                <div class="help-section mt-5 pt-4 text-center" data-aos="fade-up" data-aos-delay="400">
+                    <div class="help-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h5>Need Assistance?</h5>
+                    <p class="text-muted mb-3">If you're having trouble tracking your order, our support team is here to help.</p>
+                    <div class="help-links">
+                        <a href="#" class="help-link">
+                            <i class="fas fa-envelope me-2"></i>support@captainsignature.com
+                        </a>
+                        <span class="mx-3 text-muted">|</span>
+                        <a href="#" class="help-link">
+                            <i class="fas fa-phone-alt me-2"></i>+234 123 456 7890
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="tips-grid mt-5" data-aos="fade-up" data-aos-delay="500">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="tip-card">
+                            <i class="fas fa-truck"></i>
+                            <h6>Shipping</h6>
+                            <small>3-5 business days</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="tip-card">
+                            <i class="fas fa-clock"></i>
+                            <h6>Tracking Updates</h6>
+                            <small>Every 12 hours</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="tip-card">
+                            <i class="fas fa-shield-alt"></i>
+                            <h6>Secure</h6>
+                            <small>End-to-end tracking</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Tracking Page Specific Styles */
+    :root {
+        --gold: #B89B5E;
+        --light-gold: #D4B85A;
+        --dark-gold: #A8893A;
+        --charcoal: #2C2C2C;
+        --light-gray: #F8F9FA;
+        --medium-gray: #E9ECEF;
+    }
+
+    /* Breadcrumb Styling */
+    .breadcrumb {
+        background: transparent;
+    }
+
+    .breadcrumb-item a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 400;
+        transition: all 0.3s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: var(--dark-gold);
+        transform: translateX(-2px);
+    }
+
+    .breadcrumb-item.active {
+        color: var(--charcoal);
+        font-weight: 400;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: var(--gold);
+        content: "›";
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+    /* Main Tracking Card */
+    .tracking-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(184, 155, 94, 0.15);
+        border-radius: 20px;
+        padding: 3rem 2.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.02);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tracking-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--gold), var(--light-gold), var(--gold), transparent);
+        animation: borderGlow 3s linear infinite;
+    }
+
+    @keyframes borderGlow {
+        0%, 100% { opacity: 0.5; transform: translateX(-100%); }
+        50% { opacity: 1; transform: translateX(100%); }
+    }
+
+    .tracking-card:hover {
+        box-shadow: 0 30px 60px rgba(184, 155, 94, 0.1);
+        transform: translateY(-5px);
+    }
+
+    /* Icon Wrapper */
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, rgba(184, 155, 94, 0.1) 0%, rgba(184, 155, 94, 0.2) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: floatIcon 3s ease-in-out infinite;
+    }
+
+    .icon-wrapper i {
+        font-size: 2.5rem;
+        color: var(--gold);
+        animation: pulseIcon 2s ease-in-out infinite;
+    }
+
+    @keyframes floatIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    /* Section Title */
+    .section-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.2rem;
+        font-weight: 600;
+        color: var(--charcoal);
+        margin-bottom: 0.5rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    /* Form Styling */
+    .tracking-form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        position: relative;
+    }
+
+    .form-label {
+        color: var(--charcoal);
+        font-weight: 500;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-label i {
+        color: var(--gold);
+        font-size: 1rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.2rem;
+        background: var(--light-gray);
+        border: 1px solid transparent;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: var(--charcoal);
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--gold);
+        background: var(--pure-white);
+        box-shadow: 0 0 0 4px rgba(184, 155, 94, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .form-control::placeholder {
+        color: #ADB5BD;
+        font-weight: 300;
+    }
+
+    /* Input Icons */
+    .input-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gold);
+        cursor: pointer;
+        opacity: 0.5;
+        transition: all 0.3s ease;
+    }
+
+    .input-icon:hover {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .input-validator {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #28a745;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .form-control.valid ~ .input-validator {
+        opacity: 1;
+    }
+
+    /* Submit Button */
+    .btn-track {
+        position: relative;
+        background: linear-gradient(135deg, var(--charcoal) 0%, #1a1a1a 100%);
+        color: var(--pure-white);
+        border: none;
+        padding: 1.2rem 3rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border-radius: 50px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        min-width: 250px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .btn-track::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(184, 155, 94, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-track:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-track:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-track i {
+        transition: transform 0.3s ease;
+    }
+
+    .btn-track:hover i {
+        transform: translateX(5px);
+    }
+
+    .btn-track .btn-loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .btn-track .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top-color: var(--pure-white);
+        border-right-color: var(--pure-white);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Help Section */
+    .help-section {
+        border-top: 1px solid rgba(184, 155, 94, 0.2);
+        position: relative;
+    }
+
+    .help-icon {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 40px;
+        background: var(--pure-white);
+        border: 1px solid var(--gold);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+    }
+
+    .help-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .help-link {
+        color: var(--charcoal);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        background: rgba(184, 155, 94, 0.05);
+    }
+
+    .help-link:hover {
+        color: var(--gold);
+        transform: translateY(-2px);
+        background: rgba(184, 155, 94, 0.1);
+    }
+
+    .help-link i {
+        color: var(--gold);
+    }
+
+    /* Tips Grid */
+    .tips-grid {
+        margin-top: 2rem;
+    }
+
+    .tip-card {
+        background: var(--pure-white);
+        border: 1px solid rgba(184, 155, 94, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+    }
+
+    .tip-card:nth-child(1) { animation-delay: 0.1s; }
+    .tip-card:nth-child(2) { animation-delay: 0.2s; }
+    .tip-card:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .tip-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--gold);
+        box-shadow: 0 15px 30px rgba(184, 155, 94, 0.1);
+    }
+
+    .tip-card i {
+        font-size: 2rem;
+        color: var(--gold);
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .tip-card:hover i {
+        transform: scale(1.1);
+    }
+
+    .tip-card h6 {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        color: var(--charcoal);
+    }
+
+    .tip-card small {
+        color: var(--taupe);
+        font-size: 0.85rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .tracking-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+        }
+
+        .btn-track {
+            min-width: 200px;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+
+        .help-links {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .help-links span {
+            display: none;
+        }
+
+        .tip-card {
+            padding: 1rem;
+        }
+    }
+
+    /* Input Validation Animation */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+        20%, 40%, 60%, 80% { transform: translateX(3px); }
+    }
+
+    .form-control.error {
+        border-color: #dc3545;
+        animation: shake 0.5s ease;
+    }
+
+    /* Success Message */
+    .copy-success {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--gold);
+        color: var(--pure-white);
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        box-shadow: 0 10px 30px rgba(184, 155, 94, 0.3);
+        animation: slideInRight 0.3s ease;
+        z-index: 9999;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>
+
+<script>
+    // Form validation and animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.tracking-form');
+        const emailInput = document.getElementById('email');
+        const orderInput = document.getElementById('order_number');
+        const trackBtn = document.getElementById('trackBtn');
+
+        // Email validation with real-time feedback
+        emailInput.addEventListener('input', function() {
+            const email = this.value;
+            const validator = document.getElementById('emailValidator');
+            
+            if (email.length > 0) {
+                if (isValidEmail(email)) {
+                    this.classList.add('valid');
+                    this.classList.remove('error');
+                    validator.style.opacity = '1';
+                } else {
+                    this.classList.remove('valid');
+                    this.classList.add('error');
+                    validator.style.opacity = '0';
+                }
+            } else {
+                this.classList.remove('valid', 'error');
+                validator.style.opacity = '0';
+            }
+        });
+
+        // Order number format validation
+        orderInput.addEventListener('input', function() {
+            const order = this.value;
+            if (order.length > 0 && !order.match(/^ORD-\d{8}-[A-Z0-9]{6}$/)) {
+                this.classList.add('error');
+            } else {
+                this.classList.remove('error');
+            }
+        });
+
+        // Copy to clipboard function
+        window.copyToClipboard = function(elementId) {
+            const input = document.getElementById(elementId);
+            const example = elementId === 'order_number' ? 'ORD-20240213-ABC123' : '';
+            
+            navigator.clipboard.writeText(example).then(function() {
+                showNotification('Example copied to clipboard!');
+            }).catch(function() {
+                showNotification('Could not copy text', 'error');
+            });
+        };
+
+        // Form submission animation
+        form.addEventListener('submit', function(e) {
+            const btn = trackBtn;
+            const btnText = btn.querySelector('.btn-text');
+            const btnIcon = btn.querySelector('.fa-arrow-right');
+            const loader = btn.querySelector('.btn-loader');
+            
+            if (!isValidEmail(emailInput.value)) {
+                e.preventDefault();
+                emailInput.classList.add('error');
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (orderInput.value.length < 10) {
+                e.preventDefault();
+                orderInput.classList.add('error');
+                showNotification('Please enter a valid order number', 'error');
+                return;
+            }
+            
+            // Show loading state
+            btnText.style.opacity = '0';
+            btnIcon.style.opacity = '0';
+            loader.style.display = 'block';
+            btn.disabled = true;
+        });
+
+        // Helper functions
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `copy-success ${type === 'error' ? 'error' : ''}`;
+            notification.style.background = type === 'error' ? '#dc3545' : 'var(--gold)';
+            notification.innerHTML = `
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'} me-2"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Add slideOut animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOutRight {
+                to {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Input focus effects
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Auto-format order number (optional)
+        orderInput.addEventListener('blur', function() {
+            let value = this.value.toUpperCase();
+            if (value && !value.startsWith('ORD-')) {
+                value = 'ORD-' + value.replace(/[^0-9A-Z]/g, '');
+                this.value = value;
+            }
+        });
+
+        // Add ripple effect to button
+        trackBtn.addEventListener('mousedown', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+
+        // Add ripple styles
+        const rippleStyle = document.createElement('style');
+        rippleStyle.textContent = `
+            .ripple {
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                background: rgba(255, 255, 255, 0.5);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s ease-out;
+                pointer-events: none;
+            }
+            
+            @keyframes ripple {
+                to {
+                    transform: scale(30);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(rippleStyle);
+    });
+
+    // Prevent form resubmission on page refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+</script>
 {% endblock %}

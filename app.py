@@ -4,7 +4,7 @@ import traceback
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, session, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Try to import extensions, with helpful error messages
 try:
@@ -202,22 +202,83 @@ def logout():
 @login_required
 def dashboard():
     if current_user.is_admin:
-        # Admin dashboard
+        # Get current datetime
+        now = datetime.now()
+        
+        # Basic stats
         total_users = User.query.count()
         total_products = Product.query.count()
         total_orders = Order.query.count()
+        
+        # Today's new users
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        new_users_today = User.query.filter(User.created_at >= today_start).count()
+        
+        # New products this month
+        month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        new_products_this_month = Product.query.filter(Product.created_at >= month_start).count()
+        
+        # Pending orders count
+        pending_orders_count = Order.query.filter_by(status='pending').count()
+        
+        # Total revenue
+        total_revenue = db.session.query(db.func.sum(Order.total_amount)).scalar() or 0
+        
+        # Revenue growth (compare to last month)
+        last_month_start = (datetime.now().replace(day=1) - timedelta(days=1)).replace(day=1)
+        last_month_revenue = db.session.query(db.func.sum(Order.total_amount))\
+            .filter(Order.order_date >= last_month_start)\
+            .filter(Order.order_date < month_start).scalar() or 0
+        revenue_growth = ((total_revenue - last_month_revenue) / last_month_revenue * 100) if last_month_revenue > 0 else 0
+        
+        # Recent orders (last 5)
         recent_orders = Order.query.order_by(Order.order_date.desc()).limit(5).all()
         
-        return render_template('dashboard/admin.html', 
+        # Inventory stats
+        low_stock_count = Product.query.filter(Product.stock <= 5).filter(Product.stock > 0).count()
+        out_of_stock_count = Product.query.filter_by(stock=0).count()
+        in_stock_count = Product.query.filter(Product.stock > 5).count()
+        
+        # Recent activities
+        recent_activities = []
+        
+        # Add recent orders to activity
+        for order in recent_orders[:2]:
+            recent_activities.append({
+                'icon': 'shopping-cart',
+                'description': f'New order #{order.order_number}',
+                'time': f'{order.order_date.strftime("%H:%M")}'
+            })
+        
+        # Add recent users to activity
+        recent_users = User.query.order_by(User.created_at.desc()).limit(2).all()
+        for user in recent_users:
+            recent_activities.append({
+                'icon': 'user',
+                'description': f'New user registered: {user.username}',
+                'time': f'{user.created_at.strftime("%H:%M")}'
+            })
+        
+        return render_template('dashboard/admin.html',
+                             now=now,
                              total_users=total_users,
+                             new_users_today=new_users_today,
                              total_products=total_products,
+                             new_products_this_month=new_products_this_month,
                              total_orders=total_orders,
-                             recent_orders=recent_orders)
+                             pending_orders_count=pending_orders_count,
+                             total_revenue=total_revenue,
+                             revenue_growth=round(revenue_growth, 1),
+                             recent_orders=recent_orders,
+                             low_stock_count=low_stock_count,
+                             out_of_stock_count=out_of_stock_count,
+                             in_stock_count=in_stock_count,
+                             recent_activities=recent_activities)
     else:
         # Customer dashboard
         orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.order_date.desc()).all()
         return render_template('dashboard/customer.html', orders=orders)
-
+        
 @app.route('/products')
 def products():
     category = request.args.get('category')

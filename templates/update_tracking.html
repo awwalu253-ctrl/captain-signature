@@ -3,68 +3,428 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Update Tracking - Order #{{ order.order_number }}</h4>
+        <div class="col-md-10 col-lg-8">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="mb-4" data-aos="fade-down">
+                <ol class="breadcrumb bg-transparent p-0">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('dashboard') }}" class="text-decoration-none" style="color: var(--gold);">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('admin_orders') }}" class="text-decoration-none" style="color: var(--gold);">
+                            <i class="fas fa-shopping-cart me-1"></i> Orders
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page" style="color: var(--charcoal);">Update Tracking</li>
+                </ol>
+            </nav>
+
+            <!-- Main Card -->
+            <div class="card border-0 shadow-lg" data-aos="fade-up" data-aos-duration="800">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-wrapper me-3">
+                            <i class="fas fa-truck fa-2x" style="color: var(--gold);"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 fw-bold" style="font-family: 'Cormorant Garamond', serif; color: var(--charcoal);">
+                                Update Tracking Information
+                            </h4>
+                            <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                                Order #{{ order.order_number }} | {{ order.customer.username }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Order Status</label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
-                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
-                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
-                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
-                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                
+                <div class="card-body px-4">
+                    <!-- Order Summary Banner -->
+                    <div class="order-summary mb-4 p-3" style="background: linear-gradient(135deg, rgba(184, 155, 94, 0.05) 0%, rgba(184, 155, 94, 0.02) 100%); border-left: 3px solid var(--gold);">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <small class="text-uppercase" style="color: var(--gold); letter-spacing: 2px; font-size: 0.7rem;">CURRENT STATUS</small>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="badge me-2 px-3 py-2" style="background: var(--gold); color: var(--pure-white); font-weight: 400; letter-spacing: 1px;">
+                                        {{ order.status|upper }}
+                                    </span>
+                                    <span style="color: var(--taupe); font-size: 0.9rem;">
+                                        Last updated: {{ order.order_date.strftime('%B %d, %Y') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <small class="text-muted">Total: <span style="color: var(--gold); font-weight: 600;">{{ g.settings.currency }}{{ "%.2f"|format(order.total_amount) }}</span></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" id="trackingForm">
+                        <!-- Order Status -->
+                        <div class="mb-4 form-group" data-aos="fade-up" data-aos-delay="100">
+                            <label for="status" class="form-label fw-semibold" style="color: var(--charcoal);">
+                                <i class="fas fa-tag me-2" style="color: var(--gold);"></i>Order Status
+                            </label>
+                            <select class="form-select" id="status" name="status" required style="border: 1px solid rgba(184, 155, 94, 0.2); border-radius: 8px; padding: 0.8rem; background: rgba(255,255,255,0.9);">
+                                <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Processing</option>
+                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>📦 Shipped</option>
+                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>✅ Delivered</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>❌ Cancelled</option>
                             </select>
                         </div>
                         
+                        <!-- Tracking Number and Carrier -->
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="tracking_number" class="form-label">Tracking Number</label>
+                            <div class="col-md-6 mb-4 form-group" data-aos="fade-up" data-aos-delay="200">
+                                <label for="tracking_number" class="form-label fw-semibold" style="color: var(--charcoal);">
+                                    <i class="fas fa-hashtag me-2" style="color: var(--gold);"></i>Tracking Number
+                                </label>
                                 <input type="text" class="form-control" id="tracking_number" name="tracking_number" 
-                                       value="{{ order.tracking_number or '' }}">
+                                       value="{{ order.tracking_number or '' }}" placeholder="e.g., 1Z999AA10123456784"
+                                       style="border: 1px solid rgba(184, 155, 94, 0.2); border-radius: 8px; padding: 0.8rem; background: rgba(255,255,255,0.9);">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="carrier" class="form-label">Carrier</label>
-                                <select class="form-select" id="carrier" name="carrier">
+                            
+                            <div class="col-md-6 mb-4 form-group" data-aos="fade-up" data-aos-delay="200">
+                                <label for="carrier" class="form-label fw-semibold" style="color: var(--charcoal);">
+                                    <i class="fas fa-shipping-fast me-2" style="color: var(--gold);"></i>Carrier
+                                </label>
+                                <select class="form-select" id="carrier" name="carrier" style="border: 1px solid rgba(184, 155, 94, 0.2); border-radius: 8px; padding: 0.8rem; background: rgba(255,255,255,0.9);">
                                     <option value="">Select Carrier</option>
-                                    <option value="UPS" {% if order.carrier == 'UPS' %}selected{% endif %}>UPS</option>
-                                    <option value="FedEx" {% if order.carrier == 'FedEx' %}selected{% endif %}>FedEx</option>
-                                    <option value="USPS" {% if order.carrier == 'USPS' %}selected{% endif %}>USPS</option>
-                                    <option value="DHL" {% if order.carrier == 'DHL' %}selected{% endif %}>DHL</option>
-                                    <option value="Other" {% if order.carrier == 'Other' %}selected{% endif %}>Other</option>
+                                    <option value="UPS" {% if order.carrier == 'UPS' %}selected{% endif %}>📦 UPS</option>
+                                    <option value="FedEx" {% if order.carrier == 'FedEx' %}selected{% endif %}>📦 FedEx</option>
+                                    <option value="USPS" {% if order.carrier == 'USPS' %}selected{% endif %}>📦 USPS</option>
+                                    <option value="DHL" {% if order.carrier == 'DHL' %}selected{% endif %}>📦 DHL</option>
+                                    <option value="Other" {% if order.carrier == 'Other' %}selected{% endif %}>📦 Other</option>
                                 </select>
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="estimated_delivery" class="form-label">Estimated Delivery Date</label>
+                        <!-- Estimated Delivery -->
+                        <div class="mb-4 form-group" data-aos="fade-up" data-aos-delay="300">
+                            <label for="estimated_delivery" class="form-label fw-semibold" style="color: var(--charcoal);">
+                                <i class="fas fa-calendar-alt me-2" style="color: var(--gold);"></i>Estimated Delivery Date
+                            </label>
                             <input type="date" class="form-control" id="estimated_delivery" name="estimated_delivery"
-                                   value="{{ order.estimated_delivery.strftime('%Y-%m-%d') if order.estimated_delivery else '' }}">
+                                   value="{{ order.estimated_delivery.strftime('%Y-%m-%d') if order.estimated_delivery else '' }}"
+                                   style="border: 1px solid rgba(184, 155, 94, 0.2); border-radius: 8px; padding: 0.8rem; background: rgba(255,255,255,0.9);">
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="location" class="form-label">Current Location</label>
-                            <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Distribution Center, City, State">
+                        <!-- Current Location -->
+                        <div class="mb-4 form-group" data-aos="fade-up" data-aos-delay="400">
+                            <label for="location" class="form-label fw-semibold" style="color: var(--charcoal);">
+                                <i class="fas fa-map-marker-alt me-2" style="color: var(--gold);"></i>Current Location
+                            </label>
+                            <input type="text" class="form-control" id="location" name="location" 
+                                   placeholder="e.g., Lagos Distribution Center, Ikeja"
+                                   style="border: 1px solid rgba(184, 155, 94, 0.2); border-radius: 8px; padding: 0.8rem; background: rgba(255,255,255,0.9);">
+                            <small class="text-muted">Where is the package currently located?</small>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="tracking_description" class="form-label">Tracking Update Description</label>
+                        <!-- Tracking Description -->
+                        <div class="mb-4 form-group" data-aos="fade-up" data-aos-delay="500">
+                            <label for="tracking_description" class="form-label fw-semibold" style="color: var(--charcoal);">
+                                <i class="fas fa-pen me-2" style="color: var(--gold);"></i>Update Description
+                            </label>
                             <textarea class="form-control" id="tracking_description" name="tracking_description" rows="3" 
-                                      placeholder="e.g., Package has left the facility"></textarea>
+                                      placeholder="e.g., Package has been processed and left the facility. In transit to destination."
+                                      style="border: 1px solid rgba(184, 155, 94, 0.2); border-radius: 8px; padding: 0.8rem; background: rgba(255,255,255,0.9);"></textarea>
+                            <small class="text-muted">Provide details about this tracking update</small>
                         </div>
                         
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('admin_orders') }}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Update Tracking</button>
+                        <!-- Timeline Preview (if there are existing updates) -->
+                        {% if order.tracking_updates %}
+                        <div class="mb-4" data-aos="fade-up" data-aos-delay="550">
+                            <label class="form-label fw-semibold" style="color: var(--charcoal);">
+                                <i class="fas fa-history me-2" style="color: var(--gold);"></i>Tracking History
+                            </label>
+                            <div class="timeline-preview p-3" style="background: rgba(184, 155, 94, 0.03); border-radius: 8px; max-height: 150px; overflow-y: auto;">
+                                {% for update in order.tracking_updates|sort(attribute='timestamp', reverse=True) %}
+                                <div class="d-flex align-items-start mb-2">
+                                    <i class="fas fa-circle mt-1 me-2" style="color: var(--gold); font-size: 0.5rem;"></i>
+                                    <div>
+                                        <small class="text-muted">{{ update.timestamp.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                                        <p class="mb-0" style="font-size: 0.9rem;">{{ update.description }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top" data-aos="fade-up" data-aos-delay="600">
+                            <a href="{{ url_for('admin_orders') }}" class="btn btn-outline-secondary px-4 py-2">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary px-5 py-2" id="submitBtn" style="background: var(--gold); border: none; color: var(--pure-white); font-weight: 500; letter-spacing: 1px; border-radius: 8px;">
+                                <i class="fas fa-save me-2"></i>Update Tracking
+                            </button>
                         </div>
                     </form>
+                </div>
+                
+                <!-- Help Section -->
+                <div class="card-footer bg-transparent border-0 px-4 pb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-circle me-1" style="color: var(--gold); font-size: 0.5rem;"></i>
+                                Status updates notify customers
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-circle me-1" style="color: var(--gold); font-size: 0.5rem;"></i>
+                                Tracking numbers help customers track
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-circle me-1" style="color: var(--gold); font-size: 0.5rem;"></i>
+                                Updates are added to timeline
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Custom styles for update tracking page */
+    .form-group {
+        opacity: 0;
+        animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--gold) !important;
+        box-shadow: 0 0 0 0.2rem rgba(184, 155, 94, 0.25) !important;
+        outline: none;
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid rgba(184, 155, 94, 0.3);
+        color: var(--charcoal);
+        transition: all 0.3s ease;
+        border-radius: 8px;
+    }
+
+    .btn-outline-secondary:hover {
+        background: rgba(184, 155, 94, 0.05);
+        border-color: var(--gold);
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-primary:hover::after {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(184, 155, 94, 0.3);
+    }
+
+    .icon-wrapper {
+        width: 50px;
+        height: 50px;
+        background: rgba(184, 155, 94, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-preview::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .timeline-preview::-webkit-scrollbar-track {
+        background: rgba(184, 155, 94, 0.05);
+    }
+
+    .timeline-preview::-webkit-scrollbar-thumb {
+        background: var(--gold);
+        border-radius: 2px;
+    }
+
+    /* Loading state for submit button */
+    .btn-primary.loading {
+        pointer-events: none;
+        opacity: 0.8;
+        position: relative;
+    }
+
+    .btn-primary.loading::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid var(--pure-white);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Success animation */
+    .btn-primary.success {
+        background: #28a745;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .btn-primary, .btn-outline-secondary {
+            padding: 0.6rem 1.2rem !important;
+            font-size: 0.9rem;
+        }
+        
+        .icon-wrapper {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .icon-wrapper i {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('trackingForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusSelect = document.getElementById('status');
+        const trackingInput = document.getElementById('tracking_number');
+        const carrierSelect = document.getElementById('carrier');
+
+        // Form submission animation
+        form.addEventListener('submit', function(e) {
+            submitBtn.classList.add('loading');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        });
+
+        // Auto-fill carrier based on tracking number pattern (optional)
+        trackingInput.addEventListener('input', function() {
+            const tracking = this.value.toUpperCase();
+            
+            // Simple pattern matching for common carriers
+            if (tracking.startsWith('1Z')) {
+                carrierSelect.value = 'UPS';
+            } else if (tracking.match(/^[0-9]{12,15}$/)) {
+                carrierSelect.value = 'FedEx';
+            } else if (tracking.match(/^[A-Z]{2}[0-9]{9}[A-Z]{2}$/)) {
+                carrierSelect.value = 'DHL';
+            }
+        });
+
+        // Validate form before submit
+        form.addEventListener('submit', function(e) {
+            const status = statusSelect.value;
+            
+            if (status === 'shipped' && !trackingInput.value.trim()) {
+                e.preventDefault();
+                alert('Please enter a tracking number for shipped orders.');
+                submitBtn.classList.remove('loading');
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Tracking';
+            }
+        });
+
+        // Add confirmation for status changes
+        statusSelect.addEventListener('change', function() {
+            const newStatus = this.value;
+            const oldStatus = '{{ order.status }}';
+            
+            if (newStatus !== oldStatus) {
+                const confirmMessage = `Are you sure you want to change status from ${oldStatus} to ${newStatus}?`;
+                if (!confirm(confirmMessage)) {
+                    this.value = oldStatus;
+                }
+            }
+        });
+
+        // Character count for description
+        const description = document.getElementById('tracking_description');
+        const charCount = document.createElement('small');
+        charCount.className = 'text-muted float-end';
+        description.parentNode.appendChild(charCount);
+
+        description.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = `${count}/500 characters`;
+            
+            if (count > 500) {
+                this.value = this.value.substring(0, 500);
+                charCount.style.color = 'red';
+            } else {
+                charCount.style.color = '';
+            }
+        });
+
+        // Enable/disable submit button based on required fields
+        function validateForm() {
+            const status = statusSelect.value;
+            if (!status) {
+                submitBtn.disabled = true;
+                submitBtn.title = 'Please select a status';
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.title = '';
+            }
+        }
+
+        statusSelect.addEventListener('change', validateForm);
+        validateForm();
+
+        // Add fade-out effect for success message (if any)
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    });
+</script>
 {% endblock %}

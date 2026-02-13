@@ -1,139 +1,634 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Settings</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-cog me-2"></i>Store Settings</h4>
-                </div>
-                <div class="card-body">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <form method="POST" action="{{ url_for('admin_settings') }}">
-                        <div class="mb-4">
-                            <h5 class="border-bottom pb-2">Delivery Settings</h5>
-                            
-                            <div class="mb-3">
-                                <label for="delivery_fee" class="form-label">Delivery Fee (₦)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₦</span>
-                                    <input type="number" class="form-control" id="delivery_fee" name="delivery_fee" 
-                                           value="{{ settings.delivery_fee }}" step="100" min="0" required>
-                                </div>
-                                <small class="text-muted">Fixed delivery fee for all orders within Nigeria</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="free_delivery_threshold" class="form-label">Free Delivery Threshold (₦)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₦</span>
-                                    <input type="number" class="form-control" id="free_delivery_threshold" name="free_delivery_threshold" 
-                                           value="{{ settings.free_delivery_threshold }}" step="1000" min="0">
-                                </div>
-                                <small class="text-muted">Orders above this amount get free delivery (set to 0 to disable)</small>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <h5 class="border-bottom pb-2">Store Information</h5>
-                            
-                            <div class="mb-3">
-                                <label for="site_name" class="form-label">Store Name</label>
-                                <input type="text" class="form-control" id="site_name" name="site_name" 
-                                       value="{{ settings.site_name }}" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="currency" class="form-label">Currency Symbol</label>
-                                <input type="text" class="form-control" id="currency" name="currency" 
-                                       value="{{ settings.currency }}" maxlength="5" required>
-                                <small class="text-muted">Currency symbol to display (e.g., ₦, $, ₵)</small>
-                            </div>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Note:</strong> Changes will apply to new orders only. Existing orders will keep their original delivery fee.
-                        </div>
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+<div class="settings-page">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Animated Breadcrumb -->
+                <nav aria-label="breadcrumb" data-aos="fade-down" data-aos-duration="800">
+                    <ol class="breadcrumb custom-breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ url_for('dashboard') }}" class="gold-link">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save Settings
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-muted">
-                    Last updated: {{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') if settings.updated_at else 'Never' }}
-                </div>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </li>
+                    </ol>
+                </nav>
             </div>
-            
-            <!-- Delivery Fee History Card -->
-            <div class="card mt-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Delivery Fee Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="text-center p-3 border rounded">
-                                <h6>Current Delivery Fee</h6>
-                                <h2 class="text-primary">{{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}</h2>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="text-center p-3 border rounded">
-                                <h6>Free Delivery Threshold</h6>
-                                <h2 class="text-success">
-                                    {% if settings.free_delivery_threshold > 0 %}
-                                        {{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}+
-                                    {% else %}
-                                        Disabled
-                                    {% endif %}
-                                </h2>
-                            </div>
-                        </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <!-- Main Settings Card -->
+                <div class="card settings-card gold-border" data-aos="flip-up" data-aos-duration="1000">
+                    <div class="card-header gold-gradient text-white">
+                        <h4 class="mb-0 animate__animated animate__pulse animate__infinite">
+                            <i class="fas fa-cog fa-spin me-2"></i>Store Settings
+                        </h4>
                     </div>
                     
-                    <hr>
+                    <div class="card-body">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__slideInRight" role="alert">
+                                        <i class="fas 
+                                            {% if category == 'success' %}fa-check-circle text-success
+                                            {% elif category == 'danger' %}fa-exclamation-circle text-danger
+                                            {% elif category == 'warning' %}fa-exclamation-triangle text-warning
+                                            {% elif category == 'info' %}fa-info-circle text-info
+                                            {% endif %} me-2">
+                                        </i>
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST" action="{{ url_for('admin_settings') }}" class="settings-form">
+                            <!-- Delivery Settings Section -->
+                            <div class="settings-section mb-4" data-aos="fade-right" data-aos-delay="200">
+                                <h5 class="section-title gold-text">
+                                    <i class="fas fa-truck me-2"></i>Delivery Settings
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <label for="delivery_fee" class="form-label fw-bold">
+                                        <i class="fas fa-money-bill-wave text-gold me-2"></i>Delivery Fee
+                                    </label>
+                                    <div class="input-group input-group-lg hover-shadow">
+                                        <span class="input-group-text gold-bg text-white">{{ settings.currency }}</span>
+                                        <input type="number" class="form-control form-control-lg gold-focus" 
+                                               id="delivery_fee" name="delivery_fee" 
+                                               value="{{ settings.delivery_fee }}" 
+                                               step="100" min="0" required
+                                               placeholder="Enter delivery fee">
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1 text-gold"></i>
+                                        Fixed delivery fee for all orders within Nigeria
+                                    </small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="free_delivery_threshold" class="form-label fw-bold">
+                                        <i class="fas fa-gift text-gold me-2"></i>Free Delivery Threshold
+                                    </label>
+                                    <div class="input-group input-group-lg hover-shadow">
+                                        <span class="input-group-text gold-bg text-white">{{ settings.currency }}</span>
+                                        <input type="number" class="form-control form-control-lg gold-focus" 
+                                               id="free_delivery_threshold" name="free_delivery_threshold" 
+                                               value="{{ settings.free_delivery_threshold }}" 
+                                               step="1000" min="0"
+                                               placeholder="Enter threshold amount">
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1 text-gold"></i>
+                                        Orders above this amount get free delivery (set to 0 to disable)
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- Store Information Section -->
+                            <div class="settings-section mb-4" data-aos="fade-left" data-aos-delay="400">
+                                <h5 class="section-title gold-text">
+                                    <i class="fas fa-store me-2"></i>Store Information
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <label for="site_name" class="form-label fw-bold">
+                                        <i class="fas fa-tag text-gold me-2"></i>Store Name
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg gold-focus hover-shadow" 
+                                           id="site_name" name="site_name" 
+                                           value="{{ settings.site_name }}" 
+                                           required
+                                           placeholder="Enter store name">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="currency" class="form-label fw-bold">
+                                        <i class="fas fa-coins text-gold me-2"></i>Currency Symbol
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg gold-focus hover-shadow" 
+                                           id="currency" name="currency" 
+                                           value="{{ settings.currency }}" 
+                                           maxlength="5" required
+                                           placeholder="e.g., ₦, $, €">
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1 text-gold"></i>
+                                        Currency symbol to display throughout the store
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- Info Alert -->
+                            <div class="alert alert-info gold-border animate__animated animate__pulse animate__infinite" 
+                                 data-aos="zoom-in" data-aos-delay="600">
+                                <i class="fas fa-info-circle fa-2x me-3 float-start gold-text"></i>
+                                <div class="alert-content">
+                                    <strong class="gold-text">Note:</strong>
+                                    <p class="mb-0">Changes will apply to new orders only. Existing orders will keep their original delivery fee.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between align-items-center mt-4" 
+                                 data-aos="fade-up" data-aos-delay="800">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-gold btn-lg hover-float">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                                </a>
+                                <button type="submit" class="btn btn-gold btn-lg hover-pulse">
+                                    <i class="fas fa-save me-2"></i>Save Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                     
-                    <h6>How Delivery Fee Works:</h6>
-                    <ul class="mb-0">
-                        <li>Fixed delivery fee of <strong>{{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}</strong> applies to all orders within Nigeria</li>
-                        {% if settings.free_delivery_threshold > 0 %}
-                            <li>Free delivery for orders above <strong>{{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}</strong></li>
+                    <!-- Card Footer with Last Updated -->
+                    <div class="card-footer gold-gradient-light text-center" data-aos="fade-up" data-aos-delay="900">
+                        <i class="fas fa-clock text-gold me-2"></i>
+                        <span class="fw-bold">Last updated:</span>
+                        {% if settings.updated_at %}
+                            <span class="gold-text">{{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        {% else %}
+                            <span class="text-muted">Never</span>
                         {% endif %}
-                        <li>Delivery typically takes 3-5 business days</li>
-                        <li>Tracking provided for all orders</li>
-                    </ul>
+                    </div>
+                </div>
+                
+                <!-- Delivery Fee Information Card -->
+                <div class="card info-card gold-border mt-4" data-aos="zoom-in-up" data-aos-delay="1000">
+                    <div class="card-header gold-gradient text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history fa-spin me-2"></i>Delivery Fee Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="info-box text-center p-4 gold-border rounded hover-scale">
+                                    <i class="fas fa-truck fa-3x gold-text mb-3"></i>
+                                    <h6 class="text-uppercase text-muted">Current Delivery Fee</h6>
+                                    <h2 class="display-6 gold-text animate__animated animate__pulse animate__infinite">
+                                        {{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}
+                                    </h2>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="info-box text-center p-4 gold-border rounded hover-scale">
+                                    <i class="fas fa-gift fa-3x gold-text mb-3"></i>
+                                    <h6 class="text-uppercase text-muted">Free Delivery Threshold</h6>
+                                    <h2 class="display-6 gold-text">
+                                        {% if settings.free_delivery_threshold > 0 %}
+                                            {{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}+
+                                        {% else %}
+                                            <span class="badge bg-secondary">Disabled</span>
+                                        {% endif %}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="gold-hr">
+                        
+                        <h6 class="gold-text mb-3">
+                            <i class="fas fa-question-circle me-2"></i>How Delivery Fee Works:
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-1s">
+                                <i class="fas fa-check-circle text-gold me-2"></i>
+                                Fixed delivery fee of 
+                                <strong class="gold-text">{{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}</strong> 
+                                applies to all orders within Nigeria
+                            </li>
+                            {% if settings.free_delivery_threshold > 0 %}
+                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-2s">
+                                <i class="fas fa-check-circle text-gold me-2"></i>
+                                Free delivery for orders above 
+                                <strong class="gold-text">{{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}</strong>
+                            </li>
+                            {% endif %}
+                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-3s">
+                                <i class="fas fa-check-circle text-gold me-2"></i>
+                                Delivery typically takes <strong class="gold-text">3-5 business days</strong>
+                            </li>
+                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-4s">
+                                <i class="fas fa-check-circle text-gold me-2"></i>
+                                <strong class="gold-text">Tracking provided</strong> for all orders
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Custom Styles for Settings Page */
+:root {
+    --black: #000000;
+    --white: #ffffff;
+    --gold: #D4AF37;
+    --light-gold: #F0E68C;
+    --dark-gold: #B8860B;
+}
+
+/* Gold Text */
+.gold-text {
+    color: var(--gold) !important;
+}
+
+/* Gold Border */
+.gold-border {
+    border: 1px solid var(--gold) !important;
+}
+
+/* Gold Background */
+.gold-bg {
+    background: linear-gradient(135deg, var(--gold), var(--dark-gold)) !important;
+}
+
+/* Gold Gradient */
+.gold-gradient {
+    background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+    border-bottom: 2px solid var(--gold);
+}
+
+.gold-gradient-light {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-top: 1px solid var(--gold);
+}
+
+/* Custom Breadcrumb */
+.custom-breadcrumb {
+    background: rgba(255,255,255,0.95);
+    padding: 1rem 1.5rem;
+    border-radius: 50px;
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--gold);
+}
+
+.custom-breadcrumb .breadcrumb-item a {
+    color: var(--black);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.custom-breadcrumb .breadcrumb-item a:hover {
+    color: var(--gold);
+    transform: translateX(-5px);
+}
+
+.custom-breadcrumb .breadcrumb-item.active {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+/* Settings Card */
+.settings-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.settings-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* Section Title */
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    animation: expandWidth 1s ease forwards;
+}
+
+@keyframes expandWidth {
+    from { width: 0; }
+    to { width: 50px; }
+}
+
+/* Form Controls */
+.form-control-lg, .input-group-text {
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.form-control-lg:focus, .gold-focus:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+    transform: scale(1.02);
+}
+
+.input-group-text {
+    background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+    color: white;
+    font-weight: 600;
+    border: none;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Buttons */
+.btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+    color: var(--black);
+    font-weight: 600;
+    border: none;
+    padding: 12px 30px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn-gold::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-gold:hover::before {
+    left: 100%;
+}
+
+.btn-gold:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.4);
+}
+
+.btn-outline-gold {
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    background: transparent;
+    padding: 12px 30px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+    background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+    color: var(--black);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+}
+
+/* Hover Animations */
+.hover-float {
+    transition: transform 0.3s ease;
+}
+
+.hover-float:hover {
+    transform: translateY(-5px);
+}
+
+.hover-pulse {
+    transition: all 0.3s ease;
+}
+
+.hover-pulse:hover {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Info Box */
+.info-box {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    transition: all 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+}
+
+/* Gold HR */
+.gold-hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 2rem 0;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Alert */
+.alert-info {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-left: 4px solid var(--gold);
+    border-radius: 10px;
+    color: var(--black);
+}
+
+.alert .fa-info-circle {
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Card Footer */
+.card-footer {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* Loading Animation for Inputs */
+.form-control:focus {
+    animation: glow 1s ease infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+    to { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .custom-breadcrumb {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn-gold, .btn-outline-gold {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .info-box h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* List Items Animation */
+.list-unstyled li {
+    opacity: 0;
+    animation: slideInRight 0.5s ease forwards;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Stagger animations for list items */
+.list-unstyled li:nth-child(1) { animation-delay: 0.1s; }
+.list-unstyled li:nth-child(2) { animation-delay: 0.3s; }
+.list-unstyled li:nth-child(3) { animation-delay: 0.5s; }
+.list-unstyled li:nth-child(4) { animation-delay: 0.7s; }
+
+/* Gold Link */
+.gold-link {
+    color: var(--black);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.gold-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--gold);
+    transition: width 0.3s ease;
+}
+
+.gold-link:hover::after {
+    width: 100%;
+}
+
+.gold-link:hover {
+    color: var(--gold);
+}
+
+/* Settings Page Background */
+.settings-page {
+    min-height: 80vh;
+    padding: 2rem 0;
+    background: 
+        radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 30%),
+        radial-gradient(circle at 90% 80%, rgba(0, 0, 0, 0.03) 0%, transparent 40%);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add floating effect to cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 20;
+            const rotateY = (centerX - x) / 20;
+            
+            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        });
+    });
+    
+    // Add counter animation to numbers
+    const numbers = document.querySelectorAll('.display-6');
+    numbers.forEach(number => {
+        const finalValue = parseFloat(number.innerText.replace(/[^0-9.-]+/g, ''));
+        if (!isNaN(finalValue)) {
+            let currentValue = 0;
+            const increment = finalValue / 50;
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= finalValue) {
+                    clearInterval(timer);
+                    currentValue = finalValue;
+                }
+                if (number.innerText.includes('₦')) {
+                    number.innerText = '₦' + currentValue.toFixed(2);
+                }
+            }, 20);
+        }
+    });
+    
+    // Form field validation with animation
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('invalid', function(e) {
+            e.preventDefault();
+            this.classList.add('animate__animated', 'animate__shakeX');
+            setTimeout(() => {
+                this.classList.remove('animate__animated', 'animate__shakeX');
+            }, 1000);
+        });
+    });
+    
+    // Success message auto-hide
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.add('animate__animated', 'animate__fadeOutRight');
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 500);
+        }, 5000);
+    });
+});
+</script>
 {% endblock %}

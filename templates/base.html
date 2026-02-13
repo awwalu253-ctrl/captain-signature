@@ -1,93 +1,738 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captain Signature - Premium Clothing</title>
+    <title>Captain Signature - Luxury Fashion House</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Sophisticated Pairing -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <style>
+        :root {
+            --pure-white: #FFFFFF;
+            --ivory: #FFFFF0;
+            --off-white: #FAF9F6;
+            --champagne: #FAD6A5;
+            --gold: #B89B5E;
+            --antique-gold: #C6A45C;
+            --old-gold: #CFB53B;
+            --charcoal: #2C2C2C;
+            --light-charcoal: #3A3A3A;
+            --taupe: #8B8589;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            --gold-shadow: 0 15px 40px rgba(184, 155, 94, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 300;
+            background: var(--off-white);
+            color: var(--charcoal);
+            line-height: 1.8;
+            letter-spacing: 0.3px;
+            overflow-x: hidden;
+            padding-top: 90px; /* Add padding to account for fixed header */
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 500;
+            letter-spacing: 1px;
+            color: var(--charcoal);
+        }
+
+        /* Subtle Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(45deg, rgba(184, 155, 94, 0.02) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(184, 155, 94, 0.02) 25%, transparent 25%);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Elegant Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--off-white);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--antique-gold);
+        }
+
+        /* Fixed Navigation - Premium Header */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(184, 155, 94, 0.2);
+            padding: 0.8rem 0;
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1030;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .navbar.scrolled {
+            padding: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.98) !important;
+            box-shadow: 0 5px 25px rgba(184, 155, 94, 0.1);
+        }
+
+        .navbar-brand {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--charcoal) !important;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand i {
+            color: var(--gold);
+            margin-right: 8px;
+            font-size: 1.6rem;
+            transition: all 0.5s ease;
+        }
+
+        .navbar-brand:hover i {
+            transform: rotate(360deg);
+        }
+
+        .navbar-brand span {
+            font-weight: 300;
+            color: var(--gold);
+            font-size: 1rem;
+            margin-left: 8px;
+            letter-spacing: 2px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .navbar-nav {
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--charcoal) !important;
+            font-weight: 400;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 0.5rem 1.2rem !important;
+            margin: 0 0.2rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 1px;
+            background: var(--gold);
+            transition: width 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .nav-link:hover::after {
+            width: 70%;
+        }
+
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+
+        /* Cart Badge - Elegant Pulse */
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: var(--gold);
+            color: var(--pure-white);
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            animation: subtlePulse 3s infinite;
+            box-shadow: 0 2px 10px rgba(184, 155, 94, 0.3);
+        }
+
+        @keyframes subtlePulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 2px 10px rgba(184, 155, 94, 0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 5px 15px rgba(184, 155, 94, 0.5);
+            }
+        }
+
+        /* Dropdown Menu - Refined */
+        .dropdown-menu {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(184, 155, 94, 0.2);
+            border-radius: 0;
+            padding: 1rem 0;
+            margin-top: 0.5rem;
+            box-shadow: var(--gold-shadow);
+            min-width: 240px;
+            animation: dropdownFade 0.2s ease;
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            color: var(--charcoal);
+            padding: 0.8rem 2rem;
+            font-weight: 400;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .dropdown-item i {
+            color: var(--gold);
+            width: 25px;
+            margin-right: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: none;
+            color: var(--gold);
+            transform: translateX(5px);
+        }
+
+        .dropdown-item:hover i {
+            transform: translateX(3px);
+        }
+
+        .dropdown-header {
+            color: var(--gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            padding: 0.5rem 2rem;
+        }
+
+        .dropdown-divider {
+            border-top: 1px solid rgba(184, 155, 94, 0.2);
+            margin: 0.5rem 0;
+        }
+
+        /* Flash Messages - Elegant */
+        .alert {
+            border: none;
+            border-radius: 0;
+            padding: 1.2rem 2rem;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-left: 3px solid var(--gold);
+            box-shadow: var(--shadow);
+            animation: slideIn 0.5s ease;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1020;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert i {
+            color: var(--gold);
+            margin-right: 10px;
+        }
+
+        .alert-success {
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.98), rgba(184, 155, 94, 0.05));
+        }
+
+        /* Main Content */
+        main {
+            min-height: calc(100vh - 400px);
+            animation: fadeIn 1.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Footer - Sophisticated */
+        .footer {
+            background: var(--charcoal);
+            color: var(--off-white);
+            padding: 5rem 0 2rem;
+            margin-top: 5rem;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--antique-gold), var(--gold), transparent);
+        }
+
+        .footer h5 {
+            color: var(--gold);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .footer h5::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 40px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+        .footer h5 i {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .footer-links li:hover {
+            opacity: 1;
+        }
+
+        .footer-links a {
+            color: var(--off-white);
+            text-decoration: none;
+            font-weight: 300;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: var(--gold);
+            transform: translateX(5px);
+        }
+
+        .footer-links i {
+            color: var(--gold);
+            margin-right: 10px;
+            font-size: 0.8rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--off-white);
+            font-size: 1.1rem;
+            transition: all 0.4s ease;
+            border: 1px solid transparent;
+        }
+
+        .social-links a:hover {
+            background: var(--gold);
+            color: var(--charcoal);
+            transform: translateY(-3px);
+            border-color: var(--gold);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+        }
+
+        .contact-info li {
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            font-weight: 300;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .contact-info i {
+            width: 30px;
+            color: var(--gold);
+            font-size: 1rem;
+        }
+
+        .footer-bottom {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-weight: 300;
+            font-size: 0.9rem;
+            color: var(--taupe);
+        }
+
+        .footer-bottom a {
+            color: var(--off-white);
+            text-decoration: none;
+            margin: 0 1.5rem;
+            transition: color 0.3s ease;
+            font-weight: 300;
+        }
+
+        .footer-bottom a:hover {
+            color: var(--gold);
+        }
+
+        /* Scroll to Top Button - Minimal */
+        .scroll-top {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 45px;
+            height: 45px;
+            background: var(--pure-white);
+            border: 1px solid var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold);
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .scroll-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-top:hover {
+            background: var(--gold);
+            color: var(--pure-white);
+            transform: translateY(-3px);
+            box-shadow: var(--gold-shadow);
+        }
+
+        /* Loading Spinner - Delicate */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--off-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 1px solid rgba(184, 155, 94, 0.2);
+            border-top-color: var(--gold);
+            border-right-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 80px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+            
+            .navbar-brand span {
+                display: none;
+            }
+            
+            .navbar-nav {
+                align-items: flex-start;
+                padding: 1rem 0;
+            }
+            
+            .nav-link {
+                padding: 0.8rem 0 !important;
+            }
+            
+            .footer {
+                padding: 3rem 0 1.5rem;
+            }
+            
+            .footer h5 {
+                margin-top: 2rem;
+            }
+            
+            .footer-bottom a {
+                display: block;
+                margin: 0.5rem 0;
+            }
+            
+            .scroll-top {
+                bottom: 20px;
+                right: 20px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* Smooth Transitions */
+        * {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Gold Accent Classes */
+        .gold-text {
+            color: var(--gold);
+        }
+
+        .gold-border {
+            border-color: var(--gold);
+        }
+
+        .gold-bg {
+            background: var(--gold);
+        }
+
+        /* Typography */
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        .text-small {
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        /* Ensure content doesn't hide behind fixed header */
+        .container:first-of-type {
+            margin-top: 1rem;
+        }
+    </style>
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Loading Spinner -->
+    <div class="loader-wrapper" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <div class="scroll-top" id="scrollTop">
+        <i class="fas fa-chevron-up"></i>
+    </div>
+
+    <!-- Fixed Navigation - Premium Header -->
+    <nav class="navbar navbar-expand-lg" id="mainNav">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-crown"></i> Captain Signature
+                <i class="fas fa-crown"></i> CAPTAIN SIGNATURE <span>EST. 2024</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                        <a class="nav-link" href="{{ url_for('index') }}">HOME</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('products') }}">Products</a>
+                        <a class="nav-link" href="{{ url_for('products') }}">COLLECTION</a>
                     </li>
-
-                    <!-- Cart Icon with Count -->
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ url_for('view_cart') }}">
-                            <i class="fas fa-shopping-cart"></i>
-                            {% if g.cart_count > 0 %}
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ g.cart_count }}
-                            </span>
-                            {% endif %}
-                        </a>
+                        <a class="nav-link" href="{{ url_for('track_order_page') }}">TRACK ORDER</a>
                     </li>
                 </ul>
+                
                 <ul class="navbar-nav">
+                    <!-- Cart Icon -->
+                    <li class="nav-item me-3">
+                        <a class="nav-link position-relative" href="{{ url_for('view_cart') }}">
+                            <i class="fas fa-shopping-bag"></i>
+                            {% if g.cart_count > 0 %}
+                            <span class="cart-badge">{{ g.cart_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
                     {% if current_user.is_authenticated %}
+                    <!-- User Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                            data-bs-toggle="dropdown">
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user"></i> {{ current_user.username }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">
-                                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                                </a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('dashboard') }}">
+                                    <i class="fas fa-tachometer-alt"></i> DASHBOARD
+                                </a>
+                            </li>
+                            
                             {% if current_user.is_admin %}
+                            <li><hr class="dropdown-divider"></li>
                             <li>
-                                <hr class="dropdown-divider">
+                                <h6 class="dropdown-header">ADMIN</h6>
                             </li>
                             <li>
-                                <h6 class="dropdown-header">Admin</h6>
+                                <a class="dropdown-item" href="{{ url_for('admin_products') }}">
+                                    <i class="fas fa-box"></i> PRODUCTS
+                                </a>
                             </li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin_products') }}">
-                                    <i class="fas fa-box"></i> Manage Products
-                                </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin_orders') }}">
-                                    <i class="fas fa-shopping-cart"></i> Manage Orders
-                                </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('add_product') }}">
-                                    <i class="fas fa-plus"></i> Add Product
-                                </a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin_orders') }}">
+                                    <i class="fas fa-shopping-cart"></i> ORDERS
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('add_product') }}">
+                                    <i class="fas fa-plus"></i> ADD PRODUCT
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin_settings') }}">
+                                    <i class="fas fa-cog"></i> SETTINGS
+                                </a>
+                            </li>
                             {% endif %}
+                            
+                            <li><hr class="dropdown-divider"></li>
                             <li>
-                                <hr class="dropdown-divider">
+                                <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> LOGOUT
+                                </a>
                             </li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a></li>
                         </ul>
                     </li>
                     {% else %}
+                    <!-- Login/Signup -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
+                        <a class="nav-link" href="{{ url_for('login') }}">LOGIN</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('signup') }}">
-                            <i class="fas fa-user-plus"></i> Sign Up
-                        </a>
+                        <a class="nav-link" href="{{ url_for('signup') }}">REGISTER</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -99,92 +744,196 @@
     <div class="container mt-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {% if category == 'success' %}
-            <i class="fas fa-check-circle me-2"></i>
-            {% elif category == 'danger' %}
-            <i class="fas fa-exclamation-circle me-2"></i>
-            {% elif category == 'warning' %}
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            {% elif category == 'info' %}
-            <i class="fas fa-info-circle me-2"></i>
-            {% endif %}
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="fas 
+                    {% if category == 'success' %}fa-check-circle
+                    {% elif category == 'danger' %}fa-exclamation-circle
+                    {% elif category == 'warning' %}fa-exclamation-triangle
+                    {% elif category == 'info' %}fa-info-circle
+                    {% endif %}">
+                </i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
         {% endif %}
         {% endwith %}
     </div>
 
     <!-- Main Content -->
-    {% block content %}{% endblock %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white mt-5 py-4">
+    <footer class="footer">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5><i class="fas fa-crown"></i> Captain Signature</h5>
-                    <p>Premium clothing for the modern individual. Quality fabrics, timeless designs, and exceptional
-                        craftsmanship.</p>
-                    <div class="mt-3">
-                        <a href="#" class="text-white me-2"><i class="fab fa-facebook fa-lg"></i></a>
-                        <a href="#" class="text-white me-2"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="#" class="text-white me-2"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-white me-2"><i class="fab fa-pinterest fa-lg"></i></a>
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5><i class="fas fa-crown"></i> CAPTAIN SIGNATURE</h5>
+                    <p style="color: var(--taupe); line-height: 1.8;">Luxury fashion for the discerning individual. Each piece is crafted with precision, using only the finest materials and timeless design principles.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest"></i></a>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('index') }}" class="text-white-50">Home</a></li>
-                        <li><a href="{{ url_for('products') }}" class="text-white-50">Products</a></li>
-                        <li><a href="{{ url_for('track_order_page') }}" class="text-white-50">Track Order</a></li>
-                        <li><a href="#" class="text-white-50">About Us</a></li>
-                        <li><a href="#" class="text-white-50">Contact</a></li>
+                
+                <div class="col-lg-2 col-md-6">
+                    <h5><i class="fas fa-link"></i> EXPLORE</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}"><i class="fas fa-chevron-right"></i> HOME</a></li>
+                        <li><a href="{{ url_for('products') }}"><i class="fas fa-chevron-right"></i> COLLECTION</a></li>
+                        <li><a href="{{ url_for('track_order_page') }}"><i class="fas fa-chevron-right"></i> TRACK ORDER</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> OUR STORY</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> CONTACT</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h5>Categories</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('products', category='mens') }}" class="text-white-50">Men's
-                                Clothing</a></li>
-                        <li><a href="{{ url_for('products', category='womens') }}" class="text-white-50">Women's
-                                Clothing</a></li>
-                        <li><a href="{{ url_for('products', category='accessories') }}"
-                                class="text-white-50">Accessories</a></li>
-                        <li><a href="{{ url_for('products', category='footwear') }}" class="text-white-50">Footwear</a>
-                        </li>
+                
+                <div class="col-lg-3 col-md-6">
+                    <h5><i class="fas fa-tags"></i> CATEGORIES</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('products', category='mens') }}"><i class="fas fa-chevron-right"></i> MEN'S COLLECTION</a></li>
+                        <li><a href="{{ url_for('products', category='womens') }}"><i class="fas fa-chevron-right"></i> WOMEN'S COLLECTION</a></li>
+                        <li><a href="{{ url_for('products', category='accessories') }}"><i class="fas fa-chevron-right"></i> ACCESSORIES</a></li>
+                        <li><a href="{{ url_for('products', category='footwear') }}"><i class="fas fa-chevron-right"></i> FOOTWEAR</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h5>Contact Info</h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-map-marker-alt me-2"></i> 123 Fashion St, New York, NY 10001</li>
-                        <li><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</li>
-                        <li><i class="fas fa-envelope me-2"></i> support@captainsignature.com</li>
-                        <li><i class="fas fa-clock me-2"></i> Mon-Fri: 9AM - 6PM</li>
+                
+                <div class="col-lg-3 col-md-6">
+                    <h5><i class="fas fa-info-circle"></i> BOUTIQUE</h5>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Fashion Avenue, Lagos</li>
+                        <li><i class="fas fa-phone-alt"></i> +234 123 456 7890</li>
+                        <li><i class="fas fa-envelope"></i> concierge@captainsignature.com</li>
+                        <li><i class="fas fa-clock"></i> Mon - Sat: 10AM - 7PM</li>
                     </ul>
                 </div>
             </div>
-            <hr class="bg-secondary">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2024 Captain Signature. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-end">
-                    <a href="#" class="text-white-50 me-3">Privacy Policy</a>
-                    <a href="#" class="text-white-50 me-3">Terms of Service</a>
-                    <a href="#" class="text-white-50">Shipping Info</a>
+            
+            <div class="footer-bottom">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-0">&copy; 2024 CAPTAIN SIGNATURE. ALL RIGHTS RESERVED.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a href="#">PRIVACY</a>
+                        <a href="#">TERMS</a>
+                        <a href="#">SHIPPING</a>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 50,
+            easing: 'ease-in-out'
+        });
+
+        // Loading Spinner
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(function() {
+                    document.getElementById('loader').style.display = 'none';
+                }, 600);
+            }, 600);
+        });
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('mainNav');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Scroll to Top Button
+        window.addEventListener('scroll', function() {
+            const scrollTop = document.getElementById('scrollTop');
+            if (window.scrollY > 300) {
+                scrollTop.classList.add('show');
+            } else {
+                scrollTop.classList.remove('show');
+            }
+        });
+
+        document.getElementById('scrollTop').addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.remove();
+                }, 500);
+            });
+        }, 5000);
+
+        // Active link highlighting
+        const currentLocation = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentLocation) {
+                link.classList.add('active');
+                link.style.color = 'var(--gold)';
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Handle responsive dropdown
+        if (window.innerWidth < 768) {
+            document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
+                dropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const menu = this.nextElementSibling;
+                    menu.classList.toggle('show');
+                });
+            });
+        }
+    </script>
 
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
@@ -192,5 +941,4 @@
     <!-- Additional Scripts Block for Child Templates -->
     {% block scripts %}{% endblock %}
 </body>
-
 </html>

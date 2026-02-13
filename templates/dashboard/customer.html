@@ -1,121 +1,887 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>My Dashboard</h2>
-    <p>Welcome back, {{ current_user.username }}!</p>
-    
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">My Orders</h5>
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <div class="dashboard-hero" data-aos="fade-down" data-aos-duration="1000">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 gold-text animate__animated animate__fadeInLeft">
+                        <i class="fas fa-crown me-2"></i>Welcome back, {{ current_user.username }}!
+                    </h1>
+                    <p class="lead text-white-50 animate__animated animate__fadeInLeft animate__delay-1s">
+                        Manage your orders and account information
+                    </p>
                 </div>
-                <div class="card-body">
-                    {% if orders %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Order #</th>
-                                    <th>Items</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Total</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for order in orders %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('track_order_result', order_number=order.order_number) }}">
-                                            {{ order.order_number }}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% for item in order.items[:2] %}
-                                                {% if item.product_image %}
-                                                    {% if item.product_image.startswith('user_uploads:') %}
-                                                        {% set filename = item.product_image.replace('user_uploads:', '') %}
-                                                        <img src="{{ url_for('user_uploads', filename=filename) }}" 
-                                                             width="30" height="30" style="object-fit: cover; border-radius: 4px;" 
-                                                             class="me-1" alt="{{ item.product_name }}">
-                                                    {% else %}
-                                                        <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}" 
-                                                             width="30" height="30" style="object-fit: cover; border-radius: 4px;" 
-                                                             class="me-1" alt="{{ item.product_name }}">
-                                                    {% endif %}
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if order.items|length > 2 %}
-                                                <span class="badge bg-secondary">+{{ order.items|length - 2 }}</span>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>
-                                        <span class="badge {% if order.status == 'delivered' %}bg-success{% elif order.status == 'cancelled' %}bg-danger{% elif order.status == 'shipped' %}bg-info{% elif order.status == 'processing' %}bg-warning{% else %}bg-secondary{% endif %}">
-                                            {{ order.status|upper }}
-                                        </span>
-                                    </td>
-                                    <td>₦{{ "%.2f"|format(order.total_amount) }}</td>
-                                    <td>
-                                        <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" 
-                                           class="btn btn-sm btn-primary">
-                                            <i class="fas fa-search"></i> Track
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="col-md-4 text-end">
+                    <div class="member-badge animate__animated animate__fadeInRight">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Member since {{ current_user.created_at.strftime('%Y') }}
                     </div>
-                    {% else %}
-                    <p class="text-center">You haven't placed any orders yet.</p>
-                    <div class="text-center">
-                        <a href="{{ url_for('products') }}" class="btn btn-primary">
-                            <i class="fas fa-shopping-bag"></i> Start Shopping
-                        </a>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Account Information</h5>
+
+    <div class="container mt-5">
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">{{ orders|length }}</h3>
+                        <p class="stat-label">Total Orders</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p><strong>Username:</strong> {{ current_user.username }}</p>
-                    <p><strong>Email:</strong> {{ current_user.email }}</p>
-                    <p><strong>Phone:</strong> {{ current_user.phone or 'Not provided' }}</p>
-                    <p><strong>Address:</strong> {{ current_user.address or 'Not provided' }}</p>
-                    {% if current_user.city and current_user.state %}
-                    <p><strong>Location:</strong> {{ current_user.city }}, {{ current_user.state }}</p>
-                    {% endif %}
-                    <p><strong>Member since:</strong> {{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div class="col-md-3 mb-3" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">
+                            {% set pending = orders|selectattr('status', 'equalto', 'pending')|list|length %}
+                            {{ pending }}
+                        </h3>
+                        <p class="stat-label">Pending Orders</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">
+                            {% set delivered = orders|selectattr('status', 'equalto', 'delivered')|list|length %}
+                            {{ delivered }}
+                        </h3>
+                        <p class="stat-label">Delivered</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3" data-aos="fade-up" data-aos-delay="400">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">
+                            {% set shipped = orders|selectattr('status', 'equalto', 'shipped')|list|length %}
+                            {{ shipped }}
+                        </h3>
+                        <p class="stat-label">In Transit</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Delivery Information</h5>
+
+        <!-- Orders Section -->
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <div class="card premium-card" data-aos="fade-up" data-aos-duration="1200">
+                    <div class="card-header premium-card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-box me-2"></i>My Orders</h5>
+                            <span class="badge order-count">{{ orders|length }} Total</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if orders %}
+                        <div class="table-responsive">
+                            <table class="table premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Items</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr class="order-row" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                                        <td class="order-number">
+                                            <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" class="gold-link">
+                                                <i class="fas fa-hashtag"></i>{{ order.order_number }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div class="order-items-preview">
+                                                {% for item in order.items[:3] %}
+                                                    {% if item.product_image %}
+                                                        <div class="item-preview">
+                                                            {% if item.product_image.startswith('user_uploads:') %}
+                                                                {% set filename = item.product_image.replace('user_uploads:', '') %}
+                                                                <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                                                                     alt="{{ item.product_name }}" 
+                                                                     class="preview-image"
+                                                                     data-bs-toggle="tooltip" 
+                                                                     title="{{ item.product_name }}">
+                                                            {% else %}
+                                                                <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}" 
+                                                                     alt="{{ item.product_name }}" 
+                                                                     class="preview-image"
+                                                                     data-bs-toggle="tooltip" 
+                                                                     title="{{ item.product_name }}">
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if order.items|length > 3 %}
+                                                    <span class="more-items-badge">+{{ order.items|length - 3 }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="order-date">
+                                                <i class="far fa-calendar-alt me-1"></i>
+                                                {{ order.order_date.strftime('%d %b, %Y') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-{{ order.status }}">
+                                                <i class="fas fa-circle me-1"></i>
+                                                {{ order.status|upper }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="order-total">{{ g.settings.currency }}{{ "%.2f"|format(order.total_amount) }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" 
+                                               class="btn-action" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Track Order">
+                                                <i class="fas fa-search"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-orders" data-aos="zoom-in">
+                            <div class="empty-icon">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <h4>No Orders Yet</h4>
+                            <p class="text-muted">Looks like you haven't placed any orders with us yet.</p>
+                            <a href="{{ url_for('products') }}" class="btn-gold">
+                                <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p><i class="fas fa-truck text-success me-2"></i> Fixed delivery fee: ₦1,500 nationwide</p>
-                    <p><i class="fas fa-clock text-success me-2"></i> Delivery within 3-5 business days</p>
-                    <p><i class="fas fa-map-marker-alt text-success me-2"></i> Shipping within Nigeria only</p>
-                    <p><i class="fas fa-credit-card text-success me-2"></i> Multiple payment options available</p>
+            </div>
+        </div>
+
+        <!-- Account and Delivery Information -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4" data-aos="fade-right" data-aos-duration="1000">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <i class="fas fa-user-circle"></i>
+                        <h5>Account Information</h5>
+                    </div>
+                    <div class="info-card-body">
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-user me-2"></i>Username:</span>
+                            <span class="info-value">{{ current_user.username }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-envelope me-2"></i>Email:</span>
+                            <span class="info-value">{{ current_user.email }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-phone me-2"></i>Phone:</span>
+                            <span class="info-value">{{ current_user.phone or 'Not provided' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-map-marker-alt me-2"></i>Address:</span>
+                            <span class="info-value">{{ current_user.address or 'Not provided' }}</span>
+                        </div>
+                        {% if current_user.city and current_user.state %}
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-location-dot me-2"></i>Location:</span>
+                            <span class="info-value">{{ current_user.city }}, {{ current_user.state }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-calendar-check me-2"></i>Member since:</span>
+                            <span class="info-value">{{ current_user.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4" data-aos="fade-left" data-aos-duration="1000">
+                <div class="info-card delivery-card">
+                    <div class="info-card-header">
+                        <i class="fas fa-truck"></i>
+                        <h5>Delivery Information</h5>
+                    </div>
+                    <div class="info-card-body">
+                        <div class="delivery-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h6>Nationwide Delivery</h6>
+                                <p>We deliver to all 36 states in Nigeria including FCT</p>
+                            </div>
+                        </div>
+                        <div class="delivery-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h6>Fixed Delivery Fee</h6>
+                                <p><strong class="gold-text">{{ g.settings.currency }}{{ "%.2f"|format(g.settings.delivery_fee) }}</strong> nationwide</p>
+                            </div>
+                        </div>
+                        <div class="delivery-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h6>Delivery Time</h6>
+                                <p>3-5 business days to major cities</p>
+                            </div>
+                        </div>
+                        <div class="delivery-feature">
+                            <div class="feature-icon">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h6>Payment Options</h6>
+                                <p>Card, Bank Transfer, USSD, Cash on Delivery</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="quick-actions" data-aos="fade-up" data-aos-duration="800">
+                    <a href="{{ url_for('products') }}" class="action-item">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>Shop Now</span>
+                    </a>
+                    <a href="{{ url_for('track_order_page') }}" class="action-item">
+                        <i class="fas fa-search"></i>
+                        <span>Track Order</span>
+                    </a>
+                    <a href="#" class="action-item">
+                        <i class="fas fa-heart"></i>
+                        <span>Wishlist</span>
+                    </a>
+                    <a href="#" class="action-item">
+                        <i class="fas fa-headset"></i>
+                        <span>Support</span>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --black: #000000;
+        --white: #ffffff;
+        --gold: #D4AF37;
+        --light-gold: #F0E68C;
+        --dark-gold: #B8860B;
+    }
+
+    /* Dashboard Hero */
+    .dashboard-hero {
+        background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+        padding: 4rem 0;
+        position: relative;
+        overflow: hidden;
+        border-bottom: 3px solid var(--gold);
+    }
+
+    .dashboard-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .gold-text {
+        color: var(--gold);
+        font-weight: 700;
+        text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+        0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        50% { text-shadow: 0 0 30px rgba(212, 175, 55, 0.8); }
+    }
+
+    .member-badge {
+        background: rgba(212, 175, 55, 0.1);
+        color: var(--gold);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        display: inline-block;
+        border: 1px solid var(--gold);
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+        animation: pulse 2s ease infinite;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        background: linear-gradient(135deg, var(--white), #f8f9fa);
+        border-radius: 15px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .stat-card:hover::before {
+        left: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--black);
+        animation: bounce 2s ease infinite;
+    }
+
+    .stat-card:nth-child(2) .stat-icon { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) .stat-icon { animation-delay: 0.4s; }
+    .stat-card:nth-child(4) .stat-icon { animation-delay: 0.6s; }
+
+    @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--black);
+        margin: 0;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #666;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Premium Cards */
+    .premium-card {
+        background: var(--white);
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .premium-card-header {
+        background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+        color: var(--white);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 3px solid var(--gold);
+    }
+
+    .premium-card-header h5 {
+        color: var(--gold);
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .order-count {
+        background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+        color: var(--black);
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 50px;
+    }
+
+    /* Premium Table */
+    .premium-table {
+        margin: 0;
+    }
+
+    .premium-table thead th {
+        background: #f8f9fa;
+        color: var(--black);
+        font-weight: 600;
+        border-bottom: 2px solid var(--gold);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        padding: 1rem;
+    }
+
+    .premium-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .premium-table tbody tr:hover {
+        background: rgba(212, 175, 55, 0.05);
+        transform: scale(1.01);
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+    }
+
+    .order-number a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .order-number a:hover {
+        color: var(--dark-gold);
+        padding-left: 5px;
+    }
+
+    /* Order Items Preview */
+    .order-items-preview {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .item-preview {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .item-preview:hover {
+        transform: translateY(-3px);
+        z-index: 10;
+    }
+
+    .preview-image {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 2px solid var(--gold);
+        transition: all 0.3s ease;
+    }
+
+    .preview-image:hover {
+        width: 50px;
+        height: 50px;
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+    }
+
+    .more-items-badge {
+        background: var(--black);
+        color: var(--gold);
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        animation: fadeInPulse 2s ease infinite;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+        border-left: 3px solid #ffc107;
+    }
+
+    .status-processing {
+        background: #cce5ff;
+        color: #004085;
+        border-left: 3px solid #007bff;
+    }
+
+    .status-shipped {
+        background: #d1ecf1;
+        color: #0c5460;
+        border-left: 3px solid #17a2b8;
+    }
+
+    .status-delivered {
+        background: #d4edda;
+        color: #155724;
+        border-left: 3px solid #28a745;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 3px solid #dc3545;
+    }
+
+    @keyframes fadeInPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    .order-total {
+        font-weight: 700;
+        color: var(--gold);
+        font-size: 1.1rem;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--black);
+        color: var(--gold);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        background: var(--gold);
+        color: var(--black);
+        transform: rotate(360deg);
+    }
+
+    /* Empty Orders */
+    .empty-orders {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 3rem;
+        color: var(--gold);
+        border: 3px solid var(--gold);
+        animation: float 3s ease infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+        color: var(--black);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        border: 1px solid var(--gold);
+    }
+
+    .btn-gold:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        color: var(--black);
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: var(--white);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        height: 100%;
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px rgba(212, 175, 55, 0.2);
+    }
+
+    .info-card-header {
+        background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+        color: var(--gold);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border-bottom: 2px solid var(--gold);
+    }
+
+    .info-card-header i {
+        font-size: 1.5rem;
+    }
+
+    .info-card-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .info-card-body {
+        padding: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px dashed rgba(212, 175, 55, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .info-item:hover {
+        transform: translateX(5px);
+    }
+
+    .info-label {
+        width: 120px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--black);
+        font-weight: 500;
+    }
+
+    /* Delivery Features */
+    .delivery-feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .delivery-feature:hover {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        transform: translateX(5px);
+    }
+
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--black);
+        font-size: 1.2rem;
+    }
+
+    .feature-content h6 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: var(--black);
+    }
+
+    .feature-content p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .gold-text {
+        color: var(--gold);
+        font-weight: 700;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 2rem;
+        background: var(--white);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+    }
+
+    .action-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--black);
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
+
+    .action-item i {
+        font-size: 1.5rem;
+        color: var(--gold);
+        transition: all 0.3s ease;
+    }
+
+    .action-item span {
+        font-weight: 500;
+    }
+
+    .action-item:hover {
+        background: linear-gradient(135deg, var(--gold), var(--dark-gold));
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+    }
+
+    .action-item:hover i {
+        color: var(--black);
+        transform: scale(1.2);
+    }
+
+    .action-item:hover span {
+        color: var(--black);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .dashboard-hero h1 {
+            font-size: 2rem;
+        }
+        
+        .stat-card {
+            margin-bottom: 1rem;
+        }
+        
+        .info-item {
+            flex-direction: column;
+        }
+        
+        .info-label {
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+        
+        .quick-actions {
+            flex-direction: column;
+        }
+        
+        .action-item {
+            width: 100%;
+        }
+    }
+
+    /* Tooltip Customization */
+    .tooltip {
+        --bs-tooltip-bg: var(--gold);
+        --bs-tooltip-color: var(--black);
+    }
+</style>
+
+<script>
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    // Animated counter for stats
+    function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            element.innerHTML = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // Add hover effect to order rows
+    document.querySelectorAll('.order-row').forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(212, 175, 55, 0.05)';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'transparent';
+        });
+    });
+</script>
 {% endblock %}

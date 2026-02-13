@@ -3,79 +3,111 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Add New Product</h4>
+        <div class="col-md-8 col-lg-7">
+            <!-- Elegant Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-uppercase" style="color: var(--gold); letter-spacing: 2px;">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Product
+                </h1>
+                <div class="divider">
+                    <span class="divider-line"></span>
+                    <i class="fas fa-crown divider-icon"></i>
+                    <span class="divider-line"></span>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="" enctype="multipart/form-data">
+                <p class="text-muted mt-3">Fill in the details below to add a new product to your collection</p>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="card border-0 shadow-lg" style="background: #ffffff; border-radius: 20px;">
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="" enctype="multipart/form-data" id="productForm">
                         {{ form.hidden_tag() }}
                         
-                        <div class="mb-3">
-                            {{ form.name.label(class="form-label") }}
+                        <!-- Product Name -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-semibold" style="color: var(--gold);">
+                                <i class="fas fa-tag me-2"></i>Product Name
+                            </label>
                             {% if form.name.errors %}
-                                {{ form.name(class="form-control is-invalid") }}
+                                {{ form.name(class="form-control is-invalid", placeholder="e.g., Premium Cotton Shirt") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.name.errors %}
-                                        <span>{{ error }}</span>
+                                        {{ error }}
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.name(class="form-control") }}
+                                {{ form.name(class="form-control", placeholder="e.g., Premium Cotton Shirt") }}
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.description.label(class="form-label") }}
+                        <!-- Description -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-semibold" style="color: var(--gold);">
+                                <i class="fas fa-align-left me-2"></i>Description
+                            </label>
                             {% if form.description.errors %}
-                                {{ form.description(class="form-control is-invalid", rows=5) }}
+                                {{ form.description(class="form-control is-invalid", rows=4, placeholder="Describe your product...") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.description.errors %}
-                                        <span>{{ error }}</span>
+                                        {{ error }}
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.description(class="form-control", rows=5) }}
+                                {{ form.description(class="form-control", rows=4, placeholder="Describe your product...") }}
                             {% endif %}
+                            <small class="text-muted">Provide a detailed description of your product</small>
                         </div>
                         
+                        <!-- Price and Stock Row -->
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.price.label(class="form-label") }}
-                                {% if form.price.errors %}
-                                    {{ form.price(class="form-control is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.price.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.price(class="form-control") }}
-                                {% endif %}
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-semibold" style="color: var(--gold);">
+                                    <i class="fas fa-naira-sign me-2"></i>Price
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text" style="background: #f8f9fa; border-right: none;">
+                                        ₦
+                                    </span>
+                                    {% if form.price.errors %}
+                                        {{ form.price(class="form-control is-invalid", placeholder="0.00") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.price.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ form.price(class="form-control", placeholder="0.00") }}
+                                    {% endif %}
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                {{ form.stock.label(class="form-label") }}
+                            
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-semibold" style="color: var(--gold);">
+                                    <i class="fas fa-boxes me-2"></i>Stock
+                                </label>
                                 {% if form.stock.errors %}
-                                    {{ form.stock(class="form-control is-invalid") }}
+                                    {{ form.stock(class="form-control is-invalid", placeholder="0") }}
                                     <div class="invalid-feedback">
                                         {% for error in form.stock.errors %}
-                                            <span>{{ error }}</span>
+                                            {{ error }}
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    {{ form.stock(class="form-control") }}
+                                    {{ form.stock(class="form-control", placeholder="0") }}
                                 {% endif %}
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.category.label(class="form-label") }}
+                        <!-- Category -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-semibold" style="color: var(--gold);">
+                                <i class="fas fa-list me-2"></i>Category
+                            </label>
                             {% if form.category.errors %}
                                 {{ form.category(class="form-select is-invalid") }}
                                 <div class="invalid-feedback">
                                     {% for error in form.category.errors %}
-                                        <span>{{ error }}</span>
+                                        {{ error }}
                                     {% endfor %}
                                 </div>
                             {% else %}
@@ -83,48 +115,603 @@
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.image.label(class="form-label") }}
-                            {{ form.image(class="form-control") }}
-                            {% if form.image.errors %}
-                                {% for error in form.image.errors %}
-                                    <small class="text-danger">{{ error }}</small>
-                                {% endfor %}
-                            {% endif %}
-                            <small class="form-text text-muted">Allowed formats: JPG, PNG, JPEG, GIF</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <div id="image-preview-container" style="display: none;">
-                                <label class="form-label">Preview:</label>
-                                <br>
-                                <img id="image-preview" src="#" alt="Image preview" style="max-width: 200px; max-height: 200px;">
+                        <!-- Image Upload -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-semibold" style="color: var(--gold);">
+                                <i class="fas fa-image me-2"></i>Product Image
+                            </label>
+                            
+                            <div class="upload-container" id="uploadContainer">
+                                <input type="file" name="image" id="imageInput" accept="image/*" class="d-none">
+                                
+                                <div class="upload-box text-center p-4" id="uploadBox">
+                                    <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: var(--gold);"></i>
+                                    <h6 class="mb-2">Click to upload or drag and drop</h6>
+                                    <p class="text-muted small mb-3">JPG, PNG, JPEG, GIF (Max 5MB)</p>
+                                    <button type="button" class="btn btn-outline-gold btn-sm" id="browseBtn">
+                                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    </button>
+                                </div>
+                                
+                                <!-- Image Preview -->
+                                <div class="image-preview mt-3" id="imagePreview" style="display: none;">
+                                    <div class="position-relative d-inline-block">
+                                        <img id="previewImg" src="#" alt="Preview" class="rounded border" style="max-width: 200px; max-height: 200px;">
+                                        <button type="button" class="btn-remove" id="removeImageBtn">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {% if form.image.errors %}
+                                    <div class="text-danger mt-2 small">
+                                        {% for error in form.image.errors %}
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                         
-                        <div class="d-grid gap-2">
-                            {{ form.submit(class="btn btn-primary") }}
-                            <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">Cancel</a>
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="submit" class="btn btn-gold flex-grow-1" id="submitBtn">
+                                <i class="fas fa-plus-circle me-2"></i>Add Product
+                            </button>
+                            <a href="{{ url_for('admin_products') }}" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
                         </div>
                     </form>
+                </div>
+            </div>
+            
+            <!-- Info Card -->
+            <div class="card border-0 mt-4" style="background: #f8f9fa; border-radius: 15px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-info-circle fa-2x" style="color: var(--gold);"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Product Guidelines</h6>
+                            <p class="small text-muted mb-0">
+                                Ensure your product images are clear and high-quality. 
+                                Provide accurate pricing and stock information for better customer experience.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* Custom Styles */
+    :root {
+        --gold: #D4AF37;
+        --gold-light: #F0E68C;
+        --gold-dark: #B8860B;
+        --black: #000000;
+        --white: #ffffff;
+    }
+    
+    /* Elegant Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin: 15px 0;
+    }
+    
+    .divider-line {
+        height: 2px;
+        width: 60px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    
+    .divider-icon {
+        color: var(--gold);
+        font-size: 1.5rem;
+        animation: crownFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes crownFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    
+    /* Form Controls */
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        outline: none;
+    }
+    
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc3545;
+        background-image: none;
+    }
+    
+    .invalid-feedback {
+        font-size: 0.85rem;
+        margin-top: 5px;
+        color: #dc3545;
+    }
+    
+    /* Input Group */
+    .input-group-text {
+        border: 2px solid #e9ecef;
+        border-right: none;
+        border-radius: 12px 0 0 12px;
+        background: #f8f9fa;
+        color: var(--gold);
+        font-weight: 600;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+        border-radius: 0 12px 12px 0;
+    }
+    
+    .input-group .form-control:focus {
+        border-left: none;
+    }
+    
+    /* Upload Box */
+    .upload-box {
+        border: 3px dashed #e9ecef;
+        border-radius: 15px;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-box:hover {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.02);
+        transform: translateY(-2px);
+    }
+    
+    .upload-box.dragover {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.05);
+        transform: scale(1.02);
+    }
+    
+    /* Buttons */
+    .btn-outline-gold {
+        border: 2px solid var(--gold);
+        color: var(--gold);
+        background: transparent;
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-gold:hover {
+        background: var(--gold);
+        color: var(--white);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+    }
+    
+    .btn-gold {
+        background: var(--gold);
+        color: var(--white);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-gold:hover {
+        background: var(--gold-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+    }
+    
+    .btn-gold:active {
+        transform: translateY(0);
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #e9ecef;
+        color: #6c757d;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #e9ecef;
+        color: #495057;
+        transform: translateY(-2px);
+    }
+    
+    /* Image Preview */
+    .image-preview {
+        animation: slideUp 0.4s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .btn-remove {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--gold);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .btn-remove:hover {
+        transform: rotate(90deg);
+        background: #dc3545;
+    }
+    
+    /* Loading State */
+    .btn-gold.loading {
+        pointer-events: none;
+        opacity: 0.8;
+    }
+    
+    .btn-gold.loading i {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .divider-line {
+            width: 30px;
+        }
+        
+        .card-body {
+            padding: 1.5rem !important;
+        }
+    }
+    
+    /* Floating Labels Animation */
+    .form-group {
+        position: relative;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Success Animation */
+    .form-control.valid-success {
+        border-color: var(--gold);
+        animation: successPulse 0.5s ease;
+    }
+    
+    @keyframes successPulse {
+        0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+    
+    /* Card Hover Effect */
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
 <script>
-// Image preview functionality
-document.getElementById('image').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('productForm');
+    const uploadBox = document.getElementById('uploadBox');
+    const imageInput = document.getElementById('imageInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const removeBtn = document.getElementById('removeImageBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Browse button click
+    if (browseBtn) {
+        browseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            imageInput.click();
+        });
+    }
+    
+    // Upload box click
+    if (uploadBox) {
+        uploadBox.addEventListener('click', function() {
+            imageInput.click();
+        });
+    }
+    
+    // Drag and drop functionality
+    if (uploadBox) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadBox.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadBox.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadBox.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadBox.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            uploadBox.classList.remove('dragover');
+        }
+        
+        uploadBox.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            
+            if (file) {
+                imageInput.files = dt.files;
+                handleImagePreview(file);
+            }
+        }
+    }
+    
+    // Image input change
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleImagePreview(file);
+            }
+        });
+    }
+    
+    // Handle image preview
+    function handleImagePreview(file) {
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            showNotification('Please upload a valid image file', 'error');
+            imageInput.value = '';
+            return;
+        }
+        
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('File size must be less than 5MB', 'error');
+            imageInput.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('image-preview').src = e.target.result;
-            document.getElementById('image-preview-container').style.display = 'block';
+            previewImg.src = e.target.result;
+            imagePreview.style.display = 'block';
+            
+            // Add success class to upload box
+            uploadBox.classList.add('border-success');
+            showNotification('Image uploaded successfully', 'success');
         }
         reader.readAsDataURL(file);
     }
+    
+    // Remove image
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function() {
+            imagePreview.style.display = 'none';
+            previewImg.src = '#';
+            imageInput.value = '';
+            uploadBox.classList.remove('border-success');
+            showNotification('Image removed', 'info');
+        });
+    }
+    
+    // Form submit animation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            submitBtn.classList.add('loading');
+            submitBtn.innerHTML = '<i class="fas fa-spinner"></i> Adding Product...';
+        });
+        
+        // Real-time validation animation
+        const inputs = form.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.add('valid-success');
+                } else {
+                    this.classList.remove('valid-success');
+                }
+            });
+        });
+    }
+    
+    // Notification system
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-4`;
+        notification.style.zIndex = '9999';
+        notification.style.minWidth = '300px';
+        notification.style.borderRadius = '10px';
+        notification.style.borderLeft = `4px solid ${type === 'success' ? '#D4AF37' : '#dc3545'}`;
+        
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2" 
+                   style="color: ${type === 'success' ? '#D4AF37' : '#dc3545'};"></i>
+                <div class="flex-grow-1">${message}</div>
+                <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+    
+    // Character counter for description
+    const description = document.getElementById('description');
+    if (description) {
+        const counter = document.createElement('small');
+        counter.className = 'text-muted float-end mt-1';
+        counter.style.fontSize = '0.8rem';
+        description.parentNode.appendChild(counter);
+        
+        description.addEventListener('input', function() {
+            const count = this.value.length;
+            counter.textContent = `${count} characters`;
+            
+            if (count > 500) {
+                counter.style.color = '#dc3545';
+            } else {
+                counter.style.color = '#6c757d';
+            }
+        });
+    }
 });
 </script>
+
+<!-- Additional Styles -->
+<style>
+    /* Custom Alert Styles */
+    .alert-success {
+        background: #ffffff;
+        color: #000000;
+        border: 1px solid var(--gold);
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+    }
+    
+    .alert-error {
+        background: #ffffff;
+        color: #000000;
+        border: 1px solid #dc3545;
+        box-shadow: 0 10px 30px rgba(220, 53, 69, 0.1);
+    }
+    
+    /* Form Validation Icons */
+    .form-control.is-valid, .form-select.is-valid {
+        border-color: var(--gold);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23D4AF37' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    }
+    
+    /* Floating Labels */
+    .form-label i {
+        transition: transform 0.3s ease;
+    }
+    
+    .form-label:hover i {
+        transform: rotate(10deg);
+        color: var(--gold);
+    }
+    
+    /* Input Hover Effect */
+    .form-control:hover, .form-select:hover {
+        border-color: var(--gold-light);
+    }
+    
+    /* Price Input Animation */
+    .input-group:hover .input-group-text {
+        color: var(--gold);
+        border-color: var(--gold-light);
+    }
+    
+    /* Submit Button Ripple Effect */
+    .btn-gold {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-gold::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.5s, height 0.5s;
+    }
+    
+    .btn-gold:active::after {
+        width: 300px;
+        height: 300px;
+    }
+    
+    /* Responsive Tweaks */
+    @media (max-width: 576px) {
+        .divider-icon {
+            font-size: 1.2rem;
+        }
+        
+        .display-5 {
+            font-size: 1.8rem;
+        }
+        
+        .btn-gold, .btn-outline-secondary {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
 {% endblock %}
