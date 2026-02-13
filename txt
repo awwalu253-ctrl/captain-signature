@@ -1,0 +1,25 @@
+captain-signature/
+├── app.py
+├── requirements.txt
+├── config.py
+├── models.py
+├── forms.py
+├── utils.py
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── main.js
+│   └── images/
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── login.html
+│   ├── signup.html
+│   ├── dashboard/
+│   │   ├── customer.html
+│   │   └── admin.html
+│   ├── products.html
+│   └── add_product.html
+└── instance/
+    └── database.db

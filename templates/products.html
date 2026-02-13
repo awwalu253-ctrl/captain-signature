@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Our Products</h2>
+    
+    <!-- Category Filter -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('products') }}" class="btn btn-outline-primary">All</a>
+                <a href="{{ url_for('products', category='mens') }}" class="btn btn-outline-primary">Men's</a>
+                <a href="{{ url_for('products', category='womens') }}" class="btn btn-outline-primary">Women's</a>
+                <a href="{{ url_for('products', category='accessories') }}" class="btn btn-outline-primary">Accessories</a>
+                <a href="{{ url_for('products', category='footwear') }}" class="btn btn-outline-primary">Footwear</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Products Grid -->
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                {% if product.image %}
+                    {% if product.image.startswith('user_uploads:') %}
+                        {% set filename = product.image.replace('user_uploads:', '') %}
+                        <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                             class="card-img-top" 
+                             alt="{{ product.name }}" 
+                             style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
+                             class="card-img-top" 
+                             alt="{{ product.name }}" 
+                             style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                {% else %}
+                    <img src="https://via.placeholder.com/300x200" 
+                         class="card-img-top" 
+                         alt="Placeholder"
+                         style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-muted">${{ "%.2f"|format(product.price) }}</p>
+                    <p class="card-text"><small class="text-muted">{{ product.category }}</small></p>
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <p class="text-center">No products found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

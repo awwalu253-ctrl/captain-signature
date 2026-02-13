@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Edit Product: {{ product.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                {% for error in form.name.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=5) }}
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.price.label(class="form-label") }}
+                                {{ form.price(class="form-control", type="number", step="0.01") }}
+                                {% if form.price.errors %}
+                                    {% for error in form.price.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.stock.label(class="form-label") }}
+                                {{ form.stock(class="form-control", type="number") }}
+                                {% if form.stock.errors %}
+                                    {% for error in form.stock.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select") }}
+                            {% if form.category.errors %}
+                                {% for error in form.category.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.image.label(class="form-label") }}
+                            
+                            {% if product.image %}
+                                <div class="mb-2">
+                                    <p>Current Image:</p>
+                                    {% if product.image.startswith('user_uploads:') %}
+                                        {% set filename = product.image.replace('user_uploads:', '') %}
+                                        <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                                             alt="{{ product.name }}" 
+                                             style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                             class="border rounded">
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
+                                             alt="{{ product.name }}" 
+                                             style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                                             class="border rounded">
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            {{ form.image(class="form-control") }}
+                            <small class="text-muted">Leave empty to keep current image. Allowed: jpg, jpeg, png, gif</small>
+                            {% if form.image.errors %}
+                                {% for error in form.image.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary", value="Update Product") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

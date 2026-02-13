@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Checkout</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Shipping Information (Nigeria Only)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>We currently ship only within Nigeria.</strong> Fixed delivery fee of ₦1,500 applies to all orders.
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="shipping_name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="shipping_name" name="shipping_name" 
+                                       value="{{ user.username }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="shipping_phone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="shipping_phone" name="shipping_phone" 
+                                       placeholder="e.g., 08012345678" value="{{ user.phone or '' }}" required>
+                                <small class="text-muted">Nigerian phone number</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="shipping_address" class="form-label">Street Address *</label>
+                            <input type="text" class="form-control" id="shipping_address" name="shipping_address" 
+                                   placeholder="House number, street name" value="{{ user.address or '' }}" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="shipping_city" class="form-label">City/LGA *</label>
+                                <input type="text" class="form-control" id="shipping_city" name="shipping_city" 
+                                       placeholder="e.g., Ikeja" value="{{ user.city or '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="shipping_state" class="form-label">State *</label>
+                                <select class="form-select" id="shipping_state" name="shipping_state" required>
+                                    <option value="">Select State</option>
+                                    {% for state in [
+                                        'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue',
+                                        'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu',
+                                        'FCT - Abuja', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina',
+                                        'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo',
+                                        'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+                                    ] %}
+                                        <option value="{{ state }}" {% if user.state == state %}selected{% endif %}>{{ state }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method *</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="card">Card Payment</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="ussd">USSD</option>
+                                <option value="cash_on_delivery">Cash on Delivery</option>
+                                <option value="paystack">Paystack</option>
+                            </select>
+                            <small class="text-muted">We accept various Nigerian payment methods</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="customer_notes" class="form-label">Order Notes (Optional)</label>
+                            <textarea class="form-control" id="customer_notes" name="customer_notes" rows="3"
+                                      placeholder="Special instructions for delivery (e.g., landmark, delivery time preference)"></textarea>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I confirm that my delivery address is in Nigeria and agree to the 
+                                <a href="#" target="_blank">terms and conditions</a>.
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success btn-lg" id="placeOrderBtn">
+                            <i class="fas fa-check"></i> Place Order
+                        </button>
+                        <a href="{{ url_for('view_cart') }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Back to Cart
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        {% for item in cart_items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                {{ item.product.name }} x {{ item.quantity }}
+                            </div>
+                            <div>₦{{ "%.2f"|format(item.subtotal) }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>₦{{ "%.2f"|format(total - 1500) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Fee (Nigeria):</span>
+                        <span>₦1,500.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span class="text-primary">₦{{ "%.2f"|format(total) }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Information -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Fixed delivery fee: ₦1,500 nationwide</p>
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Delivery within 3-5 business days</p>
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Tracking provided for all orders</p>
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Cash on delivery available</p>
+                </div>
+            </div>
+            
+            <!-- Payment Methods -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Methods</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-secondary p-2">Card</span>
+                        <span class="badge bg-secondary p-2">Bank Transfer</span>
+                        <span class="badge bg-secondary p-2">USSD</span>
+                        <span class="badge bg-secondary p-2">Cash on Delivery</span>
+                        <span class="badge bg-secondary p-2">Paystack</span>
+                    </div>
+                    <small class="text-muted d-block mt-2">All payments are processed securely</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// Prevent double submission
+document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('placeOrderBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+});
+
+// Validate Nigerian phone number
+document.getElementById('shipping_phone')?.addEventListener('input', function(e) {
+    const phone = this.value.replace(/\D/g, '');
+    if (phone.length > 0 && !phone.match(/^(0|234)[0-9]{10}$/)) {
+        this.setCustomValidity('Please enter a valid Nigerian phone number');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

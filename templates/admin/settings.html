@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Settings</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-cog me-2"></i>Store Settings</h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('admin_settings') }}">
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Delivery Settings</h5>
+                            
+                            <div class="mb-3">
+                                <label for="delivery_fee" class="form-label">Delivery Fee (₦)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₦</span>
+                                    <input type="number" class="form-control" id="delivery_fee" name="delivery_fee" 
+                                           value="{{ settings.delivery_fee }}" step="100" min="0" required>
+                                </div>
+                                <small class="text-muted">Fixed delivery fee for all orders within Nigeria</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="free_delivery_threshold" class="form-label">Free Delivery Threshold (₦)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₦</span>
+                                    <input type="number" class="form-control" id="free_delivery_threshold" name="free_delivery_threshold" 
+                                           value="{{ settings.free_delivery_threshold }}" step="1000" min="0">
+                                </div>
+                                <small class="text-muted">Orders above this amount get free delivery (set to 0 to disable)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5 class="border-bottom pb-2">Store Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="site_name" class="form-label">Store Name</label>
+                                <input type="text" class="form-control" id="site_name" name="site_name" 
+                                       value="{{ settings.site_name }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="currency" class="form-label">Currency Symbol</label>
+                                <input type="text" class="form-control" id="currency" name="currency" 
+                                       value="{{ settings.currency }}" maxlength="5" required>
+                                <small class="text-muted">Currency symbol to display (e.g., ₦, $, ₵)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> Changes will apply to new orders only. Existing orders will keep their original delivery fee.
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted">
+                    Last updated: {{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') if settings.updated_at else 'Never' }}
+                </div>
+            </div>
+            
+            <!-- Delivery Fee History Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Delivery Fee Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center p-3 border rounded">
+                                <h6>Current Delivery Fee</h6>
+                                <h2 class="text-primary">{{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 border rounded">
+                                <h6>Free Delivery Threshold</h6>
+                                <h2 class="text-success">
+                                    {% if settings.free_delivery_threshold > 0 %}
+                                        {{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}+
+                                    {% else %}
+                                        Disabled
+                                    {% endif %}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6>How Delivery Fee Works:</h6>
+                    <ul class="mb-0">
+                        <li>Fixed delivery fee of <strong>{{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}</strong> applies to all orders within Nigeria</li>
+                        {% if settings.free_delivery_threshold > 0 %}
+                            <li>Free delivery for orders above <strong>{{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}</strong></li>
+                        {% endif %}
+                        <li>Delivery typically takes 3-5 business days</li>
+                        <li>Tracking provided for all orders</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

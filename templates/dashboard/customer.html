@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>My Dashboard</h2>
+    <p>Welcome back, {{ current_user.username }}!</p>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">My Orders</h5>
+                </div>
+                <div class="card-body">
+                    {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Items</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('track_order_result', order_number=order.order_number) }}">
+                                            {{ order.order_number }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% for item in order.items[:2] %}
+                                                {% if item.product_image %}
+                                                    {% if item.product_image.startswith('user_uploads:') %}
+                                                        {% set filename = item.product_image.replace('user_uploads:', '') %}
+                                                        <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                                                             width="30" height="30" style="object-fit: cover; border-radius: 4px;" 
+                                                             class="me-1" alt="{{ item.product_name }}">
+                                                    {% else %}
+                                                        <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}" 
+                                                             width="30" height="30" style="object-fit: cover; border-radius: 4px;" 
+                                                             class="me-1" alt="{{ item.product_name }}">
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if order.items|length > 2 %}
+                                                <span class="badge bg-secondary">+{{ order.items|length - 2 }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge {% if order.status == 'delivered' %}bg-success{% elif order.status == 'cancelled' %}bg-danger{% elif order.status == 'shipped' %}bg-info{% elif order.status == 'processing' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ order.status|upper }}
+                                        </span>
+                                    </td>
+                                    <td>₦{{ "%.2f"|format(order.total_amount) }}</td>
+                                    <td>
+                                        <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-search"></i> Track
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">You haven't placed any orders yet.</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('products') }}" class="btn btn-primary">
+                            <i class="fas fa-shopping-bag"></i> Start Shopping
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Username:</strong> {{ current_user.username }}</p>
+                    <p><strong>Email:</strong> {{ current_user.email }}</p>
+                    <p><strong>Phone:</strong> {{ current_user.phone or 'Not provided' }}</p>
+                    <p><strong>Address:</strong> {{ current_user.address or 'Not provided' }}</p>
+                    {% if current_user.city and current_user.state %}
+                    <p><strong>Location:</strong> {{ current_user.city }}, {{ current_user.state }}</p>
+                    {% endif %}
+                    <p><strong>Member since:</strong> {{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><i class="fas fa-truck text-success me-2"></i> Fixed delivery fee: ₦1,500 nationwide</p>
+                    <p><i class="fas fa-clock text-success me-2"></i> Delivery within 3-5 business days</p>
+                    <p><i class="fas fa-map-marker-alt text-success me-2"></i> Shipping within Nigeria only</p>
+                    <p><i class="fas fa-credit-card text-success me-2"></i> Multiple payment options available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

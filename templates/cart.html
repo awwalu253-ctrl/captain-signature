@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Shopping Cart</h2>
+    
+    {% if cart_items %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Cart Items ({{ cart_items|length }})</h5>
+                    <a href="{{ url_for('clear_cart') }}" class="btn btn-sm btn-light" 
+                       onclick="return confirm('Are you sure you want to clear your cart?')">
+                        <i class="fas fa-trash"></i> Clear Cart
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% for item in cart_items %}
+                    <div class="row mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}" id="cart-item-{{ item.product.id }}">
+                        <div class="col-md-3">
+                            {% if item.product.image %}
+                                {% if item.product.image.startswith('user_uploads:') %}
+                                    {% set filename = item.product.image.replace('user_uploads:', '') %}
+                                    <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                                         class="img-fluid rounded" 
+                                         alt="{{ item.product.name }}"
+                                         style="max-height: 100px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}" 
+                                         class="img-fluid rounded" 
+                                         alt="{{ item.product.name }}"
+                                         style="max-height: 100px; object-fit: cover;">
+                                {% endif %}
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 100px;">
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h5>{{ item.product.name }}</h5>
+                            <p class="text-muted">{{ settings.currency }}{{ "%.2f"|format(item.product.price) }} each</p>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="POST" action="{{ url_for('update_cart', product_id=item.product.id) }}" class="update-cart-form">
+                                <div class="input-group">
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                           min="0" max="{{ item.product.stock }}" class="form-control quantity-input">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Max: {{ item.product.stock }}</small>
+                            </form>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <p class="fw-bold h5">{{ settings.currency }}{{ "%.2f"|format(item.subtotal) }}</p>
+                            <a href="{{ url_for('remove_from_cart', product_id=item.product.id) }}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Remove this item from cart?')">
+                                <i class="fas fa-trash"></i> Remove
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td>Subtotal:</td>
+                            <td class="text-end">{{ settings.currency }}{{ "%.2f"|format(subtotal) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Delivery Fee:</td>
+                            <td class="text-end">
+                                {% if delivery_fee == 0 %}
+                                    <span class="text-success fw-bold">FREE</span>
+                                {% else %}
+                                    {{ settings.currency }}{{ "%.2f"|format(delivery_fee) }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if free_delivery_message %}
+                        <tr>
+                            <td colspan="2">
+                                <div class="alert alert-success py-1 px-2 small">
+                                    <i class="fas fa-truck"></i> {{ free_delivery_message }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr class="fw-bold">
+                            <td>Total:</td>
+                            <td class="text-end text-primary">{{ settings.currency }}{{ "%.2f"|format(total) }}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="alert alert-info small">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Shipping within Nigeria only
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('checkout') }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-lock"></i> Proceed to Checkout
+                        </a>
+                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-shopping-bag"></i> Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Information -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Fixed delivery fee: 
+                        {% if settings.free_delivery_threshold > 0 %}
+                            {{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }} 
+                            (FREE for orders above {{ settings.currency }}{{ "{:,.0f}".format(settings.free_delivery_threshold) }})
+                        {% else %}
+                            {{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}
+                        {% endif %}
+                    </p>
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Delivery within 3-5 business days</p>
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Tracking provided for all orders</p>
+                    <p><i class="fas fa-check-circle text-success me-2"></i>Cash on delivery available</p>
+                </div>
+            </div>
+            
+            <!-- Secure Checkout Notice -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-alt fa-2x text-success me-3"></i>
+                        <div>
+                            <h6 class="mb-0">Secure Checkout</h6>
+                            <small class="text-muted">Your information is protected</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+        <h3>Your cart is empty</h3>
+        <p class="text-muted">Looks like you haven't added any items to your cart yet.</p>
+        <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag"></i> Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+// Prevent form resubmission on page refresh
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
+
+// Add confirmation for quantity updates with large changes
+document.querySelectorAll('.update-cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const input = this.querySelector('.quantity-input');
+        const currentValue = parseInt(input.defaultValue);
+        const newValue = parseInt(input.value);
+        
+        // If decreasing quantity significantly, ask for confirmation
+        if (newValue < currentValue && (currentValue - newValue) > 3) {
+            if (!confirm(`Are you sure you want to reduce quantity from ${currentValue} to ${newValue}?`)) {
+                e.preventDefault();
+                input.value = currentValue;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('track_order_page') }}">Track Order</a></li>
+                    <li class="breadcrumb-item active">Order #{{ order.order_number }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Order Status Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Status: {{ order.order_number }}</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Status Timeline -->
+                    <div class="status-timeline mb-4">
+                        <div class="row">
+                            <div class="col-3 text-center">
+                                <div
+                                    class="status-icon {% if order.status in ['pending', 'processing', 'shipped', 'delivered'] %}completed{% endif %}">
+                                    <i class="fas fa-clipboard-check fa-2x"></i>
+                                </div>
+                                <p class="mt-2">Order Placed</p>
+                                <small>{{ order.order_date.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div
+                                    class="status-icon {% if order.status in ['processing', 'shipped', 'delivered'] %}completed{% endif %}">
+                                    <i class="fas fa-cog fa-2x"></i>
+                                </div>
+                                <p class="mt-2">Processing</p>
+                            </div>
+                            <div class="col-3 text-center">
+                                <div
+                                    class="status-icon {% if order.status in ['shipped', 'delivered'] %}completed{% endif %}">
+                                    <i class="fas fa-truck fa-2x"></i>
+                                </div>
+                                <p class="mt-2">Shipped</p>
+                                {% if order.tracking_number %}
+                                <small>Tracking: {{ order.tracking_number }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-3 text-center">
+                                <div class="status-icon {% if order.status == 'delivered' %}completed{% endif %}">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                                <p class="mt-2">Delivered</p>
+                                {% if order.delivered_date %}
+                                <small>{{ order.delivered_date.strftime('%Y-%m-%d') }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Status -->
+                    <div
+                        class="alert {% if order.status == 'delivered' %}alert-success{% elif order.status == 'cancelled' %}alert-danger{% else %}alert-info{% endif %}">
+                        <h5>Current Status:
+                            <span
+                                class="badge {% if order.status == 'delivered' %}bg-success{% elif order.status == 'cancelled' %}bg-danger{% elif order.status == 'shipped' %}bg-info{% elif order.status == 'processing' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ order.status|upper }}
+                            </span>
+                        </h5>
+                        {% if order.estimated_delivery %}
+                        <p class="mb-0">Estimated Delivery: {{ order.estimated_delivery.strftime('%B %d, %Y') }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tracking Timeline -->
+                    {% if order.tracking_updates %}
+                    <div class="tracking-timeline mt-4">
+                        <h5>Tracking History</h5>
+                        <div class="timeline">
+                            {% for update in order.tracking_updates|sort(attribute='timestamp', reverse=True) %}
+                            <div class="timeline-item">
+                                <div class="timeline-badge">
+                                    <i class="fas fa-circle"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>{{ update.status|title }}</h6>
+                                    <p class="mb-1">{{ update.description }}</p>
+                                    {% if update.location %}
+                                    <p class="mb-1"><small>Location: {{ update.location }}</small></p>
+                                    {% endif %}
+                                    <small class="text-muted">{{ update.timestamp.strftime('%B %d, %Y at %I:%M %p')
+                                        }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Tracking Number -->
+                    {% if order.tracking_number %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6>Tracking Information</h6>
+                        <p class="mb-1"><strong>Carrier:</strong> {{ order.carrier or 'Not specified' }}</p>
+                        <p class="mb-1"><strong>Tracking Number:</strong> {{ order.tracking_number }}</p>
+                        {% if order.carrier %}
+                        <a href="#" class="btn btn-sm btn-primary mt-2">Track with {{ order.carrier }}</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product_image %}
+                                            {% if item.product_image.startswith('user_uploads:') %}
+                                            {% set filename = item.product_image.replace('user_uploads:', '') %}
+                                            <img src="{{ url_for('user_uploads', filename=filename) }}" width="50"
+                                                height="50" style="object-fit: cover; border-radius: 4px;" class="me-2">
+                                            {% else %}
+                                            <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}"
+                                                width="50" height="50" style="object-fit: cover; border-radius: 4px;"
+                                                class="me-2">
+                                            {% endif %}
+                                            {% else %}
+                                            <div style="width: 50px; height: 50px; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 4px;"
+                                                class="me-2">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ item.product_name }}</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>₦{{ "%.2f"|format(item.price) }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>₦{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td><strong>₦{{ "%.2f"|format(order.subtotal) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Delivery Fee:</strong></td>
+                                    <td><strong>₦{{ "%.2f"|format(order.delivery_fee) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td><strong class="text-primary">₦{{ "%.2f"|format(order.total_amount) }}</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Order Summary -->
+            <!-- In the order summary section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Order Date:</strong><br>{{ order.order_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    <p><strong>Payment Status:</strong><br>
+                        <span
+                            class="badge {% if order.payment_status == 'paid' %}bg-success{% elif order.payment_status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}">
+                            {{ order.payment_status|upper }}
+                        </span>
+                    </p>
+                    <p><strong>Payment Method:</strong><br>{{ order.payment_method or 'Not specified' }}</p>
+
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <span>₦{{ "%.2f"|format(order.subtotal) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Delivery Fee:</span>
+                        <span>₦{{ "%.2f"|format(order.delivery_fee) }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span class="text-primary">₦{{ "%.2f"|format(order.total_amount) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            {% if order.shipping_name %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Shipping Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong><br>{{ order.shipping_name }}</p>
+                    <p><strong>Address:</strong><br>
+                        {{ order.shipping_address }}<br>
+                        {{ order.shipping_city }}, {{ order.shipping_state }} {{ order.shipping_zip }}<br>
+                        {{ order.shipping_country }}
+                    </p>
+                    <p><strong>Phone:</strong><br>{{ order.shipping_phone }}</p>
+                    <p><strong>Email:</strong><br>{{ order.shipping_email }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Need Help? -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Need Help?</h5>
+                </div>
+                <div class="card-body">
+                    <p>If you have any questions about your order, please contact us:</p>
+                    <p><i class="fas fa-envelope me-2"></i> support@captainsignature.com</p>
+                    <p><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</p>
+                    <p><i class="fas fa-clock me-2"></i> Mon-Fri: 9AM - 6PM</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-timeline .status-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        color: #6c757d;
+    }
+
+    .status-timeline .status-icon.completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .tracking-timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 30px;
+    }
+
+    .timeline-badge {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        color: #007bff;
+    }
+
+    .timeline-content {
+        padding-left: 10px;
+        border-left: 2px solid #e9ecef;
+        padding-bottom: 20px;
+    }
+
+    .timeline-item:last-child .timeline-content {
+        border-left-color: transparent;
+    }
+</style>
+{% endblock %}
