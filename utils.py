@@ -46,9 +46,13 @@ def save_picture(form_picture):
         picture_path = os.path.join(upload_folder, picture_fn)
         print(f"Full picture path: {picture_path}")
         
-        # IMPORTANT: Save the file and flush immediately
+        # Save the file
         form_picture.save(picture_path)
         print(f"✓ File saved via form_picture.save()")
+        
+        # Set proper permissions (644 = owner read/write, others read)
+        os.chmod(picture_path, 0o644)
+        print(f"✓ File permissions set to 644")
         
         # Force flush to disk (important for Vercel)
         with open(picture_path, 'ab') as f:
@@ -61,6 +65,7 @@ def save_picture(form_picture):
             file_size = os.path.getsize(picture_path)
             print(f"✓ File verified at: {picture_path}")
             print(f"  File size: {file_size} bytes")
+            print(f"  File permissions: {oct(os.stat(picture_path).st_mode)[-3:]}")
             
             # List directory after save
             if os.path.exists(upload_folder):
@@ -78,6 +83,7 @@ def save_picture(form_picture):
                 with open(picture_path, 'wb') as f:
                     f.write(form_picture.read())
                 print(f"✓ File saved via alternative method")
+                os.chmod(picture_path, 0o644)
                 if os.path.exists(picture_path):
                     file_size = os.path.getsize(picture_path)
                     print(f"✓ Alternative save successful: {file_size} bytes")
@@ -102,5 +108,3 @@ def save_picture(form_picture):
         import traceback
         traceback.print_exc()
         raise Exception(f"Failed to save image: {str(e)}")
-    
-os.chmod(picture_path, 0o644)
