@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import logging
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, session, g
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, session, g, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -177,7 +177,42 @@ def user_uploads(filename):
 @app.route('/tmp-uploads/<filename>')
 def tmp_uploads(filename):
     """Serve images from /tmp directory (for Vercel)"""
-    return send_from_directory('/tmp/captain_signature_uploads/products', filename)
+    directory = '/tmp/captain_signature_uploads/products'
+    try:
+        response = make_response(send_from_directory(directory, filename))
+        response.headers['Cache-Control'] = 'public, max-age=300'
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+    except Exception as e:
+        print(f"Error serving {filename}: {e}")
+        return "File not found", 404
+
+# Public debug route to check file existence (no login required)
+@app.route('/public-debug-file/<filename>')
+def public_debug_file(filename):
+    """Public debug route to check if file exists (no login required)"""
+    import os
+    file_path = f'/tmp/captain_signature_uploads/products/{filename}'
+    
+    result = {
+        'filename': filename,
+        'file_path': file_path,
+        'exists': os.path.exists(file_path),
+        'tmp_uploads_url': url_for('tmp_uploads', filename=filename, _external=True)
+    }
+    
+    if os.path.exists(file_path):
+        result['size'] = os.path.getsize(file_path)
+        result['permissions'] = oct(os.stat(file_path).st_mode)[-3:]
+    
+    return result
+
+# Public route to test image serving (no login required)
+@app.route('/public-test-image/<filename>')
+def public_test_image(filename):
+    """Public route to test image serving (no login required)"""
+    directory = '/tmp/captain_signature_uploads/products'
+    return send_from_directory(directory, filename)
 
 # Debug route to check configuration
 @app.route('/debug-config')
@@ -1273,6 +1308,64 @@ def debug_order(order_id):
     result += "</table>"
     
     return result
+
+# Simple test upload page
+@app.route('/test-upload', methods=['GET', 'POST'])
+def test_upload():
+    """Simple test upload page"""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return "No file part"
+        file = request.files['file']
+        if file.filename == '':
+            return "No selected file"
+        
+        try:
+            # Save using your function
+            filename = save_picture(file)
+            return f"File saved! DB path: {filename}"
+        except Exception as e:
+            return f"Error: {str(e)}"
+    
+    return '''
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit">
+    </form>
+    '''
+
+# Test filesystem write access
+@app.route('/debug-filesystem')
+def debug_filesystem():
+    """Test filesystem write access"""
+    import tempfile
+    results = []
+    
+    # Test /tmp directory
+    try:
+        test_file = '/tmp/captain_signature_test.txt'
+        with open(test_file, 'w') as f:
+            f.write('test')
+        results.append(f"✓ Wrote to /tmp: {test_file}")
+        os.remove(test_file)
+        results.append(f"✓ Removed test file")
+    except Exception as e:
+        results.append(f"✗ Cannot write to /tmp: {e}")
+    
+    # Test your specific directory
+    try:
+        test_dir = '/tmp/captain_signature_uploads/products'
+        os.makedirs(test_dir, exist_ok=True)
+        test_file = os.path.join(test_dir, 'test.txt')
+        with open(test_file, 'w') as f:
+            f.write('test')
+        results.append(f"✓ Wrote to {test_file}")
+        os.remove(test_file)
+        results.append(f"✓ Removed test file")
+    except Exception as e:
+        results.append(f"✗ Cannot write to {test_dir}: {e}")
+    
+    return "<br>".join(results)
 
 # Error handlers
 @app.errorhandler(404)
