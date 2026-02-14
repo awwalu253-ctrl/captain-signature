@@ -94,3 +94,18 @@ footer a:hover {
         height: 200px;
     }
 }
+
+/* Add to your CSS file */
+@media (max-width: 991.98px) {
+    .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        background: transparent;
+        border: none;
+        padding-left: 1rem;
+    }
+    
+    .dropdown-menu .dropdown-item {
+        color: var(--dark);
+    }
+}
