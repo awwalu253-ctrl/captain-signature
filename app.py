@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import logging
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, session, g, make_response
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, send_file, session, g, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -66,16 +66,19 @@ def ensure_directories():
     for directory in directories:
         try:
             if not os.path.exists(directory):
-                os.makedirs(directory, exist_ok=True)
+                os.makedirs(directory, mode=0o777, exist_ok=True)
                 print(f"✓ Created: {directory}")
             else:
                 print(f"✓ Exists: {directory}")
+                # Ensure permissions are set correctly
+                os.chmod(directory, 0o777)
                 
-            # Check if writable (skip for system directories)
+            # Check if writable
             if directory.startswith('/tmp'):
                 print(f"  Note: {directory} is a temp directory")
                 if os.path.exists(directory):
                     print(f"  Writable: {os.access(directory, os.W_OK)}")
+                    print(f"  Readable: {os.access(directory, os.R_OK)}")
             elif not os.access(directory, os.W_OK):
                 print(f"⚠ Warning: Directory not writable: {directory}")
                 
@@ -177,31 +180,42 @@ def user_uploads(filename):
     upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
     return send_from_directory(upload_folder, filename)
 
-# Route to serve images from /tmp directory (for Vercel)
+# FIXED: Route to serve images from /tmp directory using send_file for better reliability
 @app.route('/tmp-uploads/<filename>')
 def tmp_uploads(filename):
-    """Serve images from /tmp directory (for Vercel)"""
+    """Serve images from /tmp directory using send_file for better reliability"""
     directory = '/tmp/captain_signature_uploads/products'
-    
-    # Log for debugging
-    print(f"Attempting to serve: {filename} from {directory}")
-    
-    # Check if file exists
     file_path = os.path.join(directory, filename)
+    
+    print(f"\n=== TMP UPLOADS DEBUG ===")
+    print(f"Attempting to serve: {filename}")
+    print(f"Full path: {file_path}")
+    print(f"File exists: {os.path.exists(file_path)}")
+    
     if not os.path.exists(file_path):
-        print(f"File not found: {file_path}")
+        print(f"❌ File not found at path: {file_path}")
+        # Try to list directory contents for debugging
+        if os.path.exists(directory):
+            files = os.listdir(directory)
+            print(f"Files in directory: {files}")
         return "File not found", 404
     
-    print(f"File found: {file_path}, size: {os.path.getsize(file_path)}")
-    
     try:
-        response = make_response(send_from_directory(directory, filename))
-        response.headers['Cache-Control'] = 'public, max-age=300'
-        response.headers['Content-Type'] = 'image/jpeg'  # Force correct content type
+        # Check file permissions
+        print(f"File readable: {os.access(file_path, os.R_OK)}")
+        print(f"File size: {os.path.getsize(file_path)} bytes")
+        
+        # Use send_file for more reliable serving
+        response = make_response(send_file(file_path))
+        response.headers['Cache-Control'] = 'public, max-age=3600'
+        response.headers['Content-Type'] = 'image/jpeg'
+        print(f"✓ Successfully serving file: {filename}")
         return response
     except Exception as e:
-        print(f"Error serving {filename}: {e}")
-        return str(e), 404
+        print(f"❌ Error serving {filename}: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error serving file: {str(e)}", 500
 
 # Public debug route to check file existence (no login required)
 @app.route('/public-debug-file/<filename>')
@@ -220,6 +234,7 @@ def public_debug_file(filename):
     if os.path.exists(file_path):
         result['size'] = os.path.getsize(file_path)
         result['permissions'] = oct(os.stat(file_path).st_mode)[-3:]
+        result['readable'] = os.access(file_path, os.R_OK)
     
     return result
 
@@ -228,10 +243,37 @@ def public_debug_file(filename):
 def public_test_image(filename):
     """Public route to test image serving (no login required)"""
     directory = '/tmp/captain_signature_uploads/products'
+    file_path = os.path.join(directory, filename)
+    
+    if not os.path.exists(file_path):
+        return f"File not found: {file_path}", 404
+    
     try:
-        return send_from_directory(directory, filename)
+        return send_file(file_path)
     except Exception as e:
-        return f"Error: {str(e)}", 404
+        return f"Error: {str(e)}", 500
+
+# Debug route to check file details
+@app.route('/debug-file-check/<filename>')
+def debug_file_check(filename):
+    """Diagnose why a file isn't being served."""
+    import os
+    directory = '/tmp/captain_signature_uploads/products'
+    full_path = os.path.join(directory, filename)
+    
+    result = {
+        'filename': filename,
+        'full_path': full_path,
+        'file_exists': os.path.exists(full_path),
+        'is_file': os.path.isfile(full_path) if os.path.exists(full_path) else None,
+        'readable': os.access(full_path, os.R_OK) if os.path.exists(full_path) else None,
+        'writable': os.access(full_path, os.W_OK) if os.path.exists(full_path) else None,
+        'file_size': os.path.getsize(full_path) if os.path.exists(full_path) else None,
+        'permissions': oct(os.stat(full_path).st_mode)[-3:] if os.path.exists(full_path) else None,
+        'dir_exists': os.path.exists(directory),
+        'dir_list': os.listdir(directory) if os.path.exists(directory) else [],
+    }
+    return result
 
 # Find file in all possible locations
 @app.route('/find-file/<filename>')
@@ -275,6 +317,9 @@ def debug_paths():
     
     tmp_uploads_dir = '/tmp/captain_signature_uploads/products'
     
+    # Ensure directory exists with proper permissions
+    os.makedirs(tmp_uploads_dir, mode=0o777, exist_ok=True)
+    
     return {
         'cwd': os.getcwd(),
         'temp_dir': tempfile.gettempdir(),
@@ -282,6 +327,7 @@ def debug_paths():
         'tmp_uploads': tmp_uploads_dir,
         'tmp_uploads_exists': os.path.exists(tmp_uploads_dir),
         'tmp_uploads_writable': os.access(tmp_uploads_dir, os.W_OK) if os.path.exists(tmp_uploads_dir) else False,
+        'tmp_uploads_readable': os.access(tmp_uploads_dir, os.R_OK) if os.path.exists(tmp_uploads_dir) else False,
         'tmp_dir_list': os.listdir('/tmp') if os.path.exists('/tmp') else [],
         'tmp_uploads_list': os.listdir(tmp_uploads_dir) if os.path.exists(tmp_uploads_dir) else []
     }
@@ -329,20 +375,25 @@ def debug_uploads():
     
     if os.path.exists(tmp_path):
         results.append(f"✓ Directory exists")
+        results.append(f"  Permissions: {oct(os.stat(tmp_path).st_mode)[-3:]}")
+        results.append(f"  Readable: {os.access(tmp_path, os.R_OK)}")
+        results.append(f"  Writable: {os.access(tmp_path, os.W_OK)}")
+        
         try:
             files = os.listdir(tmp_path)
             results.append(f"Found {len(files)} files:")
             for f in files[-10:]:  # Show last 10 files
                 file_path = os.path.join(tmp_path, f)
                 size = os.path.getsize(file_path)
-                results.append(f"  - {f} ({size} bytes)")
+                perms = oct(os.stat(file_path).st_mode)[-3:]
+                results.append(f"  - {f} ({size} bytes, permissions: {perms})")
         except Exception as e:
             results.append(f"✗ Error listing files: {e}")
     else:
         results.append(f"✗ Directory does NOT exist")
         # Try to create it
         try:
-            os.makedirs(tmp_path, exist_ok=True)
+            os.makedirs(tmp_path, mode=0o777, exist_ok=True)
             results.append(f"✓ Created directory")
         except Exception as e:
             results.append(f"✗ Failed to create: {e}")
@@ -370,6 +421,41 @@ def debug_uploads():
         results.append(f"Error querying products: {e}")
     
     return "<br>".join(results)
+
+# Debug product route
+@app.route('/debug-product/<int:product_id>')
+def debug_product(product_id):
+    """Debug a specific product"""
+    product = Product.query.get_or_404(product_id)
+    
+    # Generate the image URL based on type
+    if product.image:
+        if product.image.startswith('tmp:'):
+            filename = product.image.replace('tmp:', '')
+            img_url = url_for('tmp_uploads', filename=filename, _external=True)
+        elif product.image.startswith('user_uploads:'):
+            filename = product.image.replace('user_uploads:', '')
+            img_url = url_for('user_uploads', filename=filename, _external=True)
+        else:
+            img_url = url_for('static', filename='images/products/' + product.image, _external=True)
+    else:
+        img_url = None
+    
+    # Check if file exists
+    file_exists = None
+    if product.image and product.image.startswith('tmp:'):
+        filename = product.image.replace('tmp:', '')
+        file_path = f'/tmp/captain_signature_uploads/products/{filename}'
+        file_exists = os.path.exists(file_path)
+    
+    return {
+        'product_id': product.id,
+        'name': product.name,
+        'image_path': product.image,
+        'generated_url': img_url,
+        'file_exists': file_exists,
+        'file_readable': os.access(file_path, os.R_OK) if file_exists else None
+    }
 
 # Routes
 @app.route('/')
@@ -1427,7 +1513,7 @@ def debug_filesystem():
     # Test your specific directory
     try:
         test_dir = '/tmp/captain_signature_uploads/products'
-        os.makedirs(test_dir, exist_ok=True)
+        os.makedirs(test_dir, mode=0o777, exist_ok=True)
         test_file = os.path.join(test_dir, 'test.txt')
         with open(test_file, 'w') as f:
             f.write('test')
@@ -1438,6 +1524,15 @@ def debug_filesystem():
         results.append(f"✗ Cannot write to {test_dir}: {e}")
     
     return "<br>".join(results)
+
+# Simple test for file serving
+@app.route('/test-simple-image/<filename>')
+def test_simple_image(filename):
+    """Absolute simplest image serving test"""
+    file_path = f'/tmp/captain_signature_uploads/products/{filename}'
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    return "File not found", 404
 
 # Error handlers
 @app.errorhandler(404)
@@ -1455,51 +1550,6 @@ def internal_error(error):
     logger.error(traceback.format_exc())
     return render_template('500.html'), 500
 
-@app.route('/test-upload-simple', methods=['GET', 'POST'])
-def test_upload_simple():
-    """Ultra-simple test upload"""
-    if request.method == 'POST':
-        file = request.files['file']
-        if file:
-            # Save to a simple location
-            save_path = '/tmp/test_' + file.filename
-            file.save(save_path)
-            if os.path.exists(save_path):
-                return f"✓ File saved to {save_path} (size: {os.path.getsize(save_path)} bytes)"
-            else:
-                return "✗ File not saved"
-    return '''
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit">
-    </form>
-    '''
-
-@app.route('/debug-product/<int:product_id>')
-def debug_product(product_id):
-    """Debug a specific product"""
-    product = Product.query.get_or_404(product_id)
-    
-    # Generate the image URL based on type
-    if product.image:
-        if product.image.startswith('tmp:'):
-            filename = product.image.replace('tmp:', '')
-            img_url = url_for('tmp_uploads', filename=filename, _external=True)
-        elif product.image.startswith('user_uploads:'):
-            filename = product.image.replace('user_uploads:', '')
-            img_url = url_for('user_uploads', filename=filename, _external=True)
-        else:
-            img_url = url_for('static', filename='images/products/' + product.image, _external=True)
-    else:
-        img_url = None
-    
-    return {
-        'product_id': product.id,
-        'name': product.name,
-        'image_path': product.image,
-        'generated_url': img_url,
-        'file_exists': os.path.exists(f'/tmp/captain_signature_uploads/products/{product.image.replace("tmp:", "")}') if product.image and product.image.startswith('tmp:') else None
-    }
 if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("🚀 Captain Signature Nigeria - Starting...")

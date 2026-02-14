@@ -102,3 +102,5 @@ def save_picture(form_picture):
         import traceback
         traceback.print_exc()
         raise Exception(f"Failed to save image: {str(e)}")
+    
+os.chmod(picture_path, 0o644)
