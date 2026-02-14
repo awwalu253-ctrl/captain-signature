@@ -231,36 +231,47 @@ def signup():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     
-    form = SignupForm()
-    if form.validate_on_submit():
-        # Double-check if user exists (extra safety)
-        existing_user = User.query.filter(
-            (User.email == form.email.data) | (User.username == form.username.data)
-        ).first()
-        
-        if existing_user:
-            if existing_user.email == form.email.data:
-                flash('Email already registered. Please use a different email.', 'danger')
-            else:
-                flash('Username already taken. Please choose a different one.', 'danger')
-            return render_template('signup.html', form=form)
-        
+    if request.method == 'POST':
         try:
-            hashed_password = generate_password_hash(form.password.data)
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            
+            # Basic validation
+            if not username or not email or not password:
+                flash('All fields are required', 'danger')
+                return render_template('signup.html', form=SignupForm())
+            
+            # Check if user exists
+            if User.query.filter_by(email=email).first():
+                flash('Email already registered', 'danger')
+                return render_template('signup.html', form=SignupForm())
+            
+            if User.query.filter_by(username=username).first():
+                flash('Username already taken', 'danger')
+                return render_template('signup.html', form=SignupForm())
+            
+            # Create user
+            hashed_password = generate_password_hash(password)
             user = User(
-                username=form.username.data,
-                email=form.email.data,
+                username=username,
+                email=email,
                 password=hashed_password
             )
             db.session.add(user)
             db.session.commit()
-            flash('Your account has been created! You can now log in.', 'success')
+            
+            flash('Account created! You can now log in.', 'success')
             return redirect(url_for('login'))
+            
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Signup error: {str(e)}")
+            print(f"Signup error: {str(e)}")
+            print(traceback.format_exc())
             flash('Registration failed. Please try again.', 'danger')
+            return render_template('signup.html', form=SignupForm())
     
+    form = SignupForm()
     return render_template('signup.html', form=form)
 
 @app.route('/test-write')
@@ -1004,6 +1015,75 @@ def test_upload_location():
             results.append(f"<p style='color: green;'>✓ Successfully created upload folder</p>")
         except Exception as e:
             results.append(f"<p style='color: red;'>✗ Failed to create upload folder: {e}</p>")
+    
+    return "<br>".join(results)
+
+@app.route('/debug-full')
+def debug_full():
+    """Comprehensive database diagnostic"""
+    results = []
+    
+    # 1. Check environment variables
+    results.append("=== ENVIRONMENT VARIABLES ===")
+    results.append(f"DATABASE_URL: {'SET' if os.environ.get('DATABASE_URL') else 'NOT SET'}")
+    results.append(f"POSTGRES_URL: {'SET' if os.environ.get('POSTGRES_URL') else 'NOT SET'}")
+    
+    # 2. Check config
+    results.append("\n=== DATABASE CONFIG ===")
+    results.append(f"Database URI: {app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')[:50]}...")
+    
+    # 3. Test raw connection
+    results.append("\n=== TESTING RAW CONNECTION ===")
+    try:
+        from sqlalchemy import create_engine
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1")).scalar()
+            results.append(f"✓ Raw connection successful: {result}")
+    except Exception as e:
+        results.append(f"✗ Raw connection failed: {str(e)}")
+    
+    # 4. Test SQLAlchemy connection
+    results.append("\n=== TESTING SQLALCHEMY CONNECTION ===")
+    try:
+        result = db.session.execute(text("SELECT 1")).scalar()
+        results.append(f"✓ SQLAlchemy connection successful: {result}")
+    except Exception as e:
+        results.append(f"✗ SQLAlchemy connection failed: {str(e)}")
+    
+    # 5. Check if tables exist
+    results.append("\n=== CHECKING TABLES ===")
+    try:
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        results.append(f"Tables in database: {tables}")
+    except Exception as e:
+        results.append(f"✗ Could not get tables: {str(e)}")
+    
+    # 6. Test creating a user
+    results.append("\n=== TESTING USER CREATION ===")
+    try:
+        test_username = f"test_{datetime.now().timestamp()}"
+        test_email = f"{test_username}@test.com"
+        
+        test_user = User(
+            username=test_username,
+            email=test_email,
+            password=generate_password_hash('test123')
+        )
+        db.session.add(test_user)
+        db.session.commit()
+        results.append(f"✓ Test user created successfully")
+        
+        # Clean up
+        db.session.delete(test_user)
+        db.session.commit()
+        results.append(f"✓ Test user cleaned up")
+    except Exception as e:
+        db.session.rollback()
+        results.append(f"✗ User creation failed: {str(e)}")
+        results.append(f"Traceback: {traceback.format_exc()}")
     
     return "<br>".join(results)
 
