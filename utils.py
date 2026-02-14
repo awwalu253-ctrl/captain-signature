@@ -18,21 +18,20 @@ def save_picture(form_picture):
         print("\n" + "="*60)
         print("🔍 SAVE_PICTURE DEBUG")
         print(f"is_vercel: {is_vercel}")
-        print(f"Filename: {picture_fn}")
+        print(f"Original filename: {form_picture.filename}")
+        print(f"New filename: {picture_fn}")
         
         if is_vercel:
             # On Vercel, use /tmp directory
             upload_folder = '/tmp/captain_signature_uploads/products'
             print(f"Target upload_folder: {upload_folder}")
             
-            # Create directory
-            os.makedirs(upload_folder, exist_ok=True)
-            print(f"Directory exists after creation: {os.path.exists(upload_folder)}")
-            
-            # Check if we can write to it
+            # Create directory with full permissions
+            os.makedirs(upload_folder, mode=0o777, exist_ok=True)
+            print(f"Directory exists: {os.path.exists(upload_folder)}")
             print(f"Directory writable: {os.access(upload_folder, os.W_OK)}")
             
-            # List directory contents before save
+            # List directory before save
             if os.path.exists(upload_folder):
                 before_files = os.listdir(upload_folder)
                 print(f"Files before save: {before_files}")
@@ -40,40 +39,53 @@ def save_picture(form_picture):
             # Local development
             project_root = os.path.dirname(os.path.abspath(__file__))
             upload_folder = os.path.join(project_root, 'static', 'images', 'products')
-            os.makedirs(upload_folder, exist_ok=True)
+            os.makedirs(upload_folder, mode=0o777, exist_ok=True)
             print(f"Local upload_folder: {upload_folder}")
         
         # Full path
         picture_path = os.path.join(upload_folder, picture_fn)
         print(f"Full picture path: {picture_path}")
         
-        # Save the file
+        # IMPORTANT: Save the file and flush immediately
         form_picture.save(picture_path)
         print(f"✓ File saved via form_picture.save()")
         
-        # Verify file exists
+        # Force flush to disk (important for Vercel)
+        with open(picture_path, 'ab') as f:
+            f.flush()
+            os.fsync(f.fileno())
+        print(f"✓ File flushed to disk")
+        
+        # Verify file exists and get size
         if os.path.exists(picture_path):
             file_size = os.path.getsize(picture_path)
             print(f"✓ File verified at: {picture_path}")
             print(f"  File size: {file_size} bytes")
             
-            # List directory contents after save
+            # List directory after save
             if os.path.exists(upload_folder):
                 after_files = os.listdir(upload_folder)
                 print(f"Files after save: {after_files}")
+                
+                if picture_fn in after_files:
+                    print(f"✓ File found in directory listing!")
+                else:
+                    print(f"❌ File NOT found in directory listing!")
         else:
             print(f"❌ File does NOT exist after save!")
-            # Try to write a test file to verify directory is writable
-            test_file = os.path.join(upload_folder, 'test.txt')
+            # Try alternative save method
             try:
-                with open(test_file, 'w') as f:
-                    f.write('test')
-                print(f"✓ Test file written successfully: {test_file}")
-                os.remove(test_file)
-                print(f"✓ Test file removed")
-            except Exception as e:
-                print(f"❌ Cannot write test file: {e}")
-            raise Exception("File was not saved properly")
+                with open(picture_path, 'wb') as f:
+                    f.write(form_picture.read())
+                print(f"✓ File saved via alternative method")
+                if os.path.exists(picture_path):
+                    file_size = os.path.getsize(picture_path)
+                    print(f"✓ Alternative save successful: {file_size} bytes")
+                else:
+                    raise Exception("Alternative save also failed")
+            except Exception as e2:
+                print(f"❌ Alternative save failed: {e2}")
+                raise Exception("File was not saved properly")
         
         # Return path
         if is_vercel:

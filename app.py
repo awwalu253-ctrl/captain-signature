@@ -1452,6 +1452,26 @@ def internal_error(error):
     logger.error(traceback.format_exc())
     return render_template('500.html'), 500
 
+@app.route('/test-upload-simple', methods=['GET', 'POST'])
+def test_upload_simple():
+    """Ultra-simple test upload"""
+    if request.method == 'POST':
+        file = request.files['file']
+        if file:
+            # Save to a simple location
+            save_path = '/tmp/test_' + file.filename
+            file.save(save_path)
+            if os.path.exists(save_path):
+                return f"✓ File saved to {save_path} (size: {os.path.getsize(save_path)} bytes)"
+            else:
+                return "✗ File not saved"
+    return '''
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit">
+    </form>
+    '''
+
 if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("🚀 Captain Signature Nigeria - Starting...")
