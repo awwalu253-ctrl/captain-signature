@@ -19,8 +19,7 @@ def save_picture(form_picture):
         if is_vercel:
             # On Vercel, use /tmp directory (writable)
             upload_folder = '/tmp/captain_signature_uploads/products'
-            # Also store in a database-friendly path
-            db_path = f"uploads/{picture_fn}"
+            db_path = f"tmp:{picture_fn}"
         else:
             # Local development
             project_root = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +27,7 @@ def save_picture(form_picture):
             db_path = picture_fn
         
         print(f"\n--- Image Upload Debug ---")
+        print(f"On Vercel: {is_vercel}")
         print(f"Upload folder: {upload_folder}")
         print(f"Database path: {db_path}")
         
@@ -50,10 +50,7 @@ def save_picture(form_picture):
             raise Exception("File was not saved properly")
         
         # Return the appropriate path for database
-        if is_vercel:
-            return f"tmp:{picture_fn}"  # Mark as temp file
-        else:
-            return picture_fn
+        return db_path
             
     except Exception as e:
         print(f"Error in save_picture: {str(e)}")

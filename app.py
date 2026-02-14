@@ -6,7 +6,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, abo
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-from sqlalchemy import text  # Added for proper SQL execution
+from sqlalchemy import text
 
 # Try to import extensions, with helpful error messages
 try:
@@ -53,7 +53,8 @@ def ensure_directories():
         os.path.join(project_root, 'templates', 'admin'),
         os.path.join(project_root, 'instance'),
         os.path.join(user_home, 'captain_signature_uploads'),
-        os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+        os.path.join(user_home, 'captain_signature_uploads', 'product_images'),
+        '/tmp/captain_signature_uploads/products'  # Add tmp directory for Vercel
     ]
     
     print("=" * 50)
@@ -81,6 +82,7 @@ def ensure_directories():
 project_root = ensure_directories()
 user_home = os.path.expanduser("~")
 upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+tmp_upload_folder = '/tmp/captain_signature_uploads/products'
 
 # Make session, cart, and settings available to all templates
 @app.before_request
@@ -167,6 +169,27 @@ with app.app_context():
 def user_uploads(filename):
     user_home = os.path.expanduser("~")
     upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+    return send_from_directory(upload_folder, filename)
+
+# Route to serve images from tmp directory (for Vercel)
+@app.route('/tmp-uploads/<filename>')
+def tmp_uploads(filename):
+    """Serve images from /tmp directory (for Vercel)"""
+    upload_folder = '/tmp/captain_signature_uploads/products'
+    
+    # Ensure the directory exists
+    try:
+        os.makedirs(upload_folder, exist_ok=True)
+    except Exception as e:
+        print(f"Error creating upload folder: {e}")
+        abort(500)
+    
+    # Check if file exists
+    file_path = os.path.join(upload_folder, filename)
+    if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+        abort(404)
+    
     return send_from_directory(upload_folder, filename)
 
 # Debug route to check configuration
@@ -716,8 +739,6 @@ def add_product():
     
     return render_template('add_product.html', form=form)
 
-from datetime import datetime  # Make sure this import is at the top
-
 @app.route('/admin/customers')
 @login_required
 def admin_customers():
@@ -739,18 +760,12 @@ def admin_customers():
                          customers=customers,
                          total_customers=total_customers,
                          new_today=new_today,
-                         now=now)  # <-- Add this line
-    
+                         now=now)
+
 @app.context_processor
 def inject_now():
     """Inject current datetime into all templates"""
     return {'now': datetime.now()}
-
-@app.route('/tmp-uploads/<filename>')
-def tmp_uploads(filename):
-    """Serve images from /tmp directory (for Vercel)"""
-    from flask import send_from_directory
-    return send_from_directory('/tmp/captain_signature_uploads/products', filename)
 
 @app.route('/admin/edit_product/<int:product_id>', methods=['GET', 'POST'])
 @login_required
@@ -785,13 +800,14 @@ def edit_product(product_id):
                 
                 # Delete old image if it exists
                 if product.image:
-                    if product.image.startswith('user_uploads:'):
-                        # Delete from user folder
+                    # Try to delete from all possible locations
+                    if product.image.startswith('tmp:'):
+                        filename = product.image.replace('tmp:', '')
+                        old_image_path = os.path.join('/tmp/captain_signature_uploads/products', filename)
+                    elif product.image.startswith('user_uploads:'):
                         filename = product.image.replace('user_uploads:', '')
-                        user_home = os.path.expanduser("~")
                         old_image_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
                     else:
-                        # Delete from static folder
                         old_image_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
                     
                     if os.path.exists(old_image_path):
@@ -841,13 +857,14 @@ def delete_product(product_id):
     # Delete the image file if it exists
     if product.image:
         try:
-            if product.image.startswith('user_uploads:'):
-                # Delete from user folder
+            # Try to delete from all possible locations
+            if product.image.startswith('tmp:'):
+                filename = product.image.replace('tmp:', '')
+                image_path = os.path.join('/tmp/captain_signature_uploads/products', filename)
+            elif product.image.startswith('user_uploads:'):
                 filename = product.image.replace('user_uploads:', '')
-                user_home = os.path.expanduser("~")
                 image_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
             else:
-                # Delete from static folder
                 image_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
             
             if os.path.exists(image_path):
@@ -1018,23 +1035,35 @@ def test_upload_location():
     
     user_home = os.path.expanduser("~")
     upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+    tmp_folder = '/tmp/captain_signature_uploads/products'
     
     results = []
     results.append(f"<h3>Upload Location Test</h3>")
     results.append(f"<p><strong>User home:</strong> {user_home}</p>")
-    results.append(f"<p><strong>Upload folder:</strong> {upload_folder}</p>")
+    results.append(f"<p><strong>User upload folder:</strong> {upload_folder}</p>")
+    results.append(f"<p><strong>TMP upload folder:</strong> {tmp_folder}</p>")
     
-    # Check if directory exists
+    # Check user upload folder
+    results.append(f"<h4>User Upload Folder:</h4>")
     if os.path.exists(upload_folder):
-        results.append(f"<p style='color: green;'>✓ Upload folder exists</p>")
-        
-        # Check if writable
+        results.append(f"<p style='color: green;'>✓ User upload folder exists</p>")
         if os.access(upload_folder, os.W_OK):
-            results.append(f"<p style='color: green;'>✓ Upload folder is writable</p>")
+            results.append(f"<p style='color: green;'>✓ User upload folder is writable</p>")
+        else:
+            results.append(f"<p style='color: red;'>✗ User upload folder is NOT writable</p>")
+    else:
+        results.append(f"<p style='color: red;'>✗ User upload folder does NOT exist</p>")
+    
+    # Check tmp upload folder
+    results.append(f"<h4>TMP Upload Folder:</h4>")
+    if os.path.exists(tmp_folder):
+        results.append(f"<p style='color: green;'>✓ TMP upload folder exists</p>")
+        if os.access(tmp_folder, os.W_OK):
+            results.append(f"<p style='color: green;'>✓ TMP upload folder is writable</p>")
             
             # Try to write a test file
             try:
-                test_file = os.path.join(upload_folder, 'test.txt')
+                test_file = os.path.join(tmp_folder, 'test.txt')
                 with open(test_file, 'w') as f:
                     f.write('test')
                 os.remove(test_file)
@@ -1042,15 +1071,15 @@ def test_upload_location():
             except Exception as e:
                 results.append(f"<p style='color: red;'>✗ Write test failed: {e}</p>")
         else:
-            results.append(f"<p style='color: red;'>✗ Upload folder is NOT writable</p>")
+            results.append(f"<p style='color: red;'>✗ TMP upload folder is NOT writable</p>")
     else:
-        results.append(f"<p style='color: red;'>✗ Upload folder does NOT exist</p>")
+        results.append(f"<p style='color: red;'>✗ TMP upload folder does NOT exist</p>")
         # Try to create it
         try:
-            os.makedirs(upload_folder, exist_ok=True)
-            results.append(f"<p style='color: green;'>✓ Successfully created upload folder</p>")
+            os.makedirs(tmp_folder, exist_ok=True)
+            results.append(f"<p style='color: green;'>✓ Successfully created TMP upload folder</p>")
         except Exception as e:
-            results.append(f"<p style='color: red;'>✗ Failed to create upload folder: {e}</p>")
+            results.append(f"<p style='color: red;'>✗ Failed to create TMP upload folder: {e}</p>")
     
     return "<br>".join(results)
 
@@ -1133,63 +1162,75 @@ def debug_images():
     products = Product.query.all()
     result = "<h2>Product Image Debug</h2>"
     result += "<table border='1' cellpadding='10'>"
-    result += "<tr><th>ID</th><th>Name</th><th>Image Path in DB</th><th>Image Type</th><th>Expected URL</th></tr>"
+    result += "<tr><th>ID</th><th>Name</th><th>Image Path in DB</th><th>Image Type</th><th>Expected URL</th><th>File Exists?</th></tr>"
     
     for product in products:
+        file_exists = "N/A"
         if product.image:
             if product.image.startswith('tmp:'):
                 filename = product.image.replace('tmp:', '')
-                img_type = "TMP Uploads"
+                img_type = "TMP Uploads (Vercel)"
                 img_url = url_for('tmp_uploads', filename=filename, _external=True)
+                # Check if file exists in tmp directory
+                tmp_path = f'/tmp/captain_signature_uploads/products/{filename}'
+                file_exists = "✅ Yes" if os.path.exists(tmp_path) else "❌ No"
             elif product.image.startswith('user_uploads:'):
                 filename = product.image.replace('user_uploads:', '')
                 img_type = "User Uploads"
                 img_url = url_for('user_uploads', filename=filename, _external=True)
+                # Check if file exists in user uploads
+                user_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
+                file_exists = "✅ Yes" if os.path.exists(user_path) else "❌ No"
             else:
                 img_type = "Static"
                 img_url = url_for('static', filename='images/products/' + product.image, _external=True)
+                # Check if file exists in static folder
+                static_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
+                file_exists = "✅ Yes" if os.path.exists(static_path) else "❌ No"
         else:
             img_type = "No Image"
             img_url = "None"
+            file_exists = "N/A"
         
         result += f"<tr>"
         result += f"<td>{product.id}</td>"
         result += f"<td>{product.name}</td>"
         result += f"<td>{product.image}</td>"
         result += f"<td>{img_type}</td>"
-        result += f"<td><a href='{img_url}' target='_blank'>{img_url}</a></td>"
+        result += f"<td><a href='{img_url}' target='_blank'>{img_url[:50]}...</a></td>"
+        result += f"<td>{file_exists}</td>"
         result += f"</tr>"
     
     result += "</table>"
     return result
 
-@app.route('/debug-upload-folder')
+# Debug route to check tmp uploads folder
+@app.route('/admin/debug-tmp-uploads')
 @login_required
-def debug_upload_folder():
+def debug_tmp_uploads():
     if not current_user.is_admin:
         abort(403)
     
-    upload_folder = '/tmp/captain_signature_uploads/products'
-    result = f"<h2>Upload Folder: {upload_folder}</h2>"
+    tmp_folder = '/tmp/captain_signature_uploads/products'
+    result = f"<h2>TMP Uploads Folder: {tmp_folder}</h2>"
     
-    if os.path.exists(upload_folder):
-        result += f"<p style='color: green;'>✓ Folder exists</p>"
-        files = os.listdir(upload_folder)
+    if os.path.exists(tmp_folder):
+        result += f"<p>Folder exists</p>"
+        files = os.listdir(tmp_folder)
         result += f"<p>Files found: {len(files)}</p>"
         result += "<ul>"
         for file in files:
-            file_path = os.path.join(upload_folder, file)
+            file_path = os.path.join(tmp_folder, file)
             size = os.path.getsize(file_path)
-            result += f"<li>{file} - {size} bytes</li>"
+            result += f"<li>{file} - {size} bytes - <a href='{url_for('tmp_uploads', filename=file)}' target='_blank'>View</a></li>"
         result += "</ul>"
     else:
-        result += f"<p style='color: red;'>✗ Folder does NOT exist</p>"
-        # Try to create it
+        result += f"<p>Folder does NOT exist. Creating it now...</p>"
         try:
-            os.makedirs(upload_folder, exist_ok=True)
-            result += f"<p style='color: green;'>✓ Folder created successfully</p>"
+            os.makedirs(tmp_folder, exist_ok=True)
+            result += f"<p>✅ Folder created successfully</p>"
         except Exception as e:
-            result += f"<p style='color: red;'>✗ Failed to create folder: {e}</p>"
+            result += f"<p>❌ Error creating folder: {e}</p>"
     
     return result
 
@@ -1212,7 +1253,11 @@ def debug_order(order_id):
     
     for item in order.items:
         if item.product_image:
-            if item.product_image.startswith('user_uploads:'):
+            if item.product_image.startswith('tmp:'):
+                filename = item.product_image.replace('tmp:', '')
+                img_type = "TMP Uploads"
+                img_url = url_for('tmp_uploads', filename=filename, _external=True)
+            elif item.product_image.startswith('user_uploads:'):
                 filename = item.product_image.replace('user_uploads:', '')
                 img_type = "User Uploads"
                 img_url = url_for('user_uploads', filename=filename, _external=True)
@@ -1258,6 +1303,7 @@ if __name__ == '__main__':
     print("📍 Access the website at: http://127.0.0.1:5000")
     print("👤 Admin login: admin@captainsignature.com / admin123")
     print("📁 Upload folder: " + upload_folder)
+    print("📁 TMP upload folder: /tmp/captain_signature_uploads/products")
     print("💰 Current delivery fee: ₦1,500 (configurable in Settings)")
     print("📍 Shipping: Nigeria only")
     print("=" * 60 + "\n")
