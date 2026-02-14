@@ -1137,7 +1137,11 @@ def debug_images():
     
     for product in products:
         if product.image:
-            if product.image.startswith('user_uploads:'):
+            if product.image.startswith('tmp:'):
+                filename = product.image.replace('tmp:', '')
+                img_type = "TMP Uploads"
+                img_url = url_for('tmp_uploads', filename=filename, _external=True)
+            elif product.image.startswith('user_uploads:'):
                 filename = product.image.replace('user_uploads:', '')
                 img_type = "User Uploads"
                 img_url = url_for('user_uploads', filename=filename, _external=True)
@@ -1153,10 +1157,40 @@ def debug_images():
         result += f"<td>{product.name}</td>"
         result += f"<td>{product.image}</td>"
         result += f"<td>{img_type}</td>"
-        result += f"<td>{img_url}</td>"
+        result += f"<td><a href='{img_url}' target='_blank'>{img_url}</a></td>"
         result += f"</tr>"
     
     result += "</table>"
+    return result
+
+@app.route('/debug-upload-folder')
+@login_required
+def debug_upload_folder():
+    if not current_user.is_admin:
+        abort(403)
+    
+    upload_folder = '/tmp/captain_signature_uploads/products'
+    result = f"<h2>Upload Folder: {upload_folder}</h2>"
+    
+    if os.path.exists(upload_folder):
+        result += f"<p style='color: green;'>✓ Folder exists</p>"
+        files = os.listdir(upload_folder)
+        result += f"<p>Files found: {len(files)}</p>"
+        result += "<ul>"
+        for file in files:
+            file_path = os.path.join(upload_folder, file)
+            size = os.path.getsize(file_path)
+            result += f"<li>{file} - {size} bytes</li>"
+        result += "</ul>"
+    else:
+        result += f"<p style='color: red;'>✗ Folder does NOT exist</p>"
+        # Try to create it
+        try:
+            os.makedirs(upload_folder, exist_ok=True)
+            result += f"<p style='color: green;'>✓ Folder created successfully</p>"
+        except Exception as e:
+            result += f"<p style='color: red;'>✗ Failed to create folder: {e}</p>"
+    
     return result
 
 # Debug route to check order images
