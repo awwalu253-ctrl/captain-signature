@@ -6,6 +6,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, abo
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+from sqlalchemy import text  # Added for proper SQL execution
 
 # Try to import extensions, with helpful error messages
 try:
@@ -122,7 +123,7 @@ login_manager.login_message_category = 'info'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables and admin user - FIXED with app context
+# Create tables and admin user
 with app.app_context():
     try:
         # Create all tables
@@ -175,17 +176,17 @@ def debug_config():
     return {
         'database_uri': str(app.config['SQLALCHEMY_DATABASE_URI'])[:50] + '...',
         'is_vercel': app.config.get('IS_VERCEL', False),
-        'database_url_env': os.environ.get('DATABASE_URL', 'not set'),
-        'postgres_url_env': os.environ.get('POSTGRES_URL', 'not set'),
-        'postgres_prisma_url_env': os.environ.get('POSTGRES_PRISMA_URL', 'not set'),
+        'database_url_env': 'set' if os.environ.get('DATABASE_URL') else 'not set',
+        'postgres_url_env': 'set' if os.environ.get('POSTGRES_URL') else 'not set',
+        'postgres_prisma_url_env': 'set' if os.environ.get('POSTGRES_PRISMA_URL') else 'not set',
     }
 
-# Debug route to check database connection
+# Debug route to check database connection - FIXED with text()
 @app.route('/debug-db')
 def debug_db():
     try:
-        # Test database connection
-        result = db.session.execute('SELECT 1').scalar()
+        # Test database connection using text() for raw SQL
+        result = db.session.execute(text('SELECT 1')).scalar()
         return {
             'status': 'connected',
             'result': result,
