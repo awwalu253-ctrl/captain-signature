@@ -5,6 +5,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, abo
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+import tempfile
 
 # Try to import extensions, with helpful error messages
 try:
@@ -22,11 +23,20 @@ from cart import Cart
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Determine if running on Vercel
+IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL') == '1'
+
 # Function to ensure directories exist with proper permissions
 def ensure_directories():
     """Create all necessary directories if they don't exist"""
     project_root = os.path.dirname(os.path.abspath(__file__))
-    user_home = os.path.expanduser("~")
+    
+    # On Vercel, use /tmp for writable directories
+    if IS_VERCEL:
+        upload_base = '/tmp/captain_signature_uploads'
+    else:
+        user_home = os.path.expanduser("~")
+        upload_base = os.path.join(user_home, 'captain_signature_uploads')
     
     directories = [
         os.path.join(project_root, 'static'),
@@ -38,8 +48,8 @@ def ensure_directories():
         os.path.join(project_root, 'templates', 'dashboard'),
         os.path.join(project_root, 'templates', 'admin'),
         os.path.join(project_root, 'instance'),
-        os.path.join(user_home, 'captain_signature_uploads'),
-        os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+        upload_base,
+        os.path.join(upload_base, 'product_images')
     ]
     
     print("=" * 50)
@@ -61,12 +71,11 @@ def ensure_directories():
             print(f"✗ Error creating {directory}: {e}")
     
     print("=" * 50)
-    return project_root
+    return project_root, upload_base
 
 # Call the function to create directories
-project_root = ensure_directories()
-user_home = os.path.expanduser("~")
-upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+project_root, upload_base = ensure_directories()
+upload_folder = os.path.join(upload_base, 'product_images')
 
 # Make session, cart, and settings available to all templates
 @app.before_request
@@ -112,7 +121,9 @@ def load_user(user_id):
 # Create tables and admin user
 with app.app_context():
     try:
+        # Create tables
         db.create_all()
+        
         # Create admin user if not exists
         if not User.query.filter_by(email='admin@captainsignature.com').first():
             admin = User(
@@ -137,12 +148,12 @@ with app.app_context():
             print(f"  Delivery fee: ₦{settings.delivery_fee}")
     except Exception as e:
         print(f"✗ Database initialization error: {e}")
+        print("Make sure your database is properly configured on Vercel.")
 
-# Route to serve images from user's home directory
-@app.route('/user-uploads/<filename>')
-def user_uploads(filename):
-    user_home = os.path.expanduser("~")
-    upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
+# Route to serve uploaded images
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    """Serve uploaded files from upload folder"""
     return send_from_directory(upload_folder, filename)
 
 # Routes
@@ -278,7 +289,7 @@ def dashboard():
         # Customer dashboard
         orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.order_date.desc()).all()
         return render_template('dashboard/customer.html', orders=orders)
-        
+
 @app.route('/products')
 def products():
     category = request.args.get('category')
@@ -576,7 +587,7 @@ def add_product():
                         flash(f'Invalid file type. Allowed: {", ".join(allowed_extensions)}', 'danger')
                         return render_template('add_product.html', form=form)
                     
-                    image_file = save_picture(form.image.data)
+                    image_file = save_picture(form.image.data, upload_folder)
                     flash('Image uploaded successfully!', 'success')
                     print(f"Image saved as: {image_file}")
                 else:
@@ -642,21 +653,19 @@ def edit_product(product_id):
                 
                 # Delete old image if it exists
                 if product.image:
-                    if product.image.startswith('user_uploads:'):
-                        # Delete from user folder
-                        filename = product.image.replace('user_uploads:', '')
-                        user_home = os.path.expanduser("~")
-                        old_image_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
-                    else:
-                        # Delete from static folder
-                        old_image_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
+                    # Try to delete from various possible locations
+                    possible_paths = [
+                        os.path.join(upload_folder, product.image),
+                        os.path.join(project_root, 'static', 'images', 'products', product.image)
+                    ]
                     
-                    if os.path.exists(old_image_path):
-                        os.remove(old_image_path)
-                        print(f"Deleted old image: {old_image_path}")
+                    for old_image_path in possible_paths:
+                        if os.path.exists(old_image_path):
+                            os.remove(old_image_path)
+                            print(f"Deleted old image: {old_image_path}")
                 
                 # Save new image
-                product.image = save_picture(form.image.data)
+                product.image = save_picture(form.image.data, upload_folder)
                 flash('New image uploaded successfully!', 'success')
                 print(f"New image saved as: {product.image}")
                 
@@ -698,18 +707,16 @@ def delete_product(product_id):
     # Delete the image file if it exists
     if product.image:
         try:
-            if product.image.startswith('user_uploads:'):
-                # Delete from user folder
-                filename = product.image.replace('user_uploads:', '')
-                user_home = os.path.expanduser("~")
-                image_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
-            else:
-                # Delete from static folder
-                image_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
+            # Try to delete from various possible locations
+            possible_paths = [
+                os.path.join(upload_folder, product.image),
+                os.path.join(project_root, 'static', 'images', 'products', product.image)
+            ]
             
-            if os.path.exists(image_path):
-                os.remove(image_path)
-                print(f"Deleted image: {image_path}")
+            for image_path in possible_paths:
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+                    print(f"Deleted image: {image_path}")
         except Exception as e:
             print(f"Error deleting image file: {e}")
     
@@ -866,128 +873,10 @@ def admin_settings():
     
     return render_template('admin/settings.html', settings=settings)
 
-# Test route to verify upload location
-@app.route('/admin/test-upload-location')
-@login_required
-def test_upload_location():
-    if not current_user.is_admin:
-        abort(403)
-    
-    user_home = os.path.expanduser("~")
-    upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
-    
-    results = []
-    results.append(f"<h3>Upload Location Test</h3>")
-    results.append(f"<p><strong>User home:</strong> {user_home}</p>")
-    results.append(f"<p><strong>Upload folder:</strong> {upload_folder}</p>")
-    
-    # Check if directory exists
-    if os.path.exists(upload_folder):
-        results.append(f"<p style='color: green;'>✓ Upload folder exists</p>")
-        
-        # Check if writable
-        if os.access(upload_folder, os.W_OK):
-            results.append(f"<p style='color: green;'>✓ Upload folder is writable</p>")
-            
-            # Try to write a test file
-            try:
-                test_file = os.path.join(upload_folder, 'test.txt')
-                with open(test_file, 'w') as f:
-                    f.write('test')
-                os.remove(test_file)
-                results.append(f"<p style='color: green;'>✓ Write test passed</p>")
-            except Exception as e:
-                results.append(f"<p style='color: red;'>✗ Write test failed: {e}</p>")
-        else:
-            results.append(f"<p style='color: red;'>✗ Upload folder is NOT writable</p>")
-    else:
-        results.append(f"<p style='color: red;'>✗ Upload folder does NOT exist</p>")
-        # Try to create it
-        try:
-            os.makedirs(upload_folder, exist_ok=True)
-            results.append(f"<p style='color: green;'>✓ Successfully created upload folder</p>")
-        except Exception as e:
-            results.append(f"<p style='color: red;'>✗ Failed to create upload folder: {e}</p>")
-    
-    return "<br>".join(results)
-
-# Debug route to check images
-@app.route('/admin/debug-images')
-@login_required
-def debug_images():
-    if not current_user.is_admin:
-        abort(403)
-    
-    products = Product.query.all()
-    result = "<h2>Product Image Debug</h2>"
-    result += "<table border='1' cellpadding='10'>"
-    result += "<tr><th>ID</th><th>Name</th><th>Image Path in DB</th><th>Image Type</th><th>Expected URL</th></tr>"
-    
-    for product in products:
-        if product.image:
-            if product.image.startswith('user_uploads:'):
-                filename = product.image.replace('user_uploads:', '')
-                img_type = "User Uploads"
-                img_url = url_for('user_uploads', filename=filename, _external=True)
-            else:
-                img_type = "Static"
-                img_url = url_for('static', filename='images/products/' + product.image, _external=True)
-        else:
-            img_type = "No Image"
-            img_url = "None"
-        
-        result += f"<tr>"
-        result += f"<td>{product.id}</td>"
-        result += f"<td>{product.name}</td>"
-        result += f"<td>{product.image}</td>"
-        result += f"<td>{img_type}</td>"
-        result += f"<td>{img_url}</td>"
-        result += f"</tr>"
-    
-    result += "</table>"
-    return result
-
-# Debug route to check order images
-@app.route('/admin/debug-order/<int:order_id>')
-@login_required
-def debug_order(order_id):
-    if not current_user.is_admin:
-        abort(403)
-    
-    order = Order.query.get_or_404(order_id)
-    
-    result = "<h2>Order Debug Information</h2>"
-    result += f"<p><strong>Order #:</strong> {order.order_number}</p>"
-    result += f"<p><strong>Customer:</strong> {order.customer.username}</p>"
-    
-    result += "<h3>Order Items:</h3>"
-    result += "<table border='1' cellpadding='10'>"
-    result += "<tr><th>Item ID</th><th>Product Name</th><th>Image Path in DB</th><th>Image Type</th><th>Expected URL</th></tr>"
-    
-    for item in order.items:
-        if item.product_image:
-            if item.product_image.startswith('user_uploads:'):
-                filename = item.product_image.replace('user_uploads:', '')
-                img_type = "User Uploads"
-                img_url = url_for('user_uploads', filename=filename, _external=True)
-            else:
-                img_type = "Static"
-                img_url = url_for('static', filename='images/products/' + item.product_image, _external=True)
-        else:
-            img_type = "No Image"
-            img_url = "None"
-        
-        result += f"<tr>"
-        result += f"<td>{item.id}</td>"
-        result += f"<td>{item.product_name}</td>"
-        result += f"<td>{item.product_image}</td>"
-        result += f"<td>{img_type}</td>"
-        result += f"<td>{img_url}</td>"
-        result += f"</tr>"
-    
-    result += "</table>"
-    
-    return result
+# Health check for Vercel
+@app.route('/api/health')
+def health_check():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 # Error handlers
 @app.errorhandler(404)
@@ -1003,6 +892,7 @@ def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
 
+# For local development
 if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("🚀 Captain Signature Nigeria - Starting...")
@@ -1016,3 +906,6 @@ if __name__ == '__main__':
     
     # Run the app
     app.run(debug=True, host='127.0.0.1', port=5000)
+
+# For Vercel - this is required
+app = app
