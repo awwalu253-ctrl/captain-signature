@@ -234,21 +234,40 @@ def signup():
     form = SignupForm()
     if form.validate_on_submit():
         try:
+            print("\n=== SIGNUP ATTEMPT ===")
+            print(f"Username: {form.username.data}")
+            print(f"Email: {form.email.data}")
+            
             hashed_password = generate_password_hash(form.password.data)
             user = User(
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password
             )
+            
+            print("✓ User object created, adding to session...")
             db.session.add(user)
+            
+            print("✓ Committing to database...")
             db.session.commit()
+            
+            print("✓ User saved successfully!")
             flash('Your account has been created! You can now log in.', 'success')
             return redirect(url_for('login'))
+            
         except Exception as e:
             db.session.rollback()
+            print("\n❌ SIGNUP ERROR:")
+            print(f"Error type: {type(e).__name__}")
+            print(f"Error message: {str(e)}")
+            print("\nFull traceback:")
+            traceback.print_exc()
+            
+            # Log to Vercel logs
             logger.error(f"Signup error: {str(e)}")
             logger.error(traceback.format_exc())
-            flash(f'Registration failed: {str(e)}', 'danger')
+            
+            flash(f'Registration failed. Please try again.', 'danger')
     
     return render_template('signup.html', form=form)
 
