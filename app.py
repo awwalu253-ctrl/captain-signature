@@ -716,6 +716,36 @@ def add_product():
     
     return render_template('add_product.html', form=form)
 
+from datetime import datetime  # Make sure this import is at the top
+
+@app.route('/admin/customers')
+@login_required
+def admin_customers():
+    """View all registered customers"""
+    if not current_user.is_admin:
+        abort(403)
+    
+    # Get current datetime for the template
+    now = datetime.now()
+    
+    # Get all users (excluding admins if you want)
+    customers = User.query.filter_by(is_admin=False).order_by(User.created_at.desc()).all()
+    
+    # Get stats
+    total_customers = len(customers)
+    new_today = sum(1 for c in customers if c.created_at.date() == datetime.today().date())
+    
+    return render_template('admin/customers.html', 
+                         customers=customers,
+                         total_customers=total_customers,
+                         new_today=new_today,
+                         now=now)  # <-- Add this line
+    
+@app.context_processor
+def inject_now():
+    """Inject current datetime into all templates"""
+    return {'now': datetime.now()}
+
 @app.route('/admin/edit_product/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def edit_product(product_id):

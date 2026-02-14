@@ -8,15 +8,19 @@
             <div class="welcome-card p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap">
                     <div>
-                        <h2 class="display-6 fw-bold mb-2" style="color: #D4AF37;">Welcome back, {{ current_user.username }}! 👋</h2>
+                        <h2 class="display-6 fw-bold mb-2" style="color: #D4AF37;">Welcome back, {{
+                            current_user.username }}! 👋</h2>
                         <p class="text-muted mb-0">
-                            <i class="far fa-calendar-alt me-2" style="color: #D4AF37;"></i>{{ now.strftime('%A, %B %d, %Y') if now else '' }}
+                            <i class="far fa-calendar-alt me-2" style="color: #D4AF37;"></i>{{ now.strftime('%A, %B %d,
+                            %Y') if now else '' }}
                             <span class="mx-3">|</span>
-                            <i class="far fa-clock me-2" style="color: #D4AF37;"></i>{{ now.strftime('%I:%M %p') if now else '' }}
+                            <i class="far fa-clock me-2" style="color: #D4AF37;"></i>{{ now.strftime('%I:%M %p') if now
+                            else '' }}
                         </p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <span class="badge p-3" style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); color: #000;">
+                        <span class="badge p-3"
+                            style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); color: #000;">
                             <i class="fas fa-store-alt me-2"></i>Store Active
                         </span>
                     </div>
@@ -37,7 +41,8 @@
                         <div class="ms-3">
                             <h6 class="stat-label">Total Users</h6>
                             <h3 class="stat-value mb-0">{{ total_users|default(0) }}</h3>
-                            <small class="text-success"><i class="fas fa-arrow-up me-1"></i>+{{ new_users_today|default(0) }} today</small>
+                            <small class="text-success"><i class="fas fa-arrow-up me-1"></i>+{{
+                                new_users_today|default(0) }} today</small>
                         </div>
                     </div>
                 </div>
@@ -54,7 +59,8 @@
                         <div class="ms-3">
                             <h6 class="stat-label">Total Products</h6>
                             <h3 class="stat-value mb-0">{{ total_products|default(0) }}</h3>
-                            <small class="text-success"><i class="fas fa-arrow-up me-1"></i>+{{ new_products_this_month|default(0) }} new</small>
+                            <small class="text-success"><i class="fas fa-arrow-up me-1"></i>+{{
+                                new_products_this_month|default(0) }} new</small>
                         </div>
                     </div>
                 </div>
@@ -71,7 +77,8 @@
                         <div class="ms-3">
                             <h6 class="stat-label">Total Orders</h6>
                             <h3 class="stat-value mb-0">{{ total_orders|default(0) }}</h3>
-                            <small class="text-warning"><i class="fas fa-clock me-1"></i>{{ pending_orders_count|default(0) }} pending</small>
+                            <small class="text-warning"><i class="fas fa-clock me-1"></i>{{
+                                pending_orders_count|default(0) }} pending</small>
                         </div>
                     </div>
                 </div>
@@ -88,7 +95,8 @@
                         <div class="ms-3">
                             <h6 class="stat-label text-dark">Total Revenue</h6>
                             <h3 class="stat-value text-dark mb-0">₦{{ "{:,.0f}".format(total_revenue|default(0)) }}</h3>
-                            <small class="text-dark"><i class="fas fa-arrow-up me-1"></i>+{{ revenue_growth|default(0) }}%</small>
+                            <small class="text-dark"><i class="fas fa-arrow-up me-1"></i>+{{ revenue_growth|default(0)
+                                }}%</small>
                         </div>
                     </div>
                 </div>
@@ -152,6 +160,21 @@
             </a>
         </div>
 
+        <a href="{{ url_for('admin_customers') }}" class="action-card">
+            <div class="action-card-body">
+                <div class="action-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">View Customers</h6>
+                    <p class="action-desc">Manage registered users</p>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        </a>
+
         <div class="col-xl-3 col-md-6 mb-3">
             <a href="{{ url_for('admin_settings') }}" class="action-card">
                 <div class="action-card-body">
@@ -201,58 +224,61 @@
                                     <td><span class="order-number">#{{ order.order_number }}</span></td>
                                     <td>
                                         <div class="customer-info">
-                                            <span class="customer-name">{{ order.customer.username if order.customer else 'N/A' }}</span>
-                                            <small class="customer-email">{{ order.customer.email if order.customer else order.shipping_email }}</small>
+                                            <span class="customer-name">{{ order.customer.username if order.customer
+                                                else 'N/A' }}</span>
+                                            <small class="customer-email">{{ order.customer.email if order.customer else
+                                                order.shipping_email }}</small>
                                         </div>
                                     </td>
                                     <td>{{ order.order_date.strftime('%Y-%m-%d') if order.order_date else '' }}</td>
                                     <td>
                                         {% if order.status == 'pending' %}
-                                            <span class="status-badge status-pending">
-                                                <i class="fas fa-clock me-1"></i>Pending
-                                            </span>
+                                        <span class="status-badge status-pending">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
                                         {% elif order.status == 'processing' %}
-                                            <span class="status-badge status-processing">
-                                                <i class="fas fa-cog me-1"></i>Processing
-                                            </span>
+                                        <span class="status-badge status-processing">
+                                            <i class="fas fa-cog me-1"></i>Processing
+                                        </span>
                                         {% elif order.status == 'shipped' %}
-                                            <span class="status-badge status-shipped">
-                                                <i class="fas fa-truck me-1"></i>Shipped
-                                            </span>
+                                        <span class="status-badge status-shipped">
+                                            <i class="fas fa-truck me-1"></i>Shipped
+                                        </span>
                                         {% elif order.status == 'delivered' %}
-                                            <span class="status-badge status-delivered">
-                                                <i class="fas fa-check-circle me-1"></i>Delivered
-                                            </span>
+                                        <span class="status-badge status-delivered">
+                                            <i class="fas fa-check-circle me-1"></i>Delivered
+                                        </span>
                                         {% elif order.status == 'cancelled' %}
-                                            <span class="status-badge status-cancelled">
-                                                <i class="fas fa-times-circle me-1"></i>Cancelled
-                                            </span>
+                                        <span class="status-badge status-cancelled">
+                                            <i class="fas fa-times-circle me-1"></i>Cancelled
+                                        </span>
                                         {% else %}
-                                            <span class="status-badge status-pending">
-                                                <i class="fas fa-clock me-1"></i>{{ order.status|title }}
-                                            </span>
+                                        <span class="status-badge status-pending">
+                                            <i class="fas fa-clock me-1"></i>{{ order.status|title }}
+                                        </span>
                                         {% endif %}
                                     </td>
-                                    <td><span class="order-total">₦{{ "{:,.2f}".format(order.total_amount|default(0)) }}</span></td>
+                                    <td><span class="order-total">₦{{ "{:,.2f}".format(order.total_amount|default(0))
+                                            }}</span></td>
                                     <td>
                                         <div class="action-buttons">
-                                            <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" 
-                                               class="btn-icon" title="View Order" data-bs-toggle="tooltip">
+                                            <a href="{{ url_for('track_order_result', order_number=order.order_number) }}"
+                                                class="btn-icon" title="View Order" data-bs-toggle="tooltip">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ url_for('update_tracking', order_id=order.id) }}" 
-                                               class="btn-icon" title="Update Tracking" data-bs-toggle="tooltip">
+                                            <a href="{{ url_for('update_tracking', order_id=order.id) }}"
+                                                class="btn-icon" title="Update Tracking" data-bs-toggle="tooltip">
                                                 <i class="fas fa-truck"></i>
                                             </a>
                                             {% if order.status != 'delivered' and order.status != 'cancelled' %}
-                                            <a href="{{ url_for('update_order_status', order_id=order.id, status='processing') }}" 
-                                               class="btn-icon" title="Process Order" data-bs-toggle="tooltip"
-                                               onclick="return confirm('Mark this order as processing?')">
+                                            <a href="{{ url_for('update_order_status', order_id=order.id, status='processing') }}"
+                                                class="btn-icon" title="Process Order" data-bs-toggle="tooltip"
+                                                onclick="return confirm('Mark this order as processing?')">
                                                 <i class="fas fa-cog"></i>
                                             </a>
-                                            <a href="{{ url_for('update_order_status', order_id=order.id, status='delivered') }}" 
-                                               class="btn-icon" title="Mark Delivered" data-bs-toggle="tooltip"
-                                               onclick="return confirm('Mark this order as delivered?')">
+                                            <a href="{{ url_for('update_order_status', order_id=order.id, status='delivered') }}"
+                                                class="btn-icon" title="Mark Delivered" data-bs-toggle="tooltip"
+                                                onclick="return confirm('Mark this order as delivered?')">
                                                 <i class="fas fa-check-circle"></i>
                                             </a>
                                             {% endif %}
@@ -285,16 +311,18 @@
                 <div class="info-card-body">
                     {% set total_products_safe = total_products|default(1) %}
                     {% if total_products_safe == 0 %}
-                        {% set total_products_safe = 1 %}
+                    {% set total_products_safe = 1 %}
                     {% endif %}
-                    
+
                     <div class="inventory-item">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Low Stock Items</span>
                             <span class="text-warning">{{ low_stock_count|default(0) }} items</span>
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-warning" style="width: {{ (low_stock_count|default(0) / total_products_safe * 100)|int }}%;"></div>
+                            <div class="progress-bar bg-warning"
+                                style="width: {{ (low_stock_count|default(0) / total_products_safe * 100)|int }}%;">
+                            </div>
                         </div>
                     </div>
                     <div class="inventory-item mt-3">
@@ -303,7 +331,9 @@
                             <span class="text-danger">{{ out_of_stock_count|default(0) }} items</span>
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-danger" style="width: {{ (out_of_stock_count|default(0) / total_products_safe * 100)|int }}%;"></div>
+                            <div class="progress-bar bg-danger"
+                                style="width: {{ (out_of_stock_count|default(0) / total_products_safe * 100)|int }}%;">
+                            </div>
                         </div>
                     </div>
                     <div class="inventory-item mt-3">
@@ -312,7 +342,9 @@
                             <span class="text-success">{{ in_stock_count|default(0) }} items</span>
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: {{ (in_stock_count|default(0) / total_products_safe * 100)|int }}%;"></div>
+                            <div class="progress-bar bg-success"
+                                style="width: {{ (in_stock_count|default(0) / total_products_safe * 100)|int }}%;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -325,27 +357,27 @@
                 </div>
                 <div class="info-card-body">
                     {% if recent_activities %}
-                        {% for activity in recent_activities %}
-                        <div class="activity-item">
-                            <div class="activity-icon bg-gold-soft">
-                                <i class="fas fa-{{ activity.icon|default('circle') }} text-gold"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p class="mb-0">{{ activity.description }}</p>
-                                <small class="text-muted">{{ activity.time }}</small>
-                            </div>
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon bg-gold-soft">
+                            <i class="fas fa-{{ activity.icon|default('circle') }} text-gold"></i>
                         </div>
-                        {% endfor %}
+                        <div class="activity-content">
+                            <p class="mb-0">{{ activity.description }}</p>
+                            <small class="text-muted">{{ activity.time }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
                     {% else %}
-                        <div class="activity-item">
-                            <div class="activity-icon bg-gold-soft">
-                                <i class="fas fa-check-circle text-gold"></i>
-                            </div>
-                            <div class="activity-content">
-                                <p class="mb-0">No recent activity</p>
-                                <small class="text-muted">Store is quiet</small>
-                            </div>
+                    <div class="activity-item">
+                        <div class="activity-icon bg-gold-soft">
+                            <i class="fas fa-check-circle text-gold"></i>
                         </div>
+                        <div class="activity-content">
+                            <p class="mb-0">No recent activity</p>
+                            <small class="text-muted">Store is quiet</small>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -354,457 +386,457 @@
 </div>
 
 <style>
-:root {
-    --gold: #D4AF37;
-    --gold-dark: #B8860B;
-    --gold-soft: rgba(212, 175, 55, 0.1);
-    --dark: #1a1a1a;
-    --dark-soft: rgba(0, 0, 0, 0.05);
-}
+    :root {
+        --gold: #D4AF37;
+        --gold-dark: #B8860B;
+        --gold-soft: rgba(212, 175, 55, 0.1);
+        --dark: #1a1a1a;
+        --dark-soft: rgba(0, 0, 0, 0.05);
+    }
 
-body{
-    margin-top: 90px;
-}
+    body {
+        margin-top: 90px;
+    }
 
-/* Welcome Card */
-.welcome-card {
-    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(212, 175, 55, 0.2);
-}
+    /* Welcome Card */
+    .welcome-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+    }
 
-/* Statistics Cards */
-.stat-card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
+    /* Statistics Cards */
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(212, 175, 55, 0.15);
-    border-color: var(--gold);
-}
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(212, 175, 55, 0.15);
+        border-color: var(--gold);
+    }
 
-.stat-card.bg-gold {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-}
+    .stat-card.bg-gold {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    }
 
-.stat-card-body {
-    padding: 1.8rem;
-}
-
-.stat-icon-wrapper {
-    width: 60px;
-    height: 60px;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-}
-
-.bg-gold-soft {
-    background: var(--gold-soft);
-}
-
-.bg-dark-soft {
-    background: var(--dark-soft);
-}
-
-.text-gold {
-    color: var(--gold);
-}
-
-.stat-label {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6c757d;
-    margin-bottom: 0.3rem;
-}
-
-.stat-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--dark);
-}
-
-/* Section Title */
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--dark);
-    position: relative;
-    padding-left: 15px;
-}
-
-.section-title::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 5px;
-    height: 20px;
-    background: var(--gold);
-    border-radius: 5px;
-}
-
-/* Action Cards */
-.action-card {
-    display: block;
-    text-decoration: none;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.action-card:hover {
-    transform: translateX(5px);
-    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15);
-    border-color: var(--gold);
-    text-decoration: none;
-}
-
-.action-card-body {
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.action-icon {
-    width: 50px;
-    height: 50px;
-    background: var(--gold-soft);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--gold);
-    transition: all 0.3s ease;
-}
-
-.action-card:hover .action-icon {
-    background: var(--gold);
-    color: #ffffff;
-}
-
-.action-content {
-    flex: 1;
-}
-
-.action-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: 0.2rem;
-}
-
-.action-desc {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-bottom: 0;
-}
-
-.action-arrow {
-    color: var(--gold);
-    opacity: 0;
-    transform: translateX(-10px);
-    transition: all 0.3s ease;
-}
-
-.action-card:hover .action-arrow {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-/* Table Card */
-.table-card {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    overflow: hidden;
-}
-
-.table-card-header {
-    padding: 1.5rem;
-    border-bottom: 2px solid rgba(212, 175, 55, 0.1);
-}
-
-.table-card-body {
-    padding: 1.5rem;
-}
-
-.view-all-link {
-    color: var(--gold);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.view-all-link:hover {
-    color: var(--gold-dark);
-    transform: translateX(5px);
-}
-
-/* Modern Table */
-.modern-table {
-    margin-bottom: 0;
-}
-
-.modern-table thead th {
-    border: none;
-    color: #6c757d;
-    font-weight: 500;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 1rem 0.75rem;
-}
-
-.modern-table tbody tr {
-    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-    transition: all 0.3s ease;
-}
-
-.modern-table tbody tr:hover {
-    background: var(--gold-soft);
-}
-
-.modern-table td {
-    padding: 1rem 0.75rem;
-    vertical-align: middle;
-}
-
-.order-number {
-    font-weight: 600;
-    color: var(--gold);
-}
-
-.customer-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.customer-name {
-    font-weight: 500;
-    color: var(--dark);
-}
-
-.customer-email {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
-
-/* Status Badges */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    border-radius: 30px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.status-pending {
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
-}
-
-.status-processing {
-    background: rgba(23, 162, 184, 0.1);
-    color: #17a2b8;
-}
-
-.status-shipped {
-    background: rgba(0, 123, 255, 0.1);
-    color: #007bff;
-}
-
-.status-delivered {
-    background: rgba(40, 167, 69, 0.1);
-    color: #28a745;
-}
-
-.status-cancelled {
-    background: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-}
-
-.order-total {
-    font-weight: 600;
-    color: var(--gold);
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 0.3rem;
-}
-
-.btn-icon {
-    width: 35px;
-    height: 35px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--gold);
-    background: var(--gold-soft);
-    transition: all 0.3s ease;
-    text-decoration: none;
-}
-
-.btn-icon:hover {
-    background: var(--gold);
-    color: #ffffff;
-    transform: translateY(-2px);
-}
-
-/* Info Cards */
-.info-card {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    height: 100%;
-}
-
-.info-card-header {
-    padding: 1.2rem 1.5rem;
-    border-bottom: 2px solid rgba(212, 175, 55, 0.1);
-}
-
-.info-card-header h6 {
-    color: var(--dark);
-    font-weight: 600;
-}
-
-.info-card-body {
-    padding: 1.5rem;
-}
-
-/* Activity Items */
-.activity-item {
-    display: flex;
-    gap: 1rem;
-    padding: 0.8rem 0;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-}
-
-.activity-item:last-child {
-    border-bottom: none;
-}
-
-.activity-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-}
-
-.activity-content {
-    flex: 1;
-}
-
-.activity-content p {
-    font-size: 0.9rem;
-    color: var(--dark);
-    margin-bottom: 0.25rem;
-}
-
-/* Progress Bars */
-.progress {
-    background-color: rgba(212, 175, 55, 0.1);
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
     .stat-card-body {
-        padding: 1.2rem;
+        padding: 1.8rem;
     }
-    
+
+    .stat-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+
+    .bg-gold-soft {
+        background: var(--gold-soft);
+    }
+
+    .bg-dark-soft {
+        background: var(--dark-soft);
+    }
+
+    .text-gold {
+        color: var(--gold);
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--dark);
+        position: relative;
+        padding-left: 15px;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 5px;
+        height: 20px;
+        background: var(--gold);
+        border-radius: 5px;
+    }
+
+    /* Action Cards */
+    .action-card {
+        display: block;
+        text-decoration: none;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .action-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15);
+        border-color: var(--gold);
+        text-decoration: none;
+    }
+
     .action-card-body {
-        padding: 1rem;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
-    
+
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--gold-soft);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--gold);
+        transition: all 0.3s ease;
+    }
+
+    .action-card:hover .action-icon {
+        background: var(--gold);
+        color: #ffffff;
+    }
+
+    .action-content {
+        flex: 1;
+    }
+
+    .action-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 0.2rem;
+    }
+
+    .action-desc {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .action-arrow {
+        color: var(--gold);
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s ease;
+    }
+
+    .action-card:hover .action-arrow {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Table Card */
+    .table-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        overflow: hidden;
+    }
+
     .table-card-header {
-        padding: 1rem;
+        padding: 1.5rem;
+        border-bottom: 2px solid rgba(212, 175, 55, 0.1);
     }
-    
+
     .table-card-body {
-        padding: 1rem;
+        padding: 1.5rem;
     }
-    
+
+    .view-all-link {
+        color: var(--gold);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .view-all-link:hover {
+        color: var(--gold-dark);
+        transform: translateX(5px);
+    }
+
+    /* Modern Table */
+    .modern-table {
+        margin-bottom: 0;
+    }
+
+    .modern-table thead th {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+    }
+
+    .modern-table tbody tr {
+        border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .modern-table tbody tr:hover {
+        background: var(--gold-soft);
+    }
+
+    .modern-table td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .order-number {
+        font-weight: 600;
+        color: var(--gold);
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color: var(--dark);
+    }
+
+    .customer-email {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .status-processing {
+        background: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .status-shipped {
+        background: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+
+    .status-delivered {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .status-cancelled {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .order-total {
+        font-weight: 600;
+        color: var(--gold);
+    }
+
+    /* Action Buttons */
     .action-buttons {
-        flex-wrap: wrap;
+        display: flex;
+        gap: 0.3rem;
     }
-}
+
+    .btn-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        background: var(--gold-soft);
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-icon:hover {
+        background: var(--gold);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(212, 175, 55, 0.1);
+        height: 100%;
+    }
+
+    .info-card-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 2px solid rgba(212, 175, 55, 0.1);
+    }
+
+    .info-card-header h6 {
+        color: var(--dark);
+        font-weight: 600;
+    }
+
+    .info-card-body {
+        padding: 1.5rem;
+    }
+
+    /* Activity Items */
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-content p {
+        font-size: 0.9rem;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+    }
+
+    /* Progress Bars */
+    .progress {
+        background-color: rgba(212, 175, 55, 0.1);
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stat-card-body {
+            padding: 1.2rem;
+        }
+
+        .action-card-body {
+            padding: 1rem;
+        }
+
+        .table-card-header {
+            padding: 1rem;
+        }
+
+        .table-card-body {
+            padding: 1rem;
+        }
+
+        .action-buttons {
+            flex-wrap: wrap;
+        }
+    }
 </style>
 
 {% block scripts %}
 {{ super() }}
 <script>
-// Initialize tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-});
 
-// Animate numbers on load
-function animateNumbers() {
-    const stats = document.querySelectorAll('.stat-value');
-    stats.forEach(stat => {
-        const text = stat.innerText;
-        const numbers = text.match(/[\d,]+/g);
-        if (numbers) {
-            const target = parseInt(numbers[0].replace(/,/g, ''));
-            if (!isNaN(target) && target > 0) {
-                let current = 0;
-                const increment = Math.ceil(target / 50);
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= target) {
-                        clearInterval(timer);
-                        stat.innerText = text.replace(/\d[\d,]*/, target.toLocaleString());
-                    } else {
-                        stat.innerText = text.replace(/\d[\d,]*/, current.toLocaleString());
-                    }
-                }, 20);
+    // Animate numbers on load
+    function animateNumbers() {
+        const stats = document.querySelectorAll('.stat-value');
+        stats.forEach(stat => {
+            const text = stat.innerText;
+            const numbers = text.match(/[\d,]+/g);
+            if (numbers) {
+                const target = parseInt(numbers[0].replace(/,/g, ''));
+                if (!isNaN(target) && target > 0) {
+                    let current = 0;
+                    const increment = Math.ceil(target / 50);
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            clearInterval(timer);
+                            stat.innerText = text.replace(/\d[\d,]*/, target.toLocaleString());
+                        } else {
+                            stat.innerText = text.replace(/\d[\d,]*/, current.toLocaleString());
+                        }
+                    }, 20);
+                }
             }
-        }
-    });
-}
+        });
+    }
 
-window.addEventListener('load', animateNumbers);
+    window.addEventListener('load', animateNumbers);
 
-// Refresh data periodically (optional)
-// setInterval(function() {
-//     location.reload();
-// }, 300000); // Refresh every 5 minutes
+    // Refresh data periodically (optional)
+    // setInterval(function() {
+    //     location.reload();
+    // }, 300000); // Refresh every 5 minutes
 </script>
 {% endblock %}
 {% endblock %}

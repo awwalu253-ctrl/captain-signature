@@ -1,0 +1,681 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Breadcrumb Navigation -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Customer Management</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="display-6 fw-bold" style="color: var(--gold);">Customer Management</h2>
+                    <p class="text-muted">View and manage your registered customers</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-gold" onclick="exportCustomers()">
+                        <i class="fas fa-download me-2"></i>Export List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4 mt-2">
+        <div class="col-md-4">
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-wrapper bg-gold-soft">
+                            <i class="fas fa-users text-gold"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="stat-label">Total Customers</h6>
+                            <h3 class="stat-value mb-0">{{ total_customers }}</h3>
+                            <small class="text-success"><i class="fas fa-arrow-up me-1"></i>Lifetime</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-wrapper bg-gold-soft">
+                            <i class="fas fa-user-plus text-gold"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="stat-label">New Today</h6>
+                            <h3 class="stat-value mb-0">{{ new_today }}</h3>
+                            <small class="text-info"><i class="fas fa-calendar me-1"></i>{{ now.strftime('%B %d') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon-wrapper bg-gold-soft">
+                            <i class="fas fa-shopping-bag text-gold"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="stat-label">With Orders</h6>
+                            <h3 class="stat-value mb-0">{{ customers|selectattr('orders')|list|length }}</h3>
+                            <small class="text-warning"><i class="fas fa-chart-line me-1"></i>Active customers</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-gold">
+                    <i class="fas fa-search text-gold"></i>
+                </span>
+                <input type="text" class="form-control border-gold" id="customerSearch" placeholder="Search by name, email, or ID..." 
+                       onkeyup="filterCustomers()">
+                <button class="btn btn-gold" type="button">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-select border-gold" id="orderFilter" onchange="filterCustomers()">
+                <option value="all">All Customers</option>
+                <option value="with-orders">With Orders</option>
+                <option value="no-orders">No Orders Yet</option>
+                <option value="recent">Joined Today</option>
+                <option value="this-month">Joined This Month</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Customers Table Card -->
+    <div class="card" data-aos="fade-up" data-aos-delay="400">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2" style="color: var(--gold);"></i>
+                    Registered Customers
+                </h5>
+                <span class="badge bg-gold text-white p-2">
+                    {{ customers|length }} Total
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover modern-table mb-0" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Joined</th>
+                            <th>Orders</th>
+                            <th>Total Spent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr class="customer-row" 
+                            data-name="{{ customer.username|lower }}"
+                            data-email="{{ customer.email|lower }}"
+                            data-id="{{ customer.id }}"
+                            data-orders="{{ customer.orders|length }}"
+                            data-date="{{ customer.created_at.strftime('%Y-%m-%d') }}">
+                            
+                            <td>
+                                <span class="badge bg-gold-soft text-gold px-3 py-2">#{{ customer.id }}</span>
+                            </td>
+                            
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-gold-soft me-3">
+                                        <span class="initials">{{ customer.username[:1]|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold">{{ customer.username }}</span>
+                                        {% if customer.orders|length > 0 %}
+                                        <span class="badge bg-success ms-2">Active</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <td>
+                                <div class="contact-info">
+                                    <div><i class="fas fa-envelope text-gold me-2"></i>{{ customer.email }}</div>
+                                    {% if customer.phone %}
+                                    <div><small><i class="fas fa-phone text-gold me-2"></i>{{ customer.phone }}</small></div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <td>
+                                <div class="date-info">
+                                    <div>{{ customer.created_at.strftime('%b %d, %Y') }}</div>
+                                    <small class="text-muted">{{ customer.created_at.strftime('%H:%M') }}</small>
+                                </div>
+                            </td>
+                            
+                            <td>
+                                <span class="badge {% if customer.orders|length > 0 %}bg-gold{% else %}bg-secondary{% endif %} p-2">
+                                    {{ customer.orders|length }}
+                                </span>
+                            </td>
+                            
+                            <td>
+                                <span class="fw-bold text-gold">₦{{ "%.2f"|format(customer.orders|sum(attribute='total_amount')) }}</span>
+                            </td>
+                            
+                            <td>
+                                {% if customer.orders|length > 0 %}
+                                <span class="status-badge status-active">
+                                    <i class="fas fa-circle me-1"></i>Active
+                                </span>
+                                {% else %}
+                                <span class="status-badge status-inactive">
+                                    <i class="fas fa-circle me-1"></i>Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="#" class="btn-icon" data-bs-toggle="modal" data-bs-target="#customerModal{{ customer.id }}" 
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn-icon" title="Send Message" onclick="sendMessage('{{ customer.email }}')">
+                                        <i class="fas fa-envelope"></i>
+                                    </a>
+                                    <a href="#" class="btn-icon" title="View Orders" onclick="viewOrders({{ customer.id }})">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Customer Details Modal - Enhanced -->
+                        <div class="modal fade" id="customerModal{{ customer.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header" style="background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);">
+                                        <h5 class="modal-title text-white">
+                                            <i class="fas fa-user-circle me-2"></i>
+                                            Customer Profile: {{ customer.username }}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-4 text-center mb-3">
+                                                <div class="avatar-large bg-gold-soft mx-auto mb-3">
+                                                    <span class="initials-large">{{ customer.username[:2]|upper }}</span>
+                                                </div>
+                                                <h5>{{ customer.username }}</h5>
+                                                <span class="badge {% if customer.orders|length > 0 %}bg-gold{% else %}bg-secondary{% endif %}">
+                                                    {% if customer.orders|length > 0 %}Active Customer{% else %}New Customer{% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="fw-bold text-gold">Email Address</label>
+                                                        <p><i class="fas fa-envelope me-2 text-gold"></i>{{ customer.email }}</p>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="fw-bold text-gold">Phone Number</label>
+                                                        <p><i class="fas fa-phone me-2 text-gold"></i>{{ customer.phone or 'Not provided' }}</p>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="fw-bold text-gold">Member Since</label>
+                                                        <p><i class="fas fa-calendar me-2 text-gold"></i>{{ customer.created_at.strftime('%B %d, %Y') }}</p>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="fw-bold text-gold">Last Active</label>
+                                                        <p><i class="fas fa-clock me-2 text-gold"></i>Today</p>
+                                                    </div>
+                                                    <div class="col-12 mb-3">
+                                                        <label class="fw-bold text-gold">Shipping Address</label>
+                                                        <p class="p-3 bg-light rounded">
+                                                            <i class="fas fa-map-marker-alt me-2 text-gold"></i>
+                                                            {% if customer.address %}
+                                                                {{ customer.address }}<br>
+                                                                {{ customer.city }}, {{ customer.state }}<br>
+                                                                Nigeria
+                                                            {% else %}
+                                                                No address provided
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <!-- Order Summary -->
+                                        <h6 class="fw-bold mb-3">Order Summary</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="stat-mini-card">
+                                                    <h3 class="text-gold">{{ customer.orders|length }}</h3>
+                                                    <small>Total Orders</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="stat-mini-card">
+                                                    <h3 class="text-gold">₦{{ "%.0f"|format(customer.orders|sum(attribute='total_amount')) }}</h3>
+                                                    <small>Total Spent</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="stat-mini-card">
+                                                    <h3 class="text-gold">₦{{ "%.0f"|format((customer.orders|sum(attribute='total_amount') / customer.orders|length) if customer.orders|length > 0 else 0) }}</h3>
+                                                    <small>Avg. Order Value</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if customer.orders %}
+                                        <hr>
+                                        <h6 class="fw-bold mb-3">Recent Orders</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Order #</th>
+                                                        <th>Date</th>
+                                                        <th>Status</th>
+                                                        <th>Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for order in customer.orders[:3] %}
+                                                    <tr>
+                                                        <td>
+                                                            <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" 
+                                                               class="text-gold">
+                                                                #{{ order.order_number }}
+                                                            </a>
+                                                        </td>
+                                                        <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
+                                                        <td>
+                                                            <span class="badge {% if order.status == 'delivered' %}bg-success{% elif order.status == 'pending' %}bg-warning{% elif order.status == 'cancelled' %}bg-danger{% else %}bg-info{% endif %}">
+                                                                {{ order.status }}
+                                                            </span>
+                                                        </td>
+                                                        <td>₦{{ "%.2f"|format(order.total_amount) }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                        <a href="{{ url_for('admin_orders') }}?customer={{ customer.id }}" class="btn btn-gold">
+                                            <i class="fas fa-shopping-bag me-2"></i>View All Orders
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Table Footer with Pagination -->
+        <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Showing {{ customers|length }} customers</small>
+                </div>
+                <div>
+                    <nav aria-label="Customer pagination">
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --gold: #D4AF37;
+    --gold-dark: #B8860B;
+    --gold-soft: rgba(212, 175, 55, 0.1);
+    --dark: #1a1a1a;
+    --light-bg: #f8f9fa;
+}
+
+body{
+    margin-top: 40px;
+}
+
+/* Avatar Styles */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--gold);
+    border: 3px solid var(--gold);
+}
+
+.initials {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.initials-large {
+    font-size: 3rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+/* Stat Cards */
+.stat-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(212, 175, 55, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(212, 175, 55, 0.15);
+    border-color: var(--gold);
+}
+
+.stat-card-body {
+    padding: 1.8rem;
+}
+
+.stat-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.bg-gold-soft {
+    background: var(--gold-soft);
+}
+
+.text-gold {
+    color: var(--gold);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 0.3rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-inactive {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.btn-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    background: var(--gold-soft);
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    background: var(--gold);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Mini Stat Cards */
+.stat-mini-card {
+    background: var(--light-bg);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-mini-card h3 {
+    margin-bottom: 0.2rem;
+    font-weight: 700;
+}
+
+.stat-mini-card small {
+    color: #6c757d;
+}
+
+/* Buttons */
+.btn-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+    color: white;
+}
+
+.btn-outline-gold {
+    background: transparent;
+    color: var(--gold);
+    border: 2px solid var(--gold);
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+    background: var(--gold);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Search Input */
+.border-gold {
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.border-gold:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+}
+
+/* Pagination */
+.page-link {
+    color: var(--gold);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.page-link:hover {
+    background: var(--gold-soft);
+    color: var(--gold-dark);
+    border-color: var(--gold);
+}
+
+.page-item.active .page-link {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: white;
+}
+</style>
+
+<script>
+// Customer search functionality
+function filterCustomers() {
+    const searchTerm = document.getElementById('customerSearch').value.toLowerCase();
+    const filterValue = document.getElementById('orderFilter').value;
+    const rows = document.querySelectorAll('.customer-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const email = row.dataset.email;
+        const id = row.dataset.id;
+        const orders = parseInt(row.dataset.orders);
+        const date = row.dataset.date;
+        
+        let matchesSearch = searchTerm === '' || 
+                           name.includes(searchTerm) || 
+                           email.includes(searchTerm) || 
+                           id.includes(searchTerm);
+        
+        let matchesFilter = true;
+        switch(filterValue) {
+            case 'with-orders':
+                matchesFilter = orders > 0;
+                break;
+            case 'no-orders':
+                matchesFilter = orders === 0;
+                break;
+            case 'recent':
+                matchesFilter = date === new Date().toISOString().split('T')[0];
+                break;
+        }
+        
+        row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+    });
+}
+
+// Export customers list
+function exportCustomers() {
+    const customers = [];
+    document.querySelectorAll('.customer-row').forEach(row => {
+        customers.push({
+            id: row.dataset.id,
+            name: row.querySelector('.fw-bold').textContent.trim(),
+            email: row.querySelector('.contact-info div:first-child').textContent.replace(/\s+/g, ' ').trim(),
+            orders: row.dataset.orders,
+            joined: row.querySelector('.date-info div:first-child').textContent
+        });
+    });
+    
+    const csv = 'ID,Name,Email,Orders,Joined\n' + 
+                customers.map(c => `${c.id},${c.name},${c.email},${c.orders},${c.joined}`).join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'customers.csv';
+    a.click();
+}
+
+// Send message to customer
+function sendMessage(email) {
+    window.location.href = `mailto:${email}`;
+}
+
+// View customer orders
+function viewOrders(customerId) {
+    window.location.href = `{{ url_for('admin_orders') }}?customer=${customerId}`;
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
