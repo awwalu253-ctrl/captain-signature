@@ -23,9 +23,17 @@ from cart import Cart
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Setup logging
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
+# Print environment variables for debugging (remove in production)
+print("=== ENVIRONMENT VARIABLES DEBUG ===")
+print(f"DATABASE_URL: {'Set' if os.environ.get('DATABASE_URL') else 'NOT SET'}")
+print(f"POSTGRES_URL: {'Set' if os.environ.get('POSTGRES_URL') else 'NOT SET'}")
+print(f"POSTGRES_PRISMA_URL: {'Set' if os.environ.get('POSTGRES_PRISMA_URL') else 'NOT SET'}")
+print(f"VERCEL_ENV: {os.environ.get('VERCEL_ENV', 'not set')}")
+print("===================================")
 
 # Function to ensure directories exist with proper permissions
 def ensure_directories():
@@ -114,10 +122,13 @@ login_manager.login_message_category = 'info'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables and admin user
-
+# Create tables and admin user - FIXED with app context
+with app.app_context():
     try:
+        # Create all tables
         db.create_all()
+        print("✓ Database tables created/verified")
+        
         # Create admin user if not exists
         if not User.query.filter_by(email='admin@captainsignature.com').first():
             admin = User(
@@ -135,17 +146,20 @@ def load_user(user_id):
         # Create default settings if not exists
         settings = Settings.query.first()
         if not settings:
-            settings = Settings()
+            settings = Settings(
+                delivery_fee=1500.00,
+                free_delivery_threshold=0,
+                currency='₦',
+                site_name='Captain Signature'
+            )
             db.session.add(settings)
             db.session.commit()
             print("✓ Default settings created successfully!")
             print(f"  Delivery fee: ₦{settings.delivery_fee}")
             
-        print("✓ Database tables created/verified")  # Add this line
     except Exception as e:
         print(f"✗ Database initialization error: {e}")
         print(traceback.format_exc())
-
 
 # Route to serve images from user's home directory
 @app.route('/user-uploads/<filename>')
@@ -153,6 +167,36 @@ def user_uploads(filename):
     user_home = os.path.expanduser("~")
     upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
     return send_from_directory(upload_folder, filename)
+
+# Debug route to check configuration
+@app.route('/debug-config')
+def debug_config():
+    """Debug route to check configuration"""
+    return {
+        'database_uri': str(app.config['SQLALCHEMY_DATABASE_URI'])[:50] + '...',
+        'is_vercel': app.config.get('IS_VERCEL', False),
+        'database_url_env': os.environ.get('DATABASE_URL', 'not set'),
+        'postgres_url_env': os.environ.get('POSTGRES_URL', 'not set'),
+        'postgres_prisma_url_env': os.environ.get('POSTGRES_PRISMA_URL', 'not set'),
+    }
+
+# Debug route to check database connection
+@app.route('/debug-db')
+def debug_db():
+    try:
+        # Test database connection
+        result = db.session.execute('SELECT 1').scalar()
+        return {
+            'status': 'connected',
+            'result': result,
+            'database_url': os.environ.get('DATABASE_URL', 'not set')[:20] + '...' if os.environ.get('DATABASE_URL') else 'not set'
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }, 500
 
 # Routes
 @app.route('/')
@@ -207,23 +251,6 @@ def signup():
     
     return render_template('signup.html', form=form)
 
-@app.route('/debug-db')
-def debug_db():
-    try:
-        # Test database connection
-        result = db.session.execute('SELECT 1').scalar()
-        return {
-            'status': 'connected',
-            'result': result,
-            'database_url': os.environ.get('DATABASE_URL', 'not set')[:20] + '...' if os.environ.get('DATABASE_URL') else 'not set'
-        }
-    except Exception as e:
-        return {
-            'status': 'error',
-            'error': str(e),
-            'traceback': traceback.format_exc()
-        }, 500
-        
 @app.route('/logout')
 def logout():
     logout_user()
