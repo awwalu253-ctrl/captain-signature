@@ -5,21 +5,14 @@
 <section class="hero-section position-relative overflow-hidden" style="height: 80vh; z-index: 1;">
     <!-- Background Video/Image with Overlay -->
     <div class="hero-background position-absolute w-100 h-100" style="z-index: 1;">
-        <div class="hero-overlay position-absolute w-100 h-100"
-            style="background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%); z-index: 2;"></div>
+        <div class="hero-overlay position-absolute w-100 h-100" style="background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%); z-index: 2;"></div>
         <div class="hero-slideshow" style="z-index: 1;">
-            <div class="hero-slide active"
-                style="background-image: url('https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');">
-            </div>
-            <div class="hero-slide"
-                style="background-image: url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');">
-            </div>
-            <div class="hero-slide"
-                style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');">
-            </div>
+            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');"></div>
         </div>
     </div>
-
+    
     <!-- Animated Particles -->
     <div class="particles position-absolute w-100 h-100" style="z-index: 3; pointer-events: none;">
         <div class="particle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
@@ -35,23 +28,23 @@
             <div class="col-lg-8 mx-auto text-center text-white" data-aos="fade-up" data-aos-duration="1500">
                 <!-- Animated Gold Bar -->
                 <div class="gold-bar mb-4 mx-auto"></div>
-
+                
                 <!-- Main Title with Split Text Animation -->
                 <h1 class="hero-title display-1 fw-bold mb-4">
                     <span class="title-word title-word-1">Captain</span>
                     <span class="title-word title-word-2">Signature</span>
                 </h1>
-
+                
                 <!-- Subtitle with Typewriter Effect -->
                 <div class="typewriter mb-4">
                     <p class="lead fs-3">Premium Clothing for the Modern Individual</p>
                 </div>
-
+                
                 <!-- Description with Fade In -->
                 <p class="hero-description mb-5 fs-5 text-white-50" data-aos="fade-up" data-aos-delay="500">
                     Discover our exclusive collection of luxury apparel, crafted with passion and precision.
                 </p>
-
+                
                 <!-- CTA Buttons with Hover Effects -->
                 <div class="cta-buttons" data-aos="fade-up" data-aos-delay="800">
                     <a href="{{ url_for('products') }}" class="btn btn-gold btn-lg me-3 hvr-float-shadow">
@@ -61,10 +54,9 @@
                         <i class="fas fa-play me-2"></i>Explore
                     </a>
                 </div>
-
+                
                 <!-- Animated Scroll Indicator -->
-                <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-5"
-                    style="z-index: 20;">
+                <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-5" style="z-index: 20;">
                     <div class="mouse">
                         <div class="wheel"></div>
                     </div>
@@ -102,37 +94,36 @@
                     <!-- Product Image with Hover Effects -->
                     <div class="product-image-wrapper position-relative overflow-hidden rounded-3">
                         {% if product.image %}
-                        {% if product.image.startswith('tmp:') %}
-                        {% set filename = product.image.replace('tmp:', '') %}
-                        <img src="{{ url_for('tmp_uploads', filename=filename) }}" class="card-img-top product-image"
-                            alt="{{ product.name }}">
-                        {% elif product.image.startswith('user_uploads:') %}
-                        {% set filename = product.image.replace('user_uploads:', '') %}
-                        <img src="{{ url_for('user_uploads', filename=filename) }}" class="card-img-top product-image"
-                            alt="{{ product.name }}">
+                            {% if product.image.startswith('tmp:') %}
+                                {% set filename = product.image.replace('tmp:', '') %}
+                                <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
+                                     class="card-img-top product-image" 
+                                     alt="{{ product.name }}">
+                            {% elif product.image.startswith('user_uploads:') %}
+                                {% set filename = product.image.replace('user_uploads:', '') %}
+                                <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                                     class="card-img-top product-image" 
+                                     alt="{{ product.name }}">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
+                                     class="card-img-top product-image" 
+                                     alt="{{ product.name }}">
+                            {% endif %}
                         {% else %}
-                        <img src="{{ url_for('static', filename='images/products/' + product.image) }}"
-                            class="card-img-top product-image" alt="{{ product.name }}">
+                            <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top product-image" 
+                                 alt="Placeholder">
                         {% endif %}
-                        {% else %}
-                        <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            class="card-img-top product-image" alt="Placeholder">
-                        {% endif %}
-                        <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            class="card-img-top product-image" alt="Placeholder">
-                        {% endif %}
-
+                        
                         <!-- Product Overlay -->
-                        <div
-                            class="product-overlay position-absolute w-100 h-100 d-flex align-items-center justify-content-center">
+                        <div class="product-overlay position-absolute w-100 h-100 d-flex align-items-center justify-content-center">
                             <div class="overlay-content text-center">
-                                <a href="{{ url_for('product_detail', product_id=product.id) }}"
-                                    class="btn btn-gold btn-sm rounded-pill">
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-gold btn-sm rounded-pill">
                                     <i class="fas fa-eye me-2"></i>Quick View
                                 </a>
                             </div>
                         </div>
-
+                        
                         <!-- Product Badge -->
                         {% if loop.first %}
                         <span class="product-badge position-absolute top-0 end-0 m-3">
@@ -145,22 +136,18 @@
                     <div class="card-body text-center px-0">
                         <h5 class="product-title mb-2">{{ product.name }}</h5>
                         <div class="product-price mb-3">
-                            <span class="current-price text-gold fw-bold fs-5">{{ g.settings.currency }}{{
-                                "%.2f"|format(product.price) }}</span>
+                            <span class="current-price text-gold fw-bold fs-5">{{ g.settings.currency }}{{ "%.2f"|format(product.price) }}</span>
                         </div>
-
+                        
                         <!-- Quick Actions -->
                         <div class="product-actions d-flex justify-content-center gap-2">
-                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST"
-                                class="d-inline add-to-cart-form">
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" class="d-inline add-to-cart-form">
                                 <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="btn btn-outline-gold btn-sm rounded-circle"
-                                    title="Add to Cart">
+                                <button type="submit" class="btn btn-outline-gold btn-sm rounded-circle" title="Add to Cart">
                                     <i class="fas fa-shopping-cart"></i>
                                 </button>
                             </form>
-                            <a href="{{ url_for('product_detail', product_id=product.id) }}"
-                                class="btn btn-outline-gold btn-sm rounded-circle" title="View Details">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-gold btn-sm rounded-circle" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </a>
                         </div>
@@ -199,8 +186,8 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="100">
                 <a href="{{ url_for('products', category='mens') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            alt="Men's Fashion" class="category-image w-100">
+                        <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                             alt="Men's Fashion" class="category-image w-100">
                         <div class="category-overlay">
                             <div class="category-content text-center">
                                 <i class="fas fa-tshirt fa-3x mb-3 text-gold"></i>
@@ -217,8 +204,8 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="200">
                 <a href="{{ url_for('products', category='womens') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            alt="Women's Fashion" class="category-image w-100">
+                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                             alt="Women's Fashion" class="category-image w-100">
                         <div class="category-overlay">
                             <div class="category-content text-center">
                                 <i class="fas fa-female fa-3x mb-3 text-gold"></i>
@@ -235,8 +222,8 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="300">
                 <a href="{{ url_for('products', category='footwear') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            alt="Footwear" class="category-image w-100">
+                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                             alt="Footwear" class="category-image w-100">
                         <div class="category-overlay">
                             <div class="category-content text-center">
                                 <i class="fas fa-shoe-prints fa-3x mb-3 text-gold"></i>
@@ -253,8 +240,8 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
                 <a href="{{ url_for('products', category='accessories') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            alt="Accessories" class="category-image w-100">
+                        <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                             alt="Accessories" class="category-image w-100">
                         <div class="category-overlay">
                             <div class="category-content text-center">
                                 <i class="fas fa-clock fa-3x mb-3 text-gold"></i>
@@ -324,8 +311,8 @@
                 <p class="text-white-50 mb-4">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
                 <form class="newsletter-form">
                     <div class="input-group mb-3">
-                        <input type="email" class="form-control form-control-lg bg-dark text-white border-gold"
-                            placeholder="Enter your email" aria-label="Email" required>
+                        <input type="email" class="form-control form-control-lg bg-dark text-white border-gold" 
+                               placeholder="Enter your email" aria-label="Email" required>
                         <button class="btn btn-gold px-4" type="submit">
                             Subscribe <i class="fas fa-paper-plane ms-2"></i>
                         </button>
@@ -337,540 +324,474 @@
 </section>
 
 <style>
-    /* Hero Section Styles */
-    .hero-section {
-        position: relative;
-        height: 80vh;
-        overflow: hidden;
-    }
+/* Hero Section Styles */
+.hero-section {
+    position: relative;
+    height: 80vh;
+    overflow: hidden;
+}
 
-    .hero-background {
-        top: 0;
-        left: 0;
-        z-index: -1;
-    }
+.hero-background {
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
 
-    .hero-overlay {
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 100%);
-        z-index: 2;
-    }
+.hero-overlay {
+    background: linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 100%);
+    z-index: 2;
+}
 
-    .hero-slideshow {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
+.hero-slideshow {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
 
-    .hero-slide {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    animation: slideshow 24s infinite;
+}
+
+.hero-slide:nth-child(1) { animation-delay: 0s; }
+.hero-slide:nth-child(2) { animation-delay: 8s; }
+.hero-slide:nth-child(3) { animation-delay: 16s; }
+
+@keyframes slideshow {
+    0%, 20% { opacity: 0; }
+    25%, 45% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+/* Particles Animation */
+.particles {
+    z-index: 3;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: float-particle 8s infinite linear;
+}
+
+@keyframes float-particle {
+    0% {
+        transform: translateY(0) translateX(0);
         opacity: 0;
-        animation: slideshow 24s infinite;
     }
-
-    .hero-slide:nth-child(1) {
-        animation-delay: 0s;
-    }
-
-    .hero-slide:nth-child(2) {
-        animation-delay: 8s;
-    }
-
-    .hero-slide:nth-child(3) {
-        animation-delay: 16s;
-    }
-
-    @keyframes slideshow {
-
-        0%,
-        20% {
-            opacity: 0;
-        }
-
-        25%,
-        45% {
-            opacity: 1;
-        }
-
-        50%,
-        100% {
-            opacity: 0;
-        }
-    }
-
-    /* Particles Animation */
-    .particles {
-        z-index: 3;
-        pointer-events: none;
-    }
-
-    .particle {
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: var(--gold);
-        border-radius: 50%;
-        animation: float-particle 8s infinite linear;
-    }
-
-    @keyframes float-particle {
-        0% {
-            transform: translateY(0) translateX(0);
-            opacity: 0;
-        }
-
-        50% {
-            opacity: 1;
-        }
-
-        100% {
-            transform: translateY(-100vh) translateX(100px);
-            opacity: 0;
-        }
-    }
-
-    /* Gold Bar Animation */
-    .gold-bar {
-        width: 100px;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        animation: expandWidth 2s ease-out;
-    }
-
-    @keyframes expandWidth {
-        0% {
-            width: 0;
-            opacity: 0;
-        }
-
-        100% {
-            width: 100px;
-            opacity: 1;
-        }
-    }
-
-    /* Title Animation */
-    .title-word {
-        display: inline-block;
-        animation: fadeInUp 1s ease-out;
-    }
-
-    .title-word-1 {
-        animation-delay: 0.3s;
-    }
-
-    .title-word-2 {
-        animation-delay: 0.6s;
-    }
-
-    /* Typewriter Effect */
-    .typewriter p {
-        overflow: hidden;
-        white-space: nowrap;
-        margin: 0 auto;
-        animation: typing 3.5s steps(40, end);
-    }
-
-    @keyframes typing {
-        from {
-            width: 0;
-        }
-
-        to {
-            width: 100%;
-        }
-    }
-
-    /* Scroll Indicator */
-    .scroll-indicator {
-        cursor: pointer;
-        z-index: 10;
-    }
-
-    .mouse {
-        width: 30px;
-        height: 50px;
-        border: 2px solid var(--gold);
-        border-radius: 15px;
-        position: relative;
-        margin-bottom: 10px;
-    }
-
-    .wheel {
-        width: 4px;
-        height: 8px;
-        background: var(--gold);
-        border-radius: 2px;
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        animation: scrollWheel 1.5s infinite;
-    }
-
-    @keyframes scrollWheel {
-        0% {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        100% {
-            opacity: 0;
-            transform: translateX(-50%) translateY(15px);
-        }
-    }
-
-    .arrow-scroll span {
-        display: block;
-        width: 10px;
-        height: 10px;
-        border-bottom: 2px solid var(--gold);
-        border-right: 2px solid var(--gold);
-        transform: rotate(45deg);
-        margin: -5px auto;
-        animation: arrowDown 1.5s infinite;
-    }
-
-    .arrow-scroll span:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .arrow-scroll span:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    @keyframes arrowDown {
-        0% {
-            opacity: 0;
-            transform: rotate(45deg) translate(-5px, -5px);
-        }
-
-        50% {
-            opacity: 1;
-        }
-
-        100% {
-            opacity: 0;
-            transform: rotate(45deg) translate(5px, 5px);
-        }
-    }
-
-    /* Product Card Styles */
-    .product-card {
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    }
-
-    .product-card:hover {
-        transform: translateY(-10px);
-    }
-
-    .product-image-wrapper {
-        position: relative;
-        background: #f8f9fa;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .product-image {
-        width: 100%;
-        height: 280px;
-        object-fit: cover;
-        transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-    }
-
-    .product-card:hover .product-image {
-        transform: scale(1.1);
-    }
-
-    .product-overlay {
-        top: 0;
-        left: 0;
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
-        opacity: 0;
-        transition: all 0.4s ease;
-        z-index: 2;
-    }
-
-    .product-card:hover .product-overlay {
+    50% {
         opacity: 1;
     }
-
-    .overlay-content {
-        transform: translateY(20px);
-        transition: all 0.4s ease;
-    }
-
-    .product-card:hover .overlay-content {
-        transform: translateY(0);
-    }
-
-    .product-badge {
-        background: rgba(0, 0, 0, 0.8);
-        border: 1px solid var(--gold);
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 3;
-        animation: rotateBadge 10s linear infinite;
-    }
-
-    @keyframes rotateBadge {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .product-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        transition: color 0.3s ease;
-    }
-
-    .product-card:hover .product-title {
-        color: var(--gold);
-    }
-
-    .product-actions .btn {
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        border-width: 2px;
-    }
-
-    .product-actions .btn:hover {
-        background: var(--gold);
-        color: var(--black);
-        transform: rotate(360deg);
-    }
-
-    /* Category Card Styles */
-    .category-card {
-        height: 300px;
-        cursor: pointer;
-    }
-
-    .category-image {
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.6s ease;
-    }
-
-    .category-card:hover .category-image {
-        transform: scale(1.1);
-    }
-
-    .category-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    100% {
+        transform: translateY(-100vh) translateX(100px);
         opacity: 0;
-        transition: all 0.4s ease;
     }
+}
 
-    .category-card:hover .category-overlay {
-        opacity: 1;
-    }
+/* Gold Bar Animation */
+.gold-bar {
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    animation: expandWidth 2s ease-out;
+}
 
-    .category-content {
-        transform: translateY(20px);
-        transition: all 0.4s ease;
-    }
+@keyframes expandWidth {
+    0% { width: 0; opacity: 0; }
+    100% { width: 100px; opacity: 1; }
+}
 
-    .category-card:hover .category-content {
-        transform: translateY(0);
-    }
+/* Title Animation */
+.title-word {
+    display: inline-block;
+    animation: fadeInUp 1s ease-out;
+}
 
-    /* Feature Card Styles */
-    .feature-card {
-        background: white;
-        border-radius: 15px;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    }
+.title-word-1 { animation-delay: 0.3s; }
+.title-word-2 { animation-delay: 0.6s; }
 
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(212, 175, 55, 0.15);
-    }
+/* Typewriter Effect */
+.typewriter p {
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 auto;
+    animation: typing 3.5s steps(40, end);
+}
 
-    .feature-icon {
-        transition: all 0.3s ease;
-    }
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
 
-    .feature-card:hover .feature-icon {
-        transform: scale(1.1) rotate(360deg);
-    }
+/* Scroll Indicator */
+.scroll-indicator {
+    cursor: pointer;
+    z-index: 10;
+}
 
-    /* Newsletter Section */
-    .newsletter-form .form-control {
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
-    }
+.mouse {
+    width: 30px;
+    height: 50px;
+    border: 2px solid var(--gold);
+    border-radius: 15px;
+    position: relative;
+    margin-bottom: 10px;
+}
 
-    .newsletter-form .form-control:focus {
-        border-color: var(--gold);
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-    }
+.wheel {
+    width: 4px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 2px;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: scrollWheel 1.5s infinite;
+}
 
-    /* Custom Buttons */
-    .btn-gold {
-        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
-        color: var(--black);
-        border: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
+@keyframes scrollWheel {
+    0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(15px); }
+}
 
-    .btn-gold:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-        color: var(--black);
-    }
+.arrow-scroll span {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-bottom: 2px solid var(--gold);
+    border-right: 2px solid var(--gold);
+    transform: rotate(45deg);
+    margin: -5px auto;
+    animation: arrowDown 1.5s infinite;
+}
 
-    .btn-outline-gold {
-        border: 2px solid var(--gold);
-        color: var(--gold);
-        background: transparent;
-        transition: all 0.3s ease;
-    }
+.arrow-scroll span:nth-child(2) { animation-delay: 0.2s; }
+.arrow-scroll span:nth-child(3) { animation-delay: 0.4s; }
 
-    .btn-outline-gold:hover {
-        background: var(--gold);
-        color: var(--black);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-    }
+@keyframes arrowDown {
+    0% { opacity: 0; transform: rotate(45deg) translate(-5px, -5px); }
+    50% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(45deg) translate(5px, 5px); }
+}
 
-    /* Section Dividers */
-    .divider {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+/* Product Card Styles */
+.product-card {
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
 
-    .divider-line {
-        width: 50px;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    }
+.product-card:hover {
+    transform: translateY(-10px);
+}
 
-    .section-subtitle {
-        letter-spacing: 3px;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
+.product-image-wrapper {
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
 
-    /* Spacing Utilities */
-    .py-6 {
-        padding-top: 5rem;
-        padding-bottom: 5rem;
-    }
+.product-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
 
-    /* Gold Text */
-    .text-gold {
-        color: var(--gold) !important;
-    }
+.product-card:hover .product-image {
+    transform: scale(1.1);
+}
 
-    .border-gold {
-        border-color: var(--gold) !important;
-    }
+.product-overlay {
+    top: 0;
+    left: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 2;
+}
+
+.product-card:hover .product-overlay {
+    opacity: 1;
+}
+
+.overlay-content {
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+}
+
+.product-card:hover .overlay-content {
+    transform: translateY(0);
+}
+
+.product-badge {
+    background: rgba(0,0,0,0.8);
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    animation: rotateBadge 10s linear infinite;
+}
+
+@keyframes rotateBadge {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.product-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.product-card:hover .product-title {
+    color: var(--gold);
+}
+
+.product-actions .btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border-width: 2px;
+}
+
+.product-actions .btn:hover {
+    background: var(--gold);
+    color: var(--black);
+    transform: rotate(360deg);
+}
+
+/* Category Card Styles */
+.category-card {
+    height: 300px;
+    cursor: pointer;
+}
+
+.category-image {
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.category-card:hover .category-image {
+    transform: scale(1.1);
+}
+
+.category-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.category-card:hover .category-overlay {
+    opacity: 1;
+}
+
+.category-content {
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+}
+
+.category-card:hover .category-content {
+    transform: translateY(0);
+}
+
+/* Feature Card Styles */
+.feature-card {
+    background: white;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(212, 175, 55, 0.15);
+}
+
+.feature-icon {
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1) rotate(360deg);
+}
+
+/* Newsletter Section */
+.newsletter-form .form-control {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form .form-control:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+/* Custom Buttons */
+.btn-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+    color: var(--black);
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+    color: var(--black);
+}
+
+.btn-outline-gold {
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+    background: var(--gold);
+    color: var(--black);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* Section Dividers */
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.divider-line {
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.section-subtitle {
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Spacing Utilities */
+.py-6 {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+/* Gold Text */
+.text-gold {
+    color: var(--gold) !important;
+}
+
+.border-gold {
+    border-color: var(--gold) !important;
+}
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Add to cart form submission with animation
-        const addToCartForms = document.querySelectorAll('.add-to-cart-form');
-        addToCartForms.forEach(form => {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const button = this.querySelector('button');
-                const originalHTML = button.innerHTML;
-
-                // Animate button
-                button.innerHTML = '<i class="fas fa-check"></i>';
-                button.style.background = 'var(--gold)';
-                button.style.color = 'var(--black)';
-
-                // Show success message
-                const toast = document.createElement('div');
-                toast.className = 'position-fixed top-0 end-0 m-3 p-3 bg-success text-white rounded shadow';
-                toast.style.zIndex = '9999';
-                toast.innerHTML = '<i class="fas fa-check-circle me-2"></i>Item added to cart!';
-                document.body.appendChild(toast);
-
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
-
-                // Submit form after animation
-                setTimeout(() => {
-                    button.innerHTML = originalHTML;
-                    button.style.background = '';
-                    button.style.color = '';
-                    form.submit();
-                }, 500);
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    // Add to cart form submission with animation
+    const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+    addToCartForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const button = this.querySelector('button');
+            const originalHTML = button.innerHTML;
+            
+            // Animate button
+            button.innerHTML = '<i class="fas fa-check"></i>';
+            button.style.background = 'var(--gold)';
+            button.style.color = 'var(--black)';
+            
+            // Show success message
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed top-0 end-0 m-3 p-3 bg-success text-white rounded shadow';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = '<i class="fas fa-check-circle me-2"></i>Item added to cart!';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+            
+            // Submit form after animation
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.style.background = '';
+                button.style.color = '';
+                form.submit();
+            }, 500);
         });
+    });
 
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Counter animation for stats
-        const animateValue = (element, start, end, duration) => {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                element.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        };
-
-        // Parallax effect for hero section
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const hero = document.querySelector('.hero-section');
-            if (hero) {
-                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
         });
     });
+
+    // Counter animation for stats
+    const animateValue = (element, start, end, duration) => {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            element.innerHTML = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+
+    // Parallax effect for hero section
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero-section');
+        if (hero) {
+            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    });
+});
 </script>
 {% endblock %}
