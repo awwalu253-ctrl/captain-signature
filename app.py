@@ -233,43 +233,60 @@ def signup():
     
     form = SignupForm()
     if form.validate_on_submit():
+        # Double-check if user exists (extra safety)
+        existing_user = User.query.filter(
+            (User.email == form.email.data) | (User.username == form.username.data)
+        ).first()
+        
+        if existing_user:
+            if existing_user.email == form.email.data:
+                flash('Email already registered. Please use a different email.', 'danger')
+            else:
+                flash('Username already taken. Please choose a different one.', 'danger')
+            return render_template('signup.html', form=form)
+        
         try:
-            print("\n=== SIGNUP ATTEMPT ===")
-            print(f"Username: {form.username.data}")
-            print(f"Email: {form.email.data}")
-            
             hashed_password = generate_password_hash(form.password.data)
             user = User(
                 username=form.username.data,
                 email=form.email.data,
                 password=hashed_password
             )
-            
-            print("✓ User object created, adding to session...")
             db.session.add(user)
-            
-            print("✓ Committing to database...")
             db.session.commit()
-            
-            print("✓ User saved successfully!")
             flash('Your account has been created! You can now log in.', 'success')
             return redirect(url_for('login'))
-            
         except Exception as e:
             db.session.rollback()
-            print("\n❌ SIGNUP ERROR:")
-            print(f"Error type: {type(e).__name__}")
-            print(f"Error message: {str(e)}")
-            print("\nFull traceback:")
-            traceback.print_exc()
-            
-            # Log to Vercel logs
             logger.error(f"Signup error: {str(e)}")
-            logger.error(traceback.format_exc())
-            
-            flash(f'Registration failed. Please try again.', 'danger')
+            flash('Registration failed. Please try again.', 'danger')
     
     return render_template('signup.html', form=form)
+
+@app.route('/test-write')
+def test_write():
+    try:
+        # Test creating a test user
+        test_user = User(
+            username=f"test_{datetime.now().timestamp()}",
+            email=f"test_{datetime.now().timestamp()}@test.com",
+            password=generate_password_hash('test123')
+        )
+        db.session.add(test_user)
+        db.session.commit()
+        db.session.delete(test_user)
+        db.session.commit()
+        return {"status": "success", "message": "Database write test passed"}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}, 500
+
+@app.route('/init-db')
+def init_db():
+    try:
+        db.create_all()
+        return "Database tables created successfully!"
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 @app.route('/logout')
 def logout():

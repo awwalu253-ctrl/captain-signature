@@ -57,3 +57,15 @@ class Config:
     DEFAULT_DELIVERY_FEE = 1500.00
     CURRENCY = '₦'
     SITE_NAME = 'Captain Signature'
+    
+# Add these to your Config class
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'pool_size': 5,
+    'max_overflow': 10,
+    'pool_timeout': 30,
+    'pool_recycle': 1800,
+    'connect_args': {
+        'sslmode': 'require',
+        'connect_timeout': 10
+    }
+}
