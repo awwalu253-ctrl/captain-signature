@@ -182,23 +182,26 @@ def user_uploads(filename):
 def tmp_uploads(filename):
     """Serve images from /tmp directory (for Vercel)"""
     directory = '/tmp/captain_signature_uploads/products'
+    
+    # Log for debugging
+    print(f"Attempting to serve: {filename} from {directory}")
+    
+    # Check if file exists
+    file_path = os.path.join(directory, filename)
+    if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+        return "File not found", 404
+    
+    print(f"File found: {file_path}, size: {os.path.getsize(file_path)}")
+    
     try:
-        if not os.path.exists(directory):
-            os.makedirs(directory, exist_ok=True)
-            print(f"Created directory: {directory}")
-        
-        file_path = os.path.join(directory, filename)
-        if not os.path.exists(file_path):
-            print(f"File not found: {file_path}")
-            return "File not found", 404
-            
         response = make_response(send_from_directory(directory, filename))
         response.headers['Cache-Control'] = 'public, max-age=300'
-        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Content-Type'] = 'image/jpeg'  # Force correct content type
         return response
     except Exception as e:
         print(f"Error serving {filename}: {e}")
-        return f"Error: {str(e)}", 404
+        return str(e), 404
 
 # Public debug route to check file existence (no login required)
 @app.route('/public-debug-file/<filename>')
@@ -1472,6 +1475,31 @@ def test_upload_simple():
     </form>
     '''
 
+@app.route('/debug-product/<int:product_id>')
+def debug_product(product_id):
+    """Debug a specific product"""
+    product = Product.query.get_or_404(product_id)
+    
+    # Generate the image URL based on type
+    if product.image:
+        if product.image.startswith('tmp:'):
+            filename = product.image.replace('tmp:', '')
+            img_url = url_for('tmp_uploads', filename=filename, _external=True)
+        elif product.image.startswith('user_uploads:'):
+            filename = product.image.replace('user_uploads:', '')
+            img_url = url_for('user_uploads', filename=filename, _external=True)
+        else:
+            img_url = url_for('static', filename='images/products/' + product.image, _external=True)
+    else:
+        img_url = None
+    
+    return {
+        'product_id': product.id,
+        'name': product.name,
+        'image_path': product.image,
+        'generated_url': img_url,
+        'file_exists': os.path.exists(f'/tmp/captain_signature_uploads/products/{product.image.replace("tmp:", "")}') if product.image and product.image.startswith('tmp:') else None
+    }
 if __name__ == '__main__':
     print("\n" + "=" * 60)
     print("🚀 Captain Signature Nigeria - Starting...")
