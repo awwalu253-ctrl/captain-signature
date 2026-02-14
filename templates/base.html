@@ -119,6 +119,7 @@
             left: 0;
             right: 0;
             width: 100%;
+            margin-top: -40px;
             z-index: 1030;
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.02);
         }
@@ -586,6 +587,10 @@
                 overflow-y: auto;
             }
 
+            .navbar{
+                
+            }
+
             .navbar-nav {
                 align-items: flex-start;
                 width: 100%;
@@ -672,7 +677,7 @@
             body {
                 padding-top: 80px;
             }
-
+            
             .navbar {
                 padding: 0.5rem 1rem;
             }
@@ -811,7 +816,7 @@
     <!-- Fixed Navigation -->
     <nav class="navbar navbar-expand-lg" id="mainNav">
         <div class="container">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" style=" width: 80px; margin-top: -30px;" alt="Captain Signature Logo">
+            <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" style=" width: 80px; " alt="Captain Signature Logo">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 </i> CAPTAIN SIGNATURE <span>EST. 2024</span>
             </a>
