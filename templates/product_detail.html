@@ -25,18 +25,28 @@
             <div class="col-lg-6" data-aos="fade-right" data-aos-duration="800">
                 <div class="product-image-wrapper">
                     {% if product.image %}
-                    {% if product.image.startswith('tmp:') %}
-                    {% set filename = product.image.replace('tmp:', '') %}
-                    <img src="{{ url_for('tmp_uploads', filename=filename) }}" alt="{{ product.name }}"
-                        class="img-fluid">
-                    {% else %}
-                    <img src="{{ url_for('static', filename='images/products/' + product.image) }}"
-                        alt="{{ product.name }}" class="img-fluid">
-                    {% endif %}
-                    {% else %}
-                    <img src="https://via.placeholder.com/300" alt="Placeholder">
-                    {% endif %}
-
+                    <div class="main-image-container">
+                        <!-- Handle all image path types -->
+                        {% if product.image.startswith('user_uploads:') %}
+                            {% set filename = product.image.replace('user_uploads:', '') %}
+                            <img src="{{ url_for('user_uploads', filename=filename) }}" 
+                                 class="img-fluid main-image" 
+                                 alt="{{ product.name }}"
+                                 id="mainProductImage">
+                        {% elif product.image.startswith('tmp:') %}
+                            {% set filename = product.image.replace('tmp:', '') %}
+                            <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
+                                 class="img-fluid main-image" 
+                                 alt="{{ product.name }}"
+                                 id="mainProductImage">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
+                                 class="img-fluid main-image" 
+                                 alt="{{ product.name }}"
+                                 id="mainProductImage">
+                        {% endif %}
+                    </div>
+                    
                     <!-- Image zoom hint -->
                     <div class="zoom-hint text-center mt-2">
                         <small class="text-muted">
@@ -57,7 +67,7 @@
                 <div class="product-details-wrapper">
                     <!-- Product Title -->
                     <h1 class="product-title">{{ product.name }}</h1>
-
+                    
                     <!-- Product Meta -->
                     <div class="product-meta mb-4">
                         <span class="product-category">
@@ -89,8 +99,8 @@
                     <!-- Add to Cart Section -->
                     {% if product.stock > 0 %}
                     <div class="add-to-cart-section mb-5">
-                        <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}"
-                            class="add-to-cart-form" id="addToCartForm">
+                        <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}" 
+                              class="add-to-cart-form" id="addToCartForm">
                             <div class="row g-3 align-items-end">
                                 <div class="col-auto">
                                     <label for="quantity" class="form-label fw-semibold">Quantity</label>
@@ -98,10 +108,10 @@
                                         <button type="button" class="quantity-btn minus" onclick="decrementQuantity()">
                                             <i class="fas fa-minus"></i>
                                         </button>
-                                        <input type="number" class="form-control quantity-input" id="quantity"
-                                            name="quantity" min="1" max="{{ product.stock }}" value="1" readonly>
-                                        <button type="button" class="quantity-btn plus"
-                                            onclick="incrementQuantity({{ product.stock }})">
+                                        <input type="number" class="form-control quantity-input" id="quantity" 
+                                               name="quantity" min="1" max="{{ product.stock }}" value="1" 
+                                               readonly>
+                                        <button type="button" class="quantity-btn plus" onclick="incrementQuantity({{ product.stock }})">
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
@@ -113,7 +123,7 @@
                                 </div>
                             </div>
                         </form>
-
+                        
                         <!-- Stock Status Bar -->
                         <div class="stock-status mt-3">
                             <div class="stock-bar">
@@ -167,9 +177,9 @@
                             <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-admin-edit">
                                 <i class="fas fa-edit me-2"></i>Edit Product
                             </a>
-                            <a href="{{ url_for('delete_product', product_id=product.id) }}"
-                                class="btn btn-admin-delete"
-                                onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">
+                            <a href="{{ url_for('delete_product', product_id=product.id) }}" 
+                               class="btn btn-admin-delete"
+                               onclick="return confirm('Are you sure you want to delete {{ product.name }}?')">
                                 <i class="fas fa-trash me-2"></i>Delete Product
                             </a>
                         </div>
@@ -208,7 +218,7 @@
         font-weight: 500;
     }
 
-    .breadcrumb-item+.breadcrumb-item::before {
+    .breadcrumb-item + .breadcrumb-item::before {
         color: var(--gold);
         opacity: 0.5;
     }
@@ -262,9 +272,7 @@
     }
 
     @keyframes fadeIn {
-        to {
-            opacity: 1;
-        }
+        to { opacity: 1; }
     }
 
     /* Product Details */
@@ -540,19 +548,19 @@
         .product-title {
             font-size: 2rem;
         }
-
+        
         .product-price .amount {
             font-size: 2.5rem;
         }
-
+        
         .product-image-wrapper {
             padding: 1rem;
         }
-
+        
         .feature-item {
             font-size: 0.85rem;
         }
-
+        
         .btn-add-to-cart {
             padding: 0.8rem 1.5rem;
         }
@@ -569,9 +577,7 @@
     }
 
     @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
+        to { transform: rotate(360deg); }
     }
 
     /* Image Zoom Effect */
@@ -585,17 +591,9 @@
 
     /* Success Animation */
     @keyframes successPop {
-        0% {
-            transform: scale(1);
-        }
-
-        50% {
-            transform: scale(1.1);
-        }
-
-        100% {
-            transform: scale(1);
-        }
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
     }
 
     .add-to-cart-success {
@@ -622,20 +620,20 @@
     }
 
     // Prevent double submission with enhanced feedback
-    document.getElementById('addToCartForm')?.addEventListener('submit', function (e) {
+    document.getElementById('addToCartForm')?.addEventListener('submit', function(e) {
         const btn = document.getElementById('addToCartBtn');
         const originalText = btn.innerHTML;
-
+        
         btn.disabled = true;
         btn.classList.add('loading');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding to Bag...';
-
+        
         // Simulate success (remove this in production)
         setTimeout(() => {
             btn.classList.remove('loading');
             btn.innerHTML = originalText;
             btn.disabled = false;
-
+            
             // Show success notification (you can replace with your flash message)
             showNotification('Product added to cart successfully!');
         }, 1500);
@@ -652,7 +650,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
         document.body.appendChild(notification);
-
+        
         setTimeout(() => {
             notification.remove();
         }, 3000);
@@ -662,16 +660,16 @@
     const mainImage = document.getElementById('mainProductImage');
     if (mainImage) {
         const imageWrapper = document.querySelector('.main-image-container');
-
-        imageWrapper.addEventListener('mousemove', function (e) {
+        
+        imageWrapper.addEventListener('mousemove', function(e) {
             const { left, top, width, height } = this.getBoundingClientRect();
             const x = (e.clientX - left) / width * 100;
             const y = (e.clientY - top) / height * 100;
-
+            
             mainImage.style.transformOrigin = `${x}% ${y}%`;
         });
-
-        imageWrapper.addEventListener('mouseleave', function () {
+        
+        imageWrapper.addEventListener('mouseleave', function() {
             mainImage.style.transformOrigin = 'center center';
         });
     }
@@ -706,7 +704,7 @@
     }
 
     // Track product view for analytics
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // You can add analytics tracking here
         console.log('Product viewed:', '{{ product.name }}');
     });
