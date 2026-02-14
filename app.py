@@ -55,7 +55,9 @@ def ensure_directories():
         os.path.join(user_home, 'captain_signature_uploads'),
         os.path.join(user_home, 'captain_signature_uploads', 'product_images'),
         # Add Vercel tmp directory for production
-        '/tmp/captain_signature_uploads/products'
+        '/tmp/captain_signature_uploads/products',
+        '/tmp/captain_signature_uploads',
+        '/tmp'
     ]
     
     print("=" * 50)
@@ -72,6 +74,8 @@ def ensure_directories():
             # Check if writable (skip for system directories)
             if directory.startswith('/tmp'):
                 print(f"  Note: {directory} is a temp directory")
+                if os.path.exists(directory):
+                    print(f"  Writable: {os.access(directory, os.W_OK)}")
             elif not os.access(directory, os.W_OK):
                 print(f"⚠ Warning: Directory not writable: {directory}")
                 
@@ -179,13 +183,22 @@ def tmp_uploads(filename):
     """Serve images from /tmp directory (for Vercel)"""
     directory = '/tmp/captain_signature_uploads/products'
     try:
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+            print(f"Created directory: {directory}")
+        
+        file_path = os.path.join(directory, filename)
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            return "File not found", 404
+            
         response = make_response(send_from_directory(directory, filename))
         response.headers['Cache-Control'] = 'public, max-age=300'
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
     except Exception as e:
         print(f"Error serving {filename}: {e}")
-        return "File not found", 404
+        return f"Error: {str(e)}", 404
 
 # Public debug route to check file existence (no login required)
 @app.route('/public-debug-file/<filename>')
@@ -212,7 +225,63 @@ def public_debug_file(filename):
 def public_test_image(filename):
     """Public route to test image serving (no login required)"""
     directory = '/tmp/captain_signature_uploads/products'
-    return send_from_directory(directory, filename)
+    try:
+        return send_from_directory(directory, filename)
+    except Exception as e:
+        return f"Error: {str(e)}", 404
+
+# Find file in all possible locations
+@app.route('/find-file/<filename>')
+def find_file(filename):
+    """Search for a file in all possible locations"""
+    import os
+    results = {}
+    
+    # Possible locations to check
+    locations = [
+        '/tmp/captain_signature_uploads/products',
+        '/tmp/captain_signature_uploads',
+        '/tmp',
+        os.path.join(project_root, 'static', 'images', 'products'),
+        os.path.join(project_root, 'uploads'),
+        '/var/task',  # Vercel's working directory
+        '/var/task/static/images/products',
+        os.path.join(project_root, 'static', 'images'),
+        os.path.join(project_root, 'static')
+    ]
+    
+    for location in locations:
+        full_path = os.path.join(location, filename)
+        exists = os.path.exists(full_path)
+        results[location] = {
+            'exists': exists,
+            'path': full_path if exists else None,
+            'dir_exists': os.path.exists(location)
+        }
+        if exists:
+            results[location]['size'] = os.path.getsize(full_path)
+    
+    return results
+
+# Debug paths
+@app.route('/debug-paths')
+def debug_paths():
+    """Show all relevant paths"""
+    import os
+    import tempfile
+    
+    tmp_uploads_dir = '/tmp/captain_signature_uploads/products'
+    
+    return {
+        'cwd': os.getcwd(),
+        'temp_dir': tempfile.gettempdir(),
+        'project_root': project_root,
+        'tmp_uploads': tmp_uploads_dir,
+        'tmp_uploads_exists': os.path.exists(tmp_uploads_dir),
+        'tmp_uploads_writable': os.access(tmp_uploads_dir, os.W_OK) if os.path.exists(tmp_uploads_dir) else False,
+        'tmp_dir_list': os.listdir('/tmp') if os.path.exists('/tmp') else [],
+        'tmp_uploads_list': os.listdir(tmp_uploads_dir) if os.path.exists(tmp_uploads_dir) else []
+    }
 
 # Debug route to check configuration
 @app.route('/debug-config')
