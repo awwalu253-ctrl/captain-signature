@@ -44,18 +44,31 @@
                              data-aos="fade-up"
                              data-aos-delay="{{ loop.index * 100 }}">
                             
-                            <!-- Product Image -->
+                            <!-- Product Image - UPDATED to handle tmp: and user_uploads: -->
                             <div class="cart-item-image">
                                 {% if item.product.image %}
-                                    {% if item.product.image.startswith('user_uploads:') %}
+                                    {# Check for tmp: prefix (Vercel uploads) #}
+                                    {% if item.product.image.startswith('tmp:') %}
+                                        {% set filename = item.product.image.replace('tmp:', '') %}
+                                        <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
+                                             class="img-fluid rounded gold-border-hover"
+                                             alt="{{ item.product.name }}"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-image-placeholder\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
+                                    
+                                    {# Check for user_uploads: prefix (local user uploads) #}
+                                    {% elif item.product.image.startswith('user_uploads:') %}
                                         {% set filename = item.product.image.replace('user_uploads:', '') %}
                                         <img src="{{ url_for('user_uploads', filename=filename) }}" 
                                              class="img-fluid rounded gold-border-hover"
-                                             alt="{{ item.product.name }}">
+                                             alt="{{ item.product.name }}"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-image-placeholder\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
+                                    
+                                    {# Regular static image #}
                                     {% else %}
                                         <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}" 
                                              class="img-fluid rounded gold-border-hover"
-                                             alt="{{ item.product.name }}">
+                                             alt="{{ item.product.name }}"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-image-placeholder\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
                                     {% endif %}
                                 {% else %}
                                     <div class="no-image-placeholder">
@@ -288,7 +301,6 @@
 </div>
 
 <style>
-
     body{
         margin-top: 70px;
     }

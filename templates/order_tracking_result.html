@@ -187,7 +187,12 @@
                                         <div class="d-flex align-items-center">
                                             <div class="product-image-wrapper me-3">
                                                 {% if item.product_image %}
-                                                    {% if item.product_image.startswith('user_uploads:') %}
+                                                    {# Handle different image path types #}
+                                                    {% if item.product_image.startswith('tmp:') %}
+                                                        {% set filename = item.product_image.replace('tmp:', '') %}
+                                                        <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
+                                                             alt="{{ item.product_name }}" class="product-image">
+                                                    {% elif item.product_image.startswith('user_uploads:') %}
                                                         {% set filename = item.product_image.replace('user_uploads:', '') %}
                                                         <img src="{{ url_for('user_uploads', filename=filename) }}" 
                                                              alt="{{ item.product_name }}" class="product-image">
@@ -342,6 +347,7 @@
         --charcoal: #2C2C2C;
         --light-gray: #F5F5F5;
         --border-color: rgba(184, 155, 94, 0.2);
+        --pure-white: #FFFFFF;
     }
 
     /* Breadcrumb Styling */

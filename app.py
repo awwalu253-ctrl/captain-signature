@@ -746,6 +746,12 @@ def inject_now():
     """Inject current datetime into all templates"""
     return {'now': datetime.now()}
 
+@app.route('/tmp-uploads/<filename>')
+def tmp_uploads(filename):
+    """Serve images from /tmp directory (for Vercel)"""
+    from flask import send_from_directory
+    return send_from_directory('/tmp/captain_signature_uploads/products', filename)
+
 @app.route('/admin/edit_product/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def edit_product(product_id):

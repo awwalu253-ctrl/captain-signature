@@ -3,9 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <!-- Page Header with Animation -->
-    <div class="d-flex justify-content-between align-items-center mb-4" 
-         data-aos="fade-down" 
-         data-aos-duration="800">
+    <div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down" data-aos-duration="800">
         <h2 class="page-title">
             <i class="fas fa-box me-2"></i>Manage Products
         </h2>
@@ -13,12 +11,10 @@
             <i class="fas fa-plus"></i> Add New Product
         </a>
     </div>
-    
+
     {% if products %}
     <!-- Products Table Card -->
-    <div class="card product-table-card" 
-         data-aos="fade-up" 
-         data-aos-duration="1000">
+    <div class="card product-table-card" data-aos="fade-up" data-aos-duration="1000">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover product-table mb-0">
@@ -35,34 +31,33 @@
                     </thead>
                     <tbody>
                         {% for product in products %}
-                        <tr class="product-row" 
-                            data-aos="fade-up" 
-                            data-aos-duration="600" 
+                        <tr class="product-row" data-aos="fade-up" data-aos-duration="600"
                             data-aos-delay="{{ loop.index * 100 }}">
                             <td class="fw-bold">#{{ product.id }}</td>
                             <td class="product-image-cell">
                                 <div class="product-image-wrapper">
                                     {% if product.image %}
-                                        {% if product.image.startswith('user_uploads:') %}
-                                            {% set filename = product.image.replace('user_uploads:', '') %}
-                                            <img src="{{ url_for('user_uploads', filename=filename) }}" 
-                                                 class="product-image"
-                                                 alt="{{ product.name }}">
-                                        {% else %}
-                                            <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
-                                                 class="product-image"
-                                                 alt="{{ product.name }}">
-                                        {% endif %}
+                                    {% if product.image.startswith('tmp:') %}
+                                    {% set filename = product.image.replace('tmp:', '') %}
+                                    <img src="{{ url_for('tmp_uploads', filename=filename) }}" alt="{{ product.name }}"
+                                        class="img-fluid">
                                     {% else %}
-                                        <div class="product-image-placeholder">
-                                            <i class="fas fa-image"></i>
-                                        </div>
+                                    <img src="{{ url_for('static', filename='images/products/' + product.image) }}"
+                                        alt="{{ product.name }}" class="img-fluid">
+                                    {% endif %}
+                                    {% else %}
+                                    <img src="https://via.placeholder.com/300" alt="Placeholder">
+                                    {% endif %}
+                                    <div class="product-image-placeholder">
+                                        <i class="fas fa-image"></i>
+                                    </div>
                                     {% endif %}
                                 </div>
                             </td>
                             <td class="product-name">{{ product.name }}</td>
                             <td class="product-price">
-                                <span class="price-tag">{{ g.settings.currency }}{{ "%.2f"|format(product.price) }}</span>
+                                <span class="price-tag">{{ g.settings.currency }}{{ "%.2f"|format(product.price)
+                                    }}</span>
                             </td>
                             <td>
                                 {% if product.stock > 0 %}
@@ -80,22 +75,20 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ url_for('edit_product', product_id=product.id) }}" 
-                                       class="btn-action btn-edit hvr-float-shadow"
-                                       title="Edit Product">
+                                    <a href="{{ url_for('edit_product', product_id=product.id) }}"
+                                        class="btn-action btn-edit hvr-float-shadow" title="Edit Product">
                                         <i class="fas fa-edit"></i>
                                         <span class="action-tooltip">Edit</span>
                                     </a>
-                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" 
-                                       class="btn-action btn-view hvr-float-shadow"
-                                       title="View Product">
+                                    <a href="{{ url_for('product_detail', product_id=product.id) }}"
+                                        class="btn-action btn-view hvr-float-shadow" title="View Product">
                                         <i class="fas fa-eye"></i>
                                         <span class="action-tooltip">View</span>
                                     </a>
-                                    <a href="{{ url_for('delete_product', product_id=product.id) }}" 
-                                       class="btn-action btn-delete hvr-float-shadow"
-                                       onclick="return confirm('Are you sure you want to delete {{ product.name }}?')"
-                                       title="Delete Product">
+                                    <a href="{{ url_for('delete_product', product_id=product.id) }}"
+                                        class="btn-action btn-delete hvr-float-shadow"
+                                        onclick="return confirm('Are you sure you want to delete {{ product.name }}?')"
+                                        title="Delete Product">
                                         <i class="fas fa-trash"></i>
                                         <span class="action-tooltip">Delete</span>
                                     </a>
@@ -121,7 +114,8 @@
             <div class="col-md-6 text-end">
                 <p class="table-stats">
                     <i class="fas fa-dollar-sign me-2"></i>
-                    Total Value: <strong>{{ g.settings.currency }}{{ "%.2f"|format(products|sum(attribute='price')) }}</strong>
+                    Total Value: <strong>{{ g.settings.currency }}{{ "%.2f"|format(products|sum(attribute='price'))
+                        }}</strong>
                 </p>
             </div>
         </div>
@@ -129,9 +123,7 @@
 
     {% else %}
     <!-- Empty State with Animation -->
-    <div class="empty-state-card" 
-         data-aos="zoom-in" 
-         data-aos-duration="1000">
+    <div class="empty-state-card" data-aos="zoom-in" data-aos-duration="1000">
         <div class="empty-state-content">
             <div class="empty-state-icon">
                 <i class="fas fa-box-open"></i>
@@ -147,485 +139,541 @@
 </div>
 
 <style>
-
-body{
-    margin-top: 55px;
-}
-/* Page Title */
-.page-title {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    color: var(--black);
-    position: relative;
-    padding-bottom: 10px;
-}
-
-.page-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-    border-radius: 2px;
-}
-
-/* Gold Button */
-.btn-gold {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
-    color: var(--black);
-    font-weight: 600;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.btn-gold::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-    z-index: -1;
-}
-
-.btn-gold:hover::before {
-    left: 100%;
-}
-
-.btn-gold:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
-    color: var(--black);
-}
-
-/* Product Table Card */
-.product-table-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    overflow: hidden;
-    animation: cardPulse 2s infinite;
-}
-
-@keyframes cardPulse {
-    0%, 100% { box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-    50% { box-shadow: 0 8px 30px rgba(212, 175, 55, 0.15); }
-}
-
-/* Table Styling */
-.product-table {
-    margin: 0;
-}
-
-.product-table thead th {
-    background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
-    color: var(--gold);
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    padding: 15px;
-    border: none;
-    position: relative;
-}
-
-.product-table thead th::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-}
-
-.product-table tbody tr {
-    transition: all 0.3s ease;
-    animation: slideInRow 0.5s ease forwards;
-    opacity: 0;
-    transform: translateX(-20px);
-}
-
-@keyframes slideInRow {
-    to {
-        opacity: 1;
-        transform: translateX(0);
+    body {
+        margin-top: 55px;
     }
-}
 
-.product-table tbody tr:hover {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%);
-    transform: scale(1.01);
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1);
-}
-
-.product-table tbody td {
-    padding: 15px;
-    vertical-align: middle;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-/* Product Image */
-.product-image-cell {
-    width: 80px;
-}
-
-.product-image-wrapper {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.product-row:hover .product-image-wrapper {
-    border-color: var(--gold);
-    transform: rotate(5deg) scale(1.1);
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-}
-
-.product-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.product-row:hover .product-image {
-    transform: scale(1.2);
-}
-
-.product-image-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-    font-size: 20px;
-}
-
-/* Product Name */
-.product-name {
-    font-weight: 600;
-    color: var(--black);
-    transition: all 0.3s ease;
-}
-
-.product-row:hover .product-name {
-    color: var(--gold);
-    transform: translateX(5px);
-}
-
-/* Price Tag */
-.price-tag {
-    font-weight: 700;
-    color: var(--gold);
-    background: rgba(212, 175, 55, 0.1);
-    padding: 5px 10px;
-    border-radius: 20px;
-    display: inline-block;
-    transition: all 0.3s ease;
-}
-
-.product-row:hover .price-tag {
-    background: var(--gold);
-    color: var(--black);
-    transform: scale(1.05);
-}
-
-/* Stock Badge */
-.stock-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.stock-badge.in-stock {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-    animation: pulse 2s infinite;
-}
-
-.stock-badge.out-of-stock {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    color: white;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-/* Category Badge */
-.category-badge {
-    background: rgba(212, 175, 55, 0.1);
-    color: var(--gold);
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-block;
-    transition: all 0.3s ease;
-}
-
-.product-row:hover .category-badge {
-    background: var(--gold);
-    color: var(--black);
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-action {
-    width: 35px;
-    height: 35px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.btn-action::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 8px;
-    background: inherit;
-    filter: blur(5px);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-}
-
-.btn-action:hover::before {
-    opacity: 0.5;
-}
-
-.btn-edit {
-    background: linear-gradient(135deg, #ffc107, #fd7e14);
-}
-
-.btn-view {
-    background: linear-gradient(135deg, #17a2b8, #0dcaf0);
-}
-
-.btn-delete {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-}
-
-.btn-action:hover {
-    transform: translateY(-3px) rotate(360deg);
-    color: white;
-}
-
-.action-tooltip {
-    position: absolute;
-    bottom: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--black);
-    color: var(--gold);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    pointer-events: none;
-}
-
-.btn-action:hover .action-tooltip {
-    opacity: 1;
-    visibility: visible;
-    bottom: -25px;
-}
-
-/* Table Footer */
-.table-footer {
-    background: white;
-    border-radius: 10px;
-    padding: 15px 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    border-left: 3px solid var(--gold);
-}
-
-.table-stats {
-    margin: 0;
-    color: var(--black);
-    font-size: 0.95rem;
-}
-
-.table-stats i {
-    color: var(--gold);
-}
-
-.table-stats strong {
-    color: var(--gold);
-    font-weight: 700;
-}
-
-/* Empty State */
-.empty-state-card {
-    background: white;
-    border-radius: 20px;
-    padding: 60px 40px;
-    text-align: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-    animation: float 6s ease infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
-}
-
-.empty-state-icon {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 30px;
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(0,0,0,0.02));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 50px;
-    color: var(--gold);
-    animation: pulse 2s infinite;
-}
-
-.empty-state-icon i {
-    animation: rotate 10s linear infinite;
-}
-
-@keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.empty-state-card h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    margin-bottom: 15px;
-    color: var(--black);
-}
-
-.empty-state-card p {
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-    color: #666;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .action-buttons {
-        flex-direction: column;
+    /* Page Title */
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        color: var(--black);
+        position: relative;
+        padding-bottom: 10px;
     }
-    
-    .btn-action {
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--gold), transparent);
+        border-radius: 2px;
+    }
+
+    /* Gold Button */
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+        color: var(--black);
+        font-weight: 600;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .btn-gold::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
         width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+        z-index: -1;
     }
-    
-    .table-footer .col-md-6 {
-        text-align: center !important;
-        margin-bottom: 10px;
-    }
-    
-    .empty-state-card {
-        padding: 40px 20px;
-    }
-    
-    .empty-state-card h3 {
-        font-size: 1.5rem;
-    }
-}
 
-/* Loading Animation for Table Rows */
-.product-row {
-    animation: fadeInRow 0.5s ease forwards;
-    opacity: 0;
-}
+    .btn-gold:hover::before {
+        left: 100%;
+    }
 
-@keyframes fadeInRow {
-    from {
+    .btn-gold:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+        color: var(--black);
+    }
+
+    /* Product Table Card */
+    .product-table-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        animation: cardPulse 2s infinite;
+    }
+
+    @keyframes cardPulse {
+
+        0%,
+        100% {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        50% {
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.15);
+        }
+    }
+
+    /* Table Styling */
+    .product-table {
+        margin: 0;
+    }
+
+    .product-table thead th {
+        background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
+        color: var(--gold);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 15px;
+        border: none;
+        position: relative;
+    }
+
+    .product-table thead th::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold), transparent);
+    }
+
+    .product-table tbody tr {
+        transition: all 0.3s ease;
+        animation: slideInRow 0.5s ease forwards;
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateX(-20px);
     }
-    to {
+
+    @keyframes slideInRow {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .product-table tbody tr:hover {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%);
+        transform: scale(1.01);
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.1);
+    }
+
+    .product-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Product Image */
+    .product-image-cell {
+        width: 80px;
+    }
+
+    .product-image-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .product-row:hover .product-image-wrapper {
+        border-color: var(--gold);
+        transform: rotate(5deg) scale(1.1);
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-row:hover .product-image {
+        transform: scale(1.2);
+    }
+
+    .product-image-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 20px;
+    }
+
+    /* Product Name */
+    .product-name {
+        font-weight: 600;
+        color: var(--black);
+        transition: all 0.3s ease;
+    }
+
+    .product-row:hover .product-name {
+        color: var(--gold);
+        transform: translateX(5px);
+    }
+
+    /* Price Tag */
+    .price-tag {
+        font-weight: 700;
+        color: var(--gold);
+        background: rgba(212, 175, 55, 0.1);
+        padding: 5px 10px;
+        border-radius: 20px;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .product-row:hover .price-tag {
+        background: var(--gold);
+        color: var(--black);
+        transform: scale(1.05);
+    }
+
+    /* Stock Badge */
+    .stock-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .stock-badge.in-stock {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        animation: pulse 2s infinite;
+    }
+
+    .stock-badge.out-of-stock {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    /* Category Badge */
+    .category-badge {
+        background: rgba(212, 175, 55, 0.1);
+        color: var(--gold);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .product-row:hover .category-badge {
+        background: var(--gold);
+        color: var(--black);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .btn-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 8px;
+        background: inherit;
+        filter: blur(5px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    .btn-action:hover::before {
+        opacity: 0.5;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #17a2b8, #0dcaf0);
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+    }
+
+    .btn-action:hover {
+        transform: translateY(-3px) rotate(360deg);
+        color: white;
+    }
+
+    .action-tooltip {
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--black);
+        color: var(--gold);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    .btn-action:hover .action-tooltip {
         opacity: 1;
-        transform: translateY(0);
+        visibility: visible;
+        bottom: -25px;
     }
-}
 
-/* Stagger children animations */
-.product-row:nth-child(1) { animation-delay: 0.1s; }
-.product-row:nth-child(2) { animation-delay: 0.2s; }
-.product-row:nth-child(3) { animation-delay: 0.3s; }
-.product-row:nth-child(4) { animation-delay: 0.4s; }
-.product-row:nth-child(5) { animation-delay: 0.5s; }
-.product-row:nth-child(6) { animation-delay: 0.6s; }
-.product-row:nth-child(7) { animation-delay: 0.7s; }
-.product-row:nth-child(8) { animation-delay: 0.8s; }
-.product-row:nth-child(9) { animation-delay: 0.9s; }
-.product-row:nth-child(10) { animation-delay: 1s; }
+    /* Table Footer */
+    .table-footer {
+        background: white;
+        border-radius: 10px;
+        padding: 15px 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-left: 3px solid var(--gold);
+    }
 
-/* Hover Effects for Table Cells */
-.product-table tbody td {
-    transition: all 0.3s ease;
-}
+    .table-stats {
+        margin: 0;
+        color: var(--black);
+        font-size: 0.95rem;
+    }
 
-.product-table tbody tr:hover td {
-    color: var(--black);
-}
+    .table-stats i {
+        color: var(--gold);
+    }
 
-/* Glowing Effect on Table Header */
-.product-table thead th {
-    position: relative;
-    overflow: hidden;
-}
+    .table-stats strong {
+        color: var(--gold);
+        font-weight: 700;
+    }
 
-.product-table thead th::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(212, 175, 55, 0.2), transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
+    /* Empty State */
+    .empty-state-card {
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        animation: float 6s ease infinite;
+    }
 
-.product-table thead:hover th::before {
-    opacity: 1;
-}
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 30px;
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(0, 0, 0, 0.02));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 50px;
+        color: var(--gold);
+        animation: pulse 2s infinite;
+    }
+
+    .empty-state-icon i {
+        animation: rotate 10s linear infinite;
+    }
+
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .empty-state-card h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: var(--black);
+    }
+
+    .empty-state-card p {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+        color: #666;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+        }
+
+        .table-footer .col-md-6 {
+            text-align: center !important;
+            margin-bottom: 10px;
+        }
+
+        .empty-state-card {
+            padding: 40px 20px;
+        }
+
+        .empty-state-card h3 {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* Loading Animation for Table Rows */
+    .product-row {
+        animation: fadeInRow 0.5s ease forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInRow {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Stagger children animations */
+    .product-row:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .product-row:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .product-row:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .product-row:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+
+    .product-row:nth-child(5) {
+        animation-delay: 0.5s;
+    }
+
+    .product-row:nth-child(6) {
+        animation-delay: 0.6s;
+    }
+
+    .product-row:nth-child(7) {
+        animation-delay: 0.7s;
+    }
+
+    .product-row:nth-child(8) {
+        animation-delay: 0.8s;
+    }
+
+    .product-row:nth-child(9) {
+        animation-delay: 0.9s;
+    }
+
+    .product-row:nth-child(10) {
+        animation-delay: 1s;
+    }
+
+    /* Hover Effects for Table Cells */
+    .product-table tbody td {
+        transition: all 0.3s ease;
+    }
+
+    .product-table tbody tr:hover td {
+        color: var(--black);
+    }
+
+    /* Glowing Effect on Table Header */
+    .product-table thead th {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .product-table thead th::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.2), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .product-table thead:hover th::before {
+        opacity: 1;
+    }
 </style>
 {% endblock %}

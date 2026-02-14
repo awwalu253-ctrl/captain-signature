@@ -119,7 +119,14 @@
                                                 {% for item in order.items[:3] %}
                                                     {% if item.product_image %}
                                                         <div class="item-preview">
-                                                            {% if item.product_image.startswith('user_uploads:') %}
+                                                            {% if item.product_image.startswith('tmp:') %}
+                                                                {% set filename = item.product_image.replace('tmp:', '') %}
+                                                                <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
+                                                                     alt="{{ item.product_name }}" 
+                                                                     class="preview-image"
+                                                                     data-bs-toggle="tooltip" 
+                                                                     title="{{ item.product_name }}">
+                                                            {% elif item.product_image.startswith('user_uploads:') %}
                                                                 {% set filename = item.product_image.replace('user_uploads:', '') %}
                                                                 <img src="{{ url_for('user_uploads', filename=filename) }}" 
                                                                      alt="{{ item.product_name }}" 
@@ -501,6 +508,7 @@
         display: flex;
         align-items: center;
         gap: 5px;
+        flex-wrap: wrap;
     }
 
     .item-preview {
@@ -535,6 +543,9 @@
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Status Badges */
@@ -842,6 +853,10 @@
         .action-item {
             width: 100%;
         }
+
+        .order-items-preview {
+            flex-wrap: wrap;
+        }
     }
 
     /* Tooltip Customization */
@@ -881,6 +896,17 @@
         });
         row.addEventListener('mouseleave', function() {
             this.style.backgroundColor = 'transparent';
+        });
+    });
+
+    // Optional: Add image error handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const images = document.querySelectorAll('.preview-image');
+        images.forEach(img => {
+            img.addEventListener('error', function() {
+                this.onerror = null;
+                this.src = "{{ url_for('static', filename='images/placeholder.jpg') }}";
+            });
         });
     });
 </script>
