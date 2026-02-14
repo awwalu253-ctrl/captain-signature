@@ -1,6 +1,7 @@
 import os
 import sys
 import traceback
+import logging
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, session, g
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,6 +22,10 @@ from cart import Cart
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logger = logging.getLogger(__name__)
+
 
 # Function to ensure directories exist with proper permissions
 def ensure_directories():
@@ -110,7 +115,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Create tables and admin user
-with app.app_context():
+
     try:
         db.create_all()
         # Create admin user if not exists
@@ -135,8 +140,12 @@ with app.app_context():
             db.session.commit()
             print("✓ Default settings created successfully!")
             print(f"  Delivery fee: ₦{settings.delivery_fee}")
+            
+        print("✓ Database tables created/verified")  # Add this line
     except Exception as e:
         print(f"✗ Database initialization error: {e}")
+        print(traceback.format_exc())
+
 
 # Route to serve images from user's home directory
 @app.route('/user-uploads/<filename>')
@@ -179,19 +188,42 @@ def signup():
     
     form = SignupForm()
     if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.password.data)
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            password=hashed_password
-        )
-        db.session.add(user)
-        db.session.commit()
-        flash('Your account has been created! You can now log in.', 'success')
-        return redirect(url_for('login'))
+        try:
+            hashed_password = generate_password_hash(form.password.data)
+            user = User(
+                username=form.username.data,
+                email=form.email.data,
+                password=hashed_password
+            )
+            db.session.add(user)
+            db.session.commit()
+            flash('Your account has been created! You can now log in.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Signup error: {str(e)}")
+            logger.error(traceback.format_exc())
+            flash(f'Registration failed: {str(e)}', 'danger')
     
     return render_template('signup.html', form=form)
 
+@app.route('/debug-db')
+def debug_db():
+    try:
+        # Test database connection
+        result = db.session.execute('SELECT 1').scalar()
+        return {
+            'status': 'connected',
+            'result': result,
+            'database_url': os.environ.get('DATABASE_URL', 'not set')[:20] + '...' if os.environ.get('DATABASE_URL') else 'not set'
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }, 500
+        
 @app.route('/logout')
 def logout():
     logout_user()
@@ -1001,6 +1033,8 @@ def forbidden_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
+    logger.error(f"500 error occurred: {error}")
+    logger.error(traceback.format_exc())
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
