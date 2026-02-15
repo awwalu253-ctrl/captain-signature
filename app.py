@@ -942,7 +942,7 @@ def clear_cart():
 @app.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
-    """Checkout page"""
+    """Checkout page - Payment before order creation"""
     cart = Cart()
     settings = Settings.get_settings()
     
@@ -976,6 +976,34 @@ def checkout():
         
         total_amount = subtotal + delivery_fee
         
+        # Store checkout data in session for later order creation
+        session['checkout_data'] = {
+            'shipping_name': shipping_name,
+            'shipping_address': shipping_address,
+            'shipping_city': shipping_city,
+            'shipping_state': shipping_state,
+            'shipping_phone': shipping_phone,
+            'payment_method': payment_method,
+            'customer_notes': customer_notes,
+            'subtotal': subtotal,
+            'delivery_fee': delivery_fee,
+            'total_amount': total_amount,
+            'cart_items': [
+                {
+                    'product_id': pid,
+                    'quantity': item['quantity'],
+                    'price': item['price'],
+                    'name': item['name'],
+                    'image': item['image']
+                } for pid, item in cart.get_cart().items()
+            ]
+        }
+        
+        # If payment method is paystack, redirect to payment
+        if payment_method == 'paystack':
+            return redirect(url_for('initiate_payment_before_order'))
+        
+        # For other payment methods (cash on delivery, etc.) - create order immediately
         # Create order
         order = Order(
             user_id=current_user.id,
@@ -995,7 +1023,7 @@ def checkout():
         )
         
         db.session.add(order)
-        db.session.flush()  # Get order ID
+        db.session.flush()
         
         # Add order items
         for product_id, item in cart.get_cart().items():
@@ -1027,10 +1055,6 @@ def checkout():
         
         # Clear cart
         cart.clear()
-        
-        # If payment method is paystack, redirect to payment
-        if payment_method == 'paystack':
-            return redirect(url_for('initiate_payment', order_id=order.id))
         
         flash(f'Order #{order.order_number} placed successfully!', 'success')
         return redirect(url_for('track_order_result', order_number=order.order_number))
@@ -1068,6 +1092,141 @@ def checkout():
                          states=NIGERIA_STATES,
                          settings=settings,
                          free_delivery_message=free_delivery_message)
+    
+@app.route('/initiate-payment-before-order')
+@login_required
+def initiate_payment_before_order():
+    """Initiate Paystack payment before creating order"""
+    checkout_data = session.get('checkout_data')
+    
+    if not checkout_data:
+        flash('Checkout session expired. Please try again.', 'danger')
+        return redirect(url_for('checkout'))
+    
+    # Generate a unique reference
+    reference = f"PRE-ORDER-{datetime.now().strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(4)}"
+    
+    # Initialize Paystack transaction
+    callback_url = url_for('payment_success_callback', _external=True)
+    
+    # Add order details to metadata
+    metadata = {
+        'customer_name': current_user.username,
+        'customer_email': current_user.email,
+        'checkout_data': checkout_data  # Store all checkout data in metadata
+    }
+    
+    response = paystack.initialize_transaction(
+        email=current_user.email,
+        amount=checkout_data['total_amount'],
+        reference=reference,
+        callback_url=callback_url,
+        metadata=metadata
+    )
+    
+    if response['status']:
+        # Store payment reference in session
+        session['payment_reference'] = response['data']['reference']
+        
+        # Redirect to Paystack payment page
+        return redirect(response['data']['authorization_url'])
+    else:
+        flash(f'Payment initiation failed: {response.get("message", "Unknown error")}', 'danger')
+        return redirect(url_for('checkout'))
+
+@app.route('/payment-success-callback')
+def payment_success_callback():
+    """Handle successful payment and create order"""
+    reference = request.args.get('reference')
+    
+    if not reference:
+        flash('No payment reference provided.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Verify transaction
+    response = paystack.verify_transaction(reference)
+    
+    if response['status'] and response['data']['status'] == 'success':
+        # Get checkout data from session
+        checkout_data = session.get('checkout_data')
+        
+        if not checkout_data:
+            flash('Checkout session expired. Please try again.', 'danger')
+            return redirect(url_for('checkout'))
+        
+        try:
+            # Create order
+            order = Order(
+                user_id=current_user.id,
+                status='processing',  # Auto-mark as processing since payment is successful
+                subtotal=checkout_data['subtotal'],
+                delivery_fee=checkout_data['delivery_fee'],
+                total_amount=checkout_data['total_amount'],
+                shipping_name=checkout_data['shipping_name'],
+                shipping_address=checkout_data['shipping_address'],
+                shipping_city=checkout_data['shipping_city'],
+                shipping_state=checkout_data['shipping_state'],
+                shipping_phone=checkout_data['shipping_phone'],
+                shipping_email=current_user.email,
+                payment_method='paystack',
+                payment_status='paid',
+                payment_reference=reference,
+                paid_at=datetime.utcnow(),
+                customer_notes=checkout_data.get('customer_notes', '')
+            )
+            
+            db.session.add(order)
+            db.session.flush()
+            
+            # Get cart from checkout data
+            cart = Cart()
+            
+            # Add order items from checkout data
+            for item_data in checkout_data['cart_items']:
+                product = Product.query.get(item_data['product_id'])
+                
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=item_data['product_id'],
+                    quantity=item_data['quantity'],
+                    price=item_data['price'],
+                    product_name=item_data['name'],
+                    product_image=item_data['image']
+                )
+                db.session.add(order_item)
+                
+                # Update stock
+                if product:
+                    product.stock -= item_data['quantity']
+            
+            # Add initial tracking update
+            tracking = OrderTracking(
+                order_id=order.id,
+                status='processing',
+                description='Order placed and payment received',
+                updated_by='system'
+            )
+            db.session.add(tracking)
+            
+            db.session.commit()
+            
+            # Clear cart and session data
+            cart.clear()
+            session.pop('checkout_data', None)
+            session.pop('payment_reference', None)
+            
+            flash('Payment successful! Your order has been placed.', 'success')
+            return redirect(url_for('track_order_result', order_number=order.order_number))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating order: {e}")
+            print(traceback.format_exc())
+            flash('Payment successful but order creation failed. Please contact support.', 'danger')
+            return redirect(url_for('index'))
+    else:
+        flash(f'Payment verification failed: {response.get("message", "Unknown error")}', 'danger')
+        return redirect(url_for('checkout'))
 
 # Order Tracking Routes
 @app.route('/track', methods=['GET', 'POST'])
