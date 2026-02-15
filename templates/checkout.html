@@ -52,6 +52,7 @@
                     </div>
 
                     <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+                        {{ form.hidden_tag() if form }}
                         <div class="row g-4">
                             <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
                                 <label for="shipping_name" class="form-label small text-uppercase fw-semibold"
@@ -112,22 +113,89 @@
                                 </select>
                             </div>
 
+                            <!-- Payment Methods Section -->
                             <div class="col-12" data-aos="fade-up" data-aos-delay="600">
-                                <label for="payment_method" class="form-label small text-uppercase fw-semibold"
+                                <label class="form-label small text-uppercase fw-semibold"
                                     style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-credit-card me-2" style="color: var(--gold);"></i>Payment Method *
                                 </label>
-                                <select class="form-select form-select-lg border-0 bg-light" id="payment_method"
-                                    name="payment_method" required style="border-radius: 0; padding: 0.8rem 1.2rem;">
-                                    <option value="">Select Payment Method</option>
-                                    <option value="card">Card Payment</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="ussd">USSD</option>
-                                    <option value="cash_on_delivery">Cash on Delivery</option>
-                                    <option value="paystack">Paystack</option>
-                                </select>
-                                <small class="text-muted mt-1 d-block"><i class="fas fa-shield-alt me-1"
-                                        style="color: var(--gold);"></i>All payments are secure</small>
+                                
+                                <!-- Paystack Payment Option -->
+                                <div class="payment-option mb-3 p-3" style="border: 1px solid var(--gold); background: rgba(184, 155, 94, 0.05);">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="paystack" value="paystack" checked
+                                               style="border: 2px solid var(--gold);">
+                                        <label class="form-check-label d-flex align-items-center" for="paystack">
+                                            <img src="https://paystack.com/assets/img/logo.svg" alt="Paystack" height="30" class="me-3">
+                                            <div>
+                                                <strong style="color: var(--charcoal);">Pay with Paystack</strong>
+                                                <p class="mb-0 small text-muted">Cards, Bank Transfer, USSD, QR Code, Mobile Money</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Paystack Features -->
+                                    <div class="paystack-features mt-3 pt-3" style="border-top: 1px dashed rgba(184, 155, 94, 0.3);">
+                                        <div class="row g-2">
+                                            <div class="col-4 col-md-2 text-center">
+                                                <i class="fas fa-credit-card" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">Cards</small>
+                                            </div>
+                                            <div class="col-4 col-md-2 text-center">
+                                                <i class="fas fa-university" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">Transfer</small>
+                                            </div>
+                                            <div class="col-4 col-md-2 text-center">
+                                                <i class="fas fa-mobile-alt" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">USSD</small>
+                                            </div>
+                                            <div class="col-4 col-md-2 text-center">
+                                                <i class="fas fa-qrcode" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">QR Code</small>
+                                            </div>
+                                            <div class="col-4 col-md-2 text-center">
+                                                <i class="fas fa-mobile" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">Mobile Money</small>
+                                            </div>
+                                            <div class="col-4 col-md-2 text-center">
+                                                <i class="fab fa-google-pay" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">Google Pay</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Other Payment Methods (Traditional) -->
+                                <div class="other-payment-methods mt-3">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="card" value="card">
+                                        <label class="form-check-label" for="card">
+                                            <i class="fas fa-credit-card me-2" style="color: var(--gold);"></i>
+                                            Card Payment (Manual)
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="bank_transfer" value="bank_transfer">
+                                        <label class="form-check-label" for="bank_transfer">
+                                            <i class="fas fa-university me-2" style="color: var(--gold);"></i>
+                                            Bank Transfer
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="cash_on_delivery" value="cash_on_delivery">
+                                        <label class="form-check-label" for="cash_on_delivery">
+                                            <i class="fas fa-truck me-2" style="color: var(--gold);"></i>
+                                            Cash on Delivery
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <small class="text-muted mt-2 d-block"><i class="fas fa-shield-alt me-1"
+                                        style="color: var(--gold);"></i>All payments are secure and encrypted</small>
                             </div>
 
                             <div class="col-12" data-aos="fade-up" data-aos-delay="700">
@@ -157,7 +225,7 @@
                                 <div class="d-flex gap-3">
                                     <button type="submit" class="btn btn-lg flex-grow-1" id="placeOrderBtn"
                                         style="background: var(--gold); color: var(--charcoal); border: none; border-radius: 0; padding: 1rem; font-weight: 500; letter-spacing: 1px;">
-                                        <i class="fas fa-check me-2"></i> Place Order
+                                        <i class="fas fa-lock me-2"></i> Place Order
                                     </button>
                                     <a href="{{ url_for('view_cart') }}" class="btn btn-lg"
                                         style="background: transparent; color: var(--charcoal); border: 1px solid var(--gold); border-radius: 0; padding: 1rem; font-weight: 400; letter-spacing: 1px;">
@@ -191,25 +259,28 @@
                             style="border-bottom: 1px solid rgba(184, 155, 94, 0.1);" data-aos="fade-up"
                             data-aos-delay="{{ loop.index * 50 }}">
 
-                            <!-- Product Image with tmp: support -->
+                            <!-- Product Image with Cloudinary support -->
                             <div class="me-3"
                                 style="width: 60px; height: 60px; overflow: hidden; background: var(--bg-light);">
                                 {% if item.product.image %}
-                                {% if item.product.image.startswith('http') %}
-                                <img src="{{ item.product.image }}" width="50" height="50" style="object-fit: cover;"
-                                    class="me-2">
-                                {% elif item.product.image.startswith('tmp:') %}
-                                {% set filename = item.product.image.replace('tmp:', '') %}
-                                <img src="{{ url_for('tmp_uploads', filename=filename) }}" width="50" height="50"
-                                    style="object-fit: cover;" class="me-2">
-                                {% elif item.product.image.startswith('user_uploads:') %}
-                                {% set filename = item.product.image.replace('user_uploads:', '') %}
-                                <img src="{{ url_for('user_uploads', filename=filename) }}" width="50" height="50"
-                                    style="object-fit: cover;" class="me-2">
+                                    {% if item.product.image.startswith('http') %}
+                                        <img src="{{ item.product.image }}" width="60" height="60" style="object-fit: cover;" class="me-2">
+                                    {% elif item.product.image.startswith('tmp:') %}
+                                        {% set filename = item.product.image.replace('tmp:', '') %}
+                                        <img src="{{ url_for('tmp_uploads', filename=filename) }}" width="60" height="60"
+                                            style="object-fit: cover;" class="me-2">
+                                    {% elif item.product.image.startswith('user_uploads:') %}
+                                        {% set filename = item.product.image.replace('user_uploads:', '') %}
+                                        <img src="{{ url_for('user_uploads', filename=filename) }}" width="60" height="60"
+                                            style="object-fit: cover;" class="me-2">
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}"
+                                            width="60" height="60" style="object-fit: cover;" class="me-2">
+                                    {% endif %}
                                 {% else %}
-                                <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}"
-                                    width="50" height="50" style="object-fit: cover;" class="me-2">
-                                {% endif %}
+                                    <div style="width: 60px; height: 60px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
                                 {% endif %}
                             </div>
 
@@ -249,14 +320,21 @@
                         </div>
                     </div>
 
+                    <!-- Paystack Badge -->
+                    <div class="text-center mb-3">
+                        <small class="text-muted">Powered by</small>
+                        <img src="https://paystack.com/assets/img/logo.svg" alt="Paystack" height="25" class="d-block mx-auto mt-1">
+                    </div>
+
                     <!-- Delivery Info -->
                     <div class="small text-muted">
                         <p class="mb-2"><i class="fas fa-truck me-2" style="color: var(--gold);"></i> Delivery within
                             3-5 business days</p>
                         <p class="mb-2"><i class="fas fa-clock me-2" style="color: var(--gold);"></i> Tracking provided
                             for all orders</p>
-                        <p class="mb-0"><i class="fas fa-shield-alt me-2" style="color: var(--gold);"></i> 256-bit SSL
+                        <p class="mb-2"><i class="fas fa-shield-alt me-2" style="color: var(--gold);"></i> 256-bit SSL
                             encryption</p>
+                        <p class="mb-0"><i class="fas fa-lock me-2" style="color: var(--gold);"></i> Secured by Paystack</p>
                     </div>
                 </div>
             </div>
@@ -354,6 +432,21 @@
         border-color: var(--gold);
     }
 
+    /* Payment Option Styles */
+    .payment-option {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .payment-option:hover {
+        background: rgba(184, 155, 94, 0.1) !important;
+    }
+
+    .form-check-input[type="radio"]:checked {
+        background-color: var(--gold);
+        border-color: var(--gold);
+    }
+
     /* Animation for price breakdown */
     .bg-light {
         animation: slideInUp 0.8s ease;
@@ -364,7 +457,6 @@
             opacity: 0;
             transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -380,10 +472,24 @@
         from {
             transform: rotate(0deg);
         }
-
         to {
             transform: rotate(360deg);
         }
+    }
+
+    /* Paystack Features Grid */
+    .paystack-features .col-4,
+    .paystack-features .col-md-2 {
+        transition: all 0.3s ease;
+    }
+
+    .paystack-features .col-4:hover,
+    .paystack-features .col-md-2:hover {
+        transform: translateY(-2px);
+    }
+
+    .paystack-features i {
+        font-size: 1.2rem;
     }
 
     /* Responsive Adjustments */
@@ -403,6 +509,10 @@
 
         .gap-3 .btn-lg {
             width: 100%;
+        }
+
+        .paystack-features .col-4 {
+            margin-bottom: 10px;
         }
     }
 </style>
@@ -453,6 +563,28 @@
         });
     });
 
+    // Payment method selection enhancement
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Highlight selected payment method
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.style.borderColor = 'rgba(184, 155, 94, 0.3)';
+                option.style.background = 'transparent';
+            });
+            
+            if (this.value === 'paystack') {
+                const paystackOption = this.closest('.payment-option');
+                if (paystackOption) {
+                    paystackOption.style.borderColor = 'var(--gold)';
+                    paystackOption.style.background = 'rgba(184, 155, 94, 0.05)';
+                }
+            }
+        });
+    });
+
+    // Trigger initial highlight for paystack
+    document.getElementById('paystack')?.dispatchEvent(new Event('change'));
+
     // Smooth scroll to top on validation error
     document.getElementById('checkoutForm')?.addEventListener('invalid', function (e) {
         e.preventDefault();
@@ -473,17 +605,6 @@
             });
         }
     }
-
-    // Check if order was successful
-    // {% with messages = get_flashed_messages(with_categories=true) %}
-    //     {% if messages %}
-    //         {% for category, message in messages %}
-    //             {% if category == 'success' and 'placed successfully' in message %}
-    //                 setTimeout(celebrateOrder, 500);
-    //             {% endif %}
-    //         {% endfor %}
-    //     {% endif %}
-    // {% endwith %}
 
     // Auto-dismiss success message
     setTimeout(function () {

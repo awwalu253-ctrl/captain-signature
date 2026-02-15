@@ -104,6 +104,12 @@ class Order(db.Model):
     # Relationships
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
     tracking_updates = db.relationship('OrderTracking', backref='order', lazy=True, cascade='all, delete-orphan')
+    # Payment fields
+    payment_reference = db.Column(db.String(100), nullable=True)
+    payment_access_code = db.Column(db.String(100), nullable=True)
+    payment_authorization_url = db.Column(db.String(500), nullable=True)
+    paystack_response = db.Column(db.JSON, nullable=True)
+    paid_at = db.Column(db.DateTime, nullable=True)
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)

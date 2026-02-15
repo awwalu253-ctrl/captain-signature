@@ -20,6 +20,8 @@ from models import db, User, Product, Order, OrderItem, OrderTracking, Settings,
 from forms import LoginForm, SignupForm, ProductForm
 from utils import save_picture
 from cart import Cart
+from paystack_utils import paystack
+import secrets
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -393,7 +395,132 @@ def debug_cloudinary():
         'api_secret': 'SET' if os.environ.get('CLOUDINARY_API_SECRET') else 'NOT SET',
         'is_vercel': app.config.get('IS_VERCEL', False),
     }
+
+# Paystack Routes
+@app.route('/initiate-payment/<int:order_id>')
+@login_required
+def initiate_payment(order_id):
+    """Initiate Paystack payment for an order"""
+    order = Order.query.get_or_404(order_id)
     
+    # Verify order belongs to current user
+    if order.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    
+    # Check if order is already paid
+    if order.payment_status == 'paid':
+        flash('This order has already been paid for.', 'info')
+        return redirect(url_for('track_order_result', order_number=order.order_number))
+    
+    # Initialize Paystack transaction
+    callback_url = url_for('payment_callback', _external=True)
+    
+    # Add order details to metadata
+    metadata = {
+        'order_id': order.id,
+        'order_number': order.order_number,
+        'customer_name': current_user.username,
+        'customer_email': current_user.email
+    }
+    
+    response = paystack.initialize_transaction(
+        email=current_user.email,
+        amount=order.total_amount,
+        reference=f"ORDER-{order.order_number}",
+        callback_url=callback_url,
+        metadata=metadata
+    )
+    
+    if response['status']:
+        # Save payment details to order
+        order.payment_reference = response['data']['reference']
+        order.payment_access_code = response['data']['access_code']
+        order.payment_authorization_url = response['data']['authorization_url']
+        order.paystack_response = response
+        db.session.commit()
+        
+        # Redirect to Paystack payment page
+        return redirect(response['data']['authorization_url'])
+    else:
+        flash(f'Payment initiation failed: {response.get("message", "Unknown error")}', 'danger')
+        return redirect(url_for('checkout'))
+
+@app.route('/payment-callback')
+def payment_callback():
+    """Handle Paystack callback after payment"""
+    reference = request.args.get('reference')
+    
+    if not reference:
+        flash('No payment reference provided.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Verify transaction
+    response = paystack.verify_transaction(reference)
+    
+    if response['status'] and response['data']['status'] == 'success':
+        # Find order by reference
+        order = Order.query.filter_by(payment_reference=reference).first()
+        
+        if order:
+            # Update order payment status
+            order.payment_status = 'paid'
+            order.paid_at = datetime.utcnow()
+            order.status = 'processing'  # Auto-mark as processing after payment
+            db.session.commit()
+            
+            flash('Payment successful! Your order is now being processed.', 'success')
+            return redirect(url_for('track_order_result', order_number=order.order_number))
+        else:
+            flash('Payment successful but order not found. Please contact support.', 'warning')
+            return redirect(url_for('index'))
+    else:
+        flash(f'Payment verification failed: {response.get("message", "Unknown error")}', 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/payment-webhook', methods=['POST'])
+def payment_webhook():
+    """Paystack webhook endpoint for real-time notifications"""
+    import json
+    
+    # Get the payload
+    payload = request.get_data(as_text=True)
+    signature = request.headers.get('x-paystack-signature')
+    
+    # Verify webhook signature (optional but recommended)
+    # You should implement signature verification here
+    
+    try:
+        event = json.loads(payload)
+        
+        # Handle different event types
+        if event['event'] == 'charge.success':
+            data = event['data']
+            reference = data['reference']
+            
+            # Find and update order
+            order = Order.query.filter_by(payment_reference=reference).first()
+            if order and order.payment_status != 'paid':
+                order.payment_status = 'paid'
+                order.paid_at = datetime.utcnow()
+                order.status = 'processing'
+                db.session.commit()
+                
+                print(f"✅ Webhook: Order {order.order_number} marked as paid")
+        
+        return {'status': 'success'}, 200
+        
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return {'status': 'error'}, 500
+
+@app.route('/payment-cancel/<int:order_id>')
+@login_required
+def payment_cancel(order_id):
+    """Handle cancelled payment"""
+    order = Order.query.get_or_404(order_id)
+    flash('Payment was cancelled. You can try again.', 'warning')
+    return redirect(url_for('checkout'))
+
 # Debug route to check database connection - FIXED with text()
 @app.route('/debug-db')
 def debug_db():
@@ -830,7 +957,7 @@ def checkout():
         shipping_city = request.form.get('shipping_city')
         shipping_state = request.form.get('shipping_state')
         shipping_phone = request.form.get('shipping_phone')
-        payment_method = request.form.get('payment_method')
+        payment_method = request.form.get('payment_method', 'paystack')
         customer_notes = request.form.get('customer_notes')
         
         # Validate Nigerian state
@@ -844,7 +971,6 @@ def checkout():
         # Check if order qualifies for free delivery
         if settings.free_delivery_threshold > 0 and subtotal >= settings.free_delivery_threshold:
             delivery_fee = 0
-            flash(f'Congratulations! You qualify for FREE delivery!', 'success')
         else:
             delivery_fee = settings.delivery_fee
         
@@ -902,7 +1028,11 @@ def checkout():
         # Clear cart
         cart.clear()
         
-        flash(f'Order #{order.order_number} placed successfully! We\'ll deliver to {shipping_city}, {shipping_state}.', 'success')
+        # If payment method is paystack, redirect to payment
+        if payment_method == 'paystack':
+            return redirect(url_for('initiate_payment', order_id=order.id))
+        
+        flash(f'Order #{order.order_number} placed successfully!', 'success')
         return redirect(url_for('track_order_result', order_number=order.order_number))
     
     # GET request - show checkout form
