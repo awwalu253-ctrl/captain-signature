@@ -1,132 +1,122 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from datetime import datetime
-import random
-import string
+import os
+import sys
 
-db = SQLAlchemy()
+class Config:
+    # Secret key for session security
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-change-in-production'
+    
+    # Check if running on Vercel
+    IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL') == '1'
+    
+    # --- Database Configuration with Explicit Error Checking ---
+    print("********** DATABASE CONFIG DEBUG **********", file=sys.stderr)
 
-# Nigeria states for dropdown
-NIGERIA_STATES = [
-    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue',
-    'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu',
-    'FCT - Abuja', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina',
-    'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo',
-    'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
-]
+    # Try multiple possible environment variable names
+    potential_db_urls = [
+        os.environ.get('DATABASE_URL'),
+        os.environ.get('POSTGRES_URL'),
+        os.environ.get('POSTGRES_PRISMA_URL')
+    ]
 
-def generate_order_number():
-    """Generate a unique order number"""
-    timestamp = datetime.now().strftime('%Y%m%d')
-    random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    return f"ORD-{timestamp}-{random_chars}"
+    # Use the first one that is found
+    database_url = None
+    for url in potential_db_urls:
+        if url:
+            database_url = url
+            print(f"✓ Found database URL from env var", file=sys.stderr)
+            break
 
-class Settings(db.Model):
-    """Global settings for the application"""
-    id = db.Column(db.Integer, primary_key=True)
-    delivery_fee = db.Column(db.Float, default=1500.00)
-    free_delivery_threshold = db.Column(db.Float, default=0.00)
-    currency = db.Column(db.String(10), default='₦')
-    site_name = db.Column(db.String(100), default='Captain Signature')
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    
-    @staticmethod
-    def get_settings():
-        """Get or create settings"""
-        settings = Settings.query.first()
-        if not settings:
-            settings = Settings()
-            db.session.add(settings)
-            db.session.commit()
-        return settings
+    if database_url is None:
+        print("❌ CRITICAL: No DATABASE_URL, POSTGRES_URL, or POSTGRES_PRISMA_URL found in environment!", file=sys.stderr)
+        print("❌ Falling back to SQLite. This WILL FAIL on Vercel.", file=sys.stderr)
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+    else:
+        # Fix PostgreSQL URL format if necessary
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            print(f"✓ Formatted URL to use 'postgresql://'", file=sys.stderr)
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    phone = db.Column(db.String(20), nullable=True)
-    address = db.Column(db.Text, nullable=True)
-    city = db.Column(db.String(100), nullable=True)
-    state = db.Column(db.String(100), nullable=True)
-    
-    # Relationships
-    orders = db.relationship('Order', backref='customer', lazy=True)
+        SQLALCHEMY_DATABASE_URI = database_url
+        print(f"✓ Using PostgreSQL database: {database_url.split('@')[-1][:20]}...", file=sys.stderr)
+        
+        # Add connection pooling and SSL options for Supabase
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_size': 5,
+            'max_overflow': 10,
+            'pool_timeout': 30,
+            'pool_recycle': 1800,
+            'connect_args': {
+                'sslmode': 'require'
+            }
+        }
 
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    image = db.Column(db.String(200), nullable=True)
-    stock = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    order_items = db.relationship('OrderItem', backref='product', lazy=True)
+    print("*******************************************", file=sys.stderr)
+    # --- End Database Configuration ---
 
-class Order(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    order_number = db.Column(db.String(50), unique=True, default=generate_order_number)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    order_date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(50), default='pending')  # pending, processing, shipped, delivered, cancelled
-    subtotal = db.Column(db.Float, default=0.0)
-    delivery_fee = db.Column(db.Float, default=1500.00)
-    total_amount = db.Column(db.Float, default=0.0)
-    
-    # Shipping Information (Nigeria only)
-    shipping_name = db.Column(db.String(100), nullable=True)
-    shipping_address = db.Column(db.Text, nullable=True)
-    shipping_city = db.Column(db.String(100), nullable=True)
-    shipping_state = db.Column(db.String(100), nullable=True)
-    shipping_phone = db.Column(db.String(20), nullable=True)
-    shipping_email = db.Column(db.String(120), nullable=True)
-    
-    # Tracking Information
-    tracking_number = db.Column(db.String(100), nullable=True)
-    carrier = db.Column(db.String(50), nullable=True)
-    estimated_delivery = db.Column(db.DateTime, nullable=True)
-    delivered_date = db.Column(db.DateTime, nullable=True)
-    
-    # Payment Information
-    payment_method = db.Column(db.String(50), nullable=True)
-    payment_status = db.Column(db.String(50), default='pending')  # pending, paid, failed
-    
-    # NEW: Paystack Payment Fields
-    payment_reference = db.Column(db.String(100), nullable=True)
-    payment_access_code = db.Column(db.String(100), nullable=True)
-    payment_authorization_url = db.Column(db.String(500), nullable=True)
-    paystack_response = db.Column(db.JSON, nullable=True)
-    paid_at = db.Column(db.DateTime, nullable=True)
-    
-    # Notes
-    admin_notes = db.Column(db.Text, nullable=True)
-    customer_notes = db.Column(db.Text, nullable=True)
-    
-    # Relationships
-    items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
-    tracking_updates = db.relationship('OrderTracking', backref='order', lazy=True, cascade='all, delete-orphan')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-class OrderItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    product_name = db.Column(db.String(100), nullable=True)
-    product_image = db.Column(db.String(200), nullable=True)
+    # --- Cloudinary Configuration for Image Uploads ---
+    CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+    
+    # Check if Cloudinary is configured
+    if IS_VERCEL:
+        if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+            print("✓ Cloudinary configured for image uploads", file=sys.stderr)
+        else:
+            print("⚠ WARNING: Cloudinary not fully configured! Image uploads may fail on Vercel.", file=sys.stderr)
+            print("  Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to Vercel env vars", file=sys.stderr)
+    # --- End Cloudinary Configuration ---
 
-class OrderTracking(db.Model):
-    """Track order status updates"""
-    id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
-    status = db.Column(db.String(50), nullable=False)
-    location = db.Column(db.String(200), nullable=True)
-    description = db.Column(db.Text, nullable=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_by = db.Column(db.String(50), nullable=True)  # 'system', 'admin', 'carrier'
+    # Upload folder configuration (for local development only)
+    if IS_VERCEL:
+        # On Vercel, we use Cloudinary instead of local storage
+        UPLOAD_FOLDER = '/tmp/captain_signature_uploads'  # Fallback only
+        print(f"✓ Using Cloudinary for image uploads on Vercel", file=sys.stderr)
+    else:
+        # Local development
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        UPLOAD_FOLDER = os.path.join(project_root, 'uploads')
+        print(f"✓ Using local upload folder: {UPLOAD_FOLDER}", file=sys.stderr)
+
+    # Max file size (16MB)
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+    
+    # Allowed file extensions
+    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
+    
+    # Nigeria states for dropdown
+    NIGERIA_STATES = [
+        'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue',
+        'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu',
+        'FCT - Abuja', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina',
+        'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo',
+        'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+    ]
+    
+    # Default delivery fee
+    DEFAULT_DELIVERY_FEE = 1500.00
+    
+    # Default currency
+    CURRENCY = '₦'
+    
+    # Site name
+    SITE_NAME = 'Captain Signature'
+    
+ # --- Paystack Configuration ---
+    PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
+    PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
+    
+    # Paystack endpoints
+    PAYSTACK_INITIALIZE_URL = 'https://api.paystack.co/transaction/initialize'
+    PAYSTACK_VERIFY_URL = 'https://api.paystack.co/transaction/verify/'
+    
+    # Check if Paystack is configured
+    if IS_VERCEL:
+        if PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY:
+            print("✓ Paystack configured for payments", file=sys.stderr)
+        else:
+            print("⚠ WARNING: Paystack not fully configured!", file=sys.stderr)
+            print("  Please add PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY to Vercel env vars", file=sys.stderr)
+    # --- End Paystack Configuration ---

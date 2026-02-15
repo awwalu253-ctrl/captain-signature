@@ -518,6 +518,8 @@
 </style>
 
 {% block scripts %}
+{% block scripts %}
+{% block scripts %}
 <script>
     // Prevent double submission with animation
     document.getElementById('checkoutForm')?.addEventListener('submit', function (e) {
@@ -594,7 +596,7 @@
         });
     }, true);
 
-    // Confetti animation on successful order (triggered by flash message)
+    // Confetti animation on successful order
     function celebrateOrder() {
         if (typeof confetti !== 'undefined') {
             confetti({
@@ -606,16 +608,15 @@
         }
     }
 
-    // Check if order was successful from flash message
-    // {% with messages = get_flashed_messages(with_categories=true) %}
-    //     {% if messages %}
-    //         {% for category, message in messages %}
-    //             {% if category == 'success' and 'placed successfully' in message %}
-    //                 setTimeout(celebrateOrder, 500);
-    //             {% endif %}
-    //         {% endfor %}
-    //     {% endif %}
-    // {% endwith %}
+    // Check for success flash messages in the DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        const successAlerts = document.querySelectorAll('.alert-success');
+        successAlerts.forEach(alert => {
+            if (alert.textContent.includes('placed successfully')) {
+                setTimeout(celebrateOrder, 500);
+            }
+        });
+    });
 
     // Auto-dismiss success message
     setTimeout(function () {
@@ -646,5 +647,4 @@
 
 <!-- Include confetti library for celebration effect -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
-{% endblock %}
 {% endblock %}
