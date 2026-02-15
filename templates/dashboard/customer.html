@@ -119,7 +119,13 @@
                                                 {% for item in order.items[:3] %}
                                                     {% if item.product_image %}
                                                         <div class="item-preview">
-                                                            {% if item.product_image.startswith('tmp:') %}
+                                                            {% if item.product_image.startswith('http') %}
+                                                                <img src="{{ item.product_image }}" 
+                                                                     alt="{{ item.product_name }}" 
+                                                                     class="preview-image"
+                                                                     data-bs-toggle="tooltip" 
+                                                                     title="{{ item.product_name }}">
+                                                            {% elif item.product_image.startswith('tmp:') %}
                                                                 {% set filename = item.product_image.replace('tmp:', '') %}
                                                                 <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
                                                                      alt="{{ item.product_name }}" 
@@ -875,20 +881,6 @@
         });
     });
 
-    // Animated counter for stats
-    function animateValue(element, start, end, duration) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            element.innerHTML = Math.floor(progress * (end - start) + start);
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            }
-        };
-        window.requestAnimationFrame(step);
-    }
-
     // Add hover effect to order rows
     document.querySelectorAll('.order-row').forEach(row => {
         row.addEventListener('mouseenter', function() {
@@ -899,13 +891,14 @@
         });
     });
 
-    // Optional: Add image error handling
+    // Image error handling with JavaScript
     document.addEventListener('DOMContentLoaded', function() {
         const images = document.querySelectorAll('.preview-image');
         images.forEach(img => {
             img.addEventListener('error', function() {
-                this.onerror = null;
-                this.src = "{{ url_for('static', filename='images/placeholder.jpg') }}";
+                this.onerror = null; // Prevent infinite loop
+                this.src = "https://via.placeholder.com/50?text=No+Image";
+                this.alt = "Image not found";
             });
         });
     });

@@ -43,17 +43,25 @@
                             <td class="product-image-cell">
                                 <div class="product-image-wrapper">
                                     {% if product.image %}
-                                        {% if product.image.startswith('tmp:') %}
+                                        {% if product.image.startswith('http') %}
+                                            <!-- Cloudinary URL -->
+                                            <img src="{{ product.image }}" 
+                                                 class="product-image"
+                                                 alt="{{ product.name }}">
+                                        {% elif product.image.startswith('tmp:') %}
+                                            <!-- Legacy tmp files -->
                                             {% set filename = product.image.replace('tmp:', '') %}
                                             <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
                                                  class="product-image"
                                                  alt="{{ product.name }}">
                                         {% elif product.image.startswith('user_uploads:') %}
+                                            <!-- Legacy user uploads -->
                                             {% set filename = product.image.replace('user_uploads:', '') %}
                                             <img src="{{ url_for('user_uploads', filename=filename) }}" 
                                                  class="product-image"
                                                  alt="{{ product.name }}">
                                         {% else %}
+                                            <!-- Local static files -->
                                             <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
                                                  class="product-image"
                                                  alt="{{ product.name }}">

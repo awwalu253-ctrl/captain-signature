@@ -187,16 +187,23 @@
                                         <div class="d-flex align-items-center">
                                             <div class="product-image-wrapper me-3">
                                                 {% if item.product_image %}
-                                                    {# Handle different image path types #}
-                                                    {% if item.product_image.startswith('tmp:') %}
+                                                    {# Handle different image path types with Cloudinary support #}
+                                                    {% if item.product_image.startswith('http') %}
+                                                        {# Cloudinary URL or any full URL #}
+                                                        <img src="{{ item.product_image }}" 
+                                                             alt="{{ item.product_name }}" class="product-image">
+                                                    {% elif item.product_image.startswith('tmp:') %}
+                                                        {# Legacy tmp files #}
                                                         {% set filename = item.product_image.replace('tmp:', '') %}
                                                         <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
                                                              alt="{{ item.product_name }}" class="product-image">
                                                     {% elif item.product_image.startswith('user_uploads:') %}
+                                                        {# Legacy user uploads #}
                                                         {% set filename = item.product_image.replace('user_uploads:', '') %}
                                                         <img src="{{ url_for('user_uploads', filename=filename) }}" 
                                                              alt="{{ item.product_name }}" class="product-image">
                                                     {% else %}
+                                                        {# Local static files #}
                                                         <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}" 
                                                              alt="{{ item.product_name }}" class="product-image">
                                                     {% endif %}
@@ -815,11 +822,14 @@
 <!-- AOS Animation Script -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        AOS.init({
-            duration: 800,
-            once: true,
-            offset: 20
-        });
+        // Initialize AOS if available
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 800,
+                once: true,
+                offset: 20
+            });
+        }
     });
 </script>
 {% endblock %}

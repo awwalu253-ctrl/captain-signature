@@ -9,11 +9,15 @@
                 <i class="fas fa-lock me-3" style="color: var(--gold);"></i>
                 Secure Checkout
             </h2>
-            <p class="text-muted" data-aos="fade-up" data-aos-delay="200" style="font-family: 'Montserrat', sans-serif; font-weight: 300;">Complete your purchase with confidence</p>
-            <div style="width: 100px; height: 2px; background: linear-gradient(90deg, var(--gold), transparent); margin-top: 10px;"></div>
+            <p class="text-muted" data-aos="fade-up" data-aos-delay="200"
+                style="font-family: 'Montserrat', sans-serif; font-weight: 300;">Complete your purchase with confidence
+            </p>
+            <div
+                style="width: 100px; height: 2px; background: linear-gradient(90deg, var(--gold), transparent); margin-top: 10px;">
+            </div>
         </div>
     </div>
-    
+
     <div class="row g-4">
         <div class="col-lg-8">
             <!-- Shipping Information Card -->
@@ -24,80 +28,97 @@
                             <i class="fas fa-map-marker-alt" style="color: var(--gold);"></i>
                         </div>
                         <div>
-                            <h5 class="mb-0 fw-semibold" style="color: var(--charcoal); font-family: 'Cormorant Garamond', serif;">Shipping Information</h5>
+                            <h5 class="mb-0 fw-semibold"
+                                style="color: var(--charcoal); font-family: 'Cormorant Garamond', serif;">Shipping
+                                Information</h5>
                             <p class="small text-muted mb-0">Nigeria Only</p>
                         </div>
                     </div>
                 </div>
                 <div class="card-body px-4 pb-4">
                     <!-- Nigeria Notice -->
-                    <div class="alert border-0 bg-light mb-4" style="border-left: 3px solid var(--gold) !important; border-radius: 0;" data-aos="fade-in" data-aos-delay="300">
+                    <div class="alert border-0 bg-light mb-4"
+                        style="border-left: 3px solid var(--gold) !important; border-radius: 0;" data-aos="fade-in"
+                        data-aos-delay="300">
                         <div class="d-flex">
                             <i class="fas fa-info-circle me-3" style="color: var(--gold); font-size: 1.2rem;"></i>
                             <div>
                                 <strong style="color: var(--charcoal);">We currently ship only within Nigeria.</strong>
-                                <p class="mb-0 small text-muted">Fixed delivery fee of <span style="color: var(--gold); font-weight: 600;">₦1,500</span> applies to all orders.</p>
+                                <p class="mb-0 small text-muted">Fixed delivery fee of <span
+                                        style="color: var(--gold); font-weight: 600;">₦1,500</span> applies to all
+                                    orders.</p>
                             </div>
                         </div>
                     </div>
-                    
+
                     <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
                         <div class="row g-4">
                             <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
-                                <label for="shipping_name" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="shipping_name" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-user me-2" style="color: var(--gold);"></i>Full Name *
                                 </label>
-                                <input type="text" class="form-control form-control-lg border-0 bg-light" id="shipping_name" name="shipping_name" 
-                                       value="{{ user.username }}" required
-                                       style="border-radius: 0; padding: 0.8rem 1.2rem;">
+                                <input type="text" class="form-control form-control-lg border-0 bg-light"
+                                    id="shipping_name" name="shipping_name" value="{{ user.username }}" required
+                                    style="border-radius: 0; padding: 0.8rem 1.2rem;">
                             </div>
                             <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
-                                <label for="shipping_phone" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="shipping_phone" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-phone me-2" style="color: var(--gold);"></i>Phone Number *
                                 </label>
-                                <input type="tel" class="form-control form-control-lg border-0 bg-light" id="shipping_phone" name="shipping_phone" 
-                                       placeholder="08012345678" value="{{ user.phone or '' }}" required
-                                       style="border-radius: 0; padding: 0.8rem 1.2rem;">
-                                <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1" style="color: var(--gold);"></i>Nigerian phone number</small>
+                                <input type="tel" class="form-control form-control-lg border-0 bg-light"
+                                    id="shipping_phone" name="shipping_phone" placeholder="08012345678"
+                                    value="{{ user.phone or '' }}" required
+                                    style="border-radius: 0; padding: 0.8rem 1.2rem;">
+                                <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"
+                                        style="color: var(--gold);"></i>Nigerian phone number</small>
                             </div>
-                            
+
                             <div class="col-12" data-aos="fade-up" data-aos-delay="300">
-                                <label for="shipping_address" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="shipping_address" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-home me-2" style="color: var(--gold);"></i>Street Address *
                                 </label>
-                                <input type="text" class="form-control form-control-lg border-0 bg-light" id="shipping_address" name="shipping_address" 
-                                       placeholder="House number, street name" value="{{ user.address or '' }}" required
-                                       style="border-radius: 0; padding: 0.8rem 1.2rem;">
+                                <input type="text" class="form-control form-control-lg border-0 bg-light"
+                                    id="shipping_address" name="shipping_address"
+                                    placeholder="House number, street name" value="{{ user.address or '' }}" required
+                                    style="border-radius: 0; padding: 0.8rem 1.2rem;">
                             </div>
-                            
+
                             <div class="col-md-6" data-aos="fade-up" data-aos-delay="400">
-                                <label for="shipping_city" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="shipping_city" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-city me-2" style="color: var(--gold);"></i>City/LGA *
                                 </label>
-                                <input type="text" class="form-control form-control-lg border-0 bg-light" id="shipping_city" name="shipping_city" 
-                                       placeholder="e.g., Ikeja" value="{{ user.city or '' }}" required
-                                       style="border-radius: 0; padding: 0.8rem 1.2rem;">
+                                <input type="text" class="form-control form-control-lg border-0 bg-light"
+                                    id="shipping_city" name="shipping_city" placeholder="e.g., Ikeja"
+                                    value="{{ user.city or '' }}" required
+                                    style="border-radius: 0; padding: 0.8rem 1.2rem;">
                             </div>
-                            
+
                             <div class="col-md-6" data-aos="fade-up" data-aos-delay="500">
-                                <label for="shipping_state" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="shipping_state" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-map me-2" style="color: var(--gold);"></i>State *
                                 </label>
-                                <select class="form-select form-select-lg border-0 bg-light" id="shipping_state" name="shipping_state" required
-                                        style="border-radius: 0; padding: 0.8rem 1.2rem;">
+                                <select class="form-select form-select-lg border-0 bg-light" id="shipping_state"
+                                    name="shipping_state" required style="border-radius: 0; padding: 0.8rem 1.2rem;">
                                     <option value="">Select State</option>
                                     {% for state in states %}
-                                        <option value="{{ state }}" {% if user.state == state %}selected{% endif %}>{{ state }}</option>
+                                    <option value="{{ state }}" {% if user.state==state %}selected{% endif %}>{{ state
+                                        }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            
+
                             <div class="col-12" data-aos="fade-up" data-aos-delay="600">
-                                <label for="payment_method" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="payment_method" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-credit-card me-2" style="color: var(--gold);"></i>Payment Method *
                                 </label>
-                                <select class="form-select form-select-lg border-0 bg-light" id="payment_method" name="payment_method" required
-                                        style="border-radius: 0; padding: 0.8rem 1.2rem;">
+                                <select class="form-select form-select-lg border-0 bg-light" id="payment_method"
+                                    name="payment_method" required style="border-radius: 0; padding: 0.8rem 1.2rem;">
                                     <option value="">Select Payment Method</option>
                                     <option value="card">Card Payment</option>
                                     <option value="bank_transfer">Bank Transfer</option>
@@ -105,37 +126,41 @@
                                     <option value="cash_on_delivery">Cash on Delivery</option>
                                     <option value="paystack">Paystack</option>
                                 </select>
-                                <small class="text-muted mt-1 d-block"><i class="fas fa-shield-alt me-1" style="color: var(--gold);"></i>All payments are secure</small>
+                                <small class="text-muted mt-1 d-block"><i class="fas fa-shield-alt me-1"
+                                        style="color: var(--gold);"></i>All payments are secure</small>
                             </div>
-                            
+
                             <div class="col-12" data-aos="fade-up" data-aos-delay="700">
-                                <label for="customer_notes" class="form-label small text-uppercase fw-semibold" style="color: var(--charcoal); letter-spacing: 1px;">
+                                <label for="customer_notes" class="form-label small text-uppercase fw-semibold"
+                                    style="color: var(--charcoal); letter-spacing: 1px;">
                                     <i class="fas fa-pen me-2" style="color: var(--gold);"></i>Order Notes (Optional)
                                 </label>
-                                <textarea class="form-control border-0 bg-light" id="customer_notes" name="customer_notes" rows="3"
-                                          placeholder="Special instructions for delivery"
-                                          style="border-radius: 0; padding: 1rem;"></textarea>
+                                <textarea class="form-control border-0 bg-light" id="customer_notes"
+                                    name="customer_notes" rows="3" placeholder="Special instructions for delivery"
+                                    style="border-radius: 0; padding: 1rem;"></textarea>
                             </div>
-                            
+
                             <div class="col-12" data-aos="fade-up" data-aos-delay="800">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="terms" required
-                                           style="border: 1px solid var(--gold); border-radius: 2px;">
+                                        style="border: 1px solid var(--gold); border-radius: 2px;">
                                     <label class="form-check-label small text-muted" for="terms">
-                                        I confirm that my delivery address is in Nigeria and agree to the 
-                                        <a href="#" style="color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold);">terms and conditions</a>.
+                                        I confirm that my delivery address is in Nigeria and agree to the
+                                        <a href="#"
+                                            style="color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold);">terms
+                                            and conditions</a>.
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <div class="col-12" data-aos="fade-up" data-aos-delay="900">
                                 <div class="d-flex gap-3">
                                     <button type="submit" class="btn btn-lg flex-grow-1" id="placeOrderBtn"
-                                            style="background: var(--gold); color: var(--charcoal); border: none; border-radius: 0; padding: 1rem; font-weight: 500; letter-spacing: 1px;">
+                                        style="background: var(--gold); color: var(--charcoal); border: none; border-radius: 0; padding: 1rem; font-weight: 500; letter-spacing: 1px;">
                                         <i class="fas fa-check me-2"></i> Place Order
                                     </button>
                                     <a href="{{ url_for('view_cart') }}" class="btn btn-lg"
-                                       style="background: transparent; color: var(--charcoal); border: 1px solid var(--gold); border-radius: 0; padding: 1rem; font-weight: 400; letter-spacing: 1px;">
+                                        style="background: transparent; color: var(--charcoal); border: 1px solid var(--gold); border-radius: 0; padding: 1rem; font-weight: 400; letter-spacing: 1px;">
                                         <i class="fas fa-arrow-left me-2"></i> Back
                                     </a>
                                 </div>
@@ -145,7 +170,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             <!-- Order Summary Card -->
             <div class="card border-0 shadow-sm mb-4 order-summary-card" data-aos="fade-left" data-aos-duration="1000">
@@ -154,44 +179,47 @@
                         <div class="icon-wrapper me-3">
                             <i class="fas fa-shopping-bag" style="color: var(--gold);"></i>
                         </div>
-                        <h5 class="mb-0 fw-semibold" style="color: var(--charcoal); font-family: 'Cormorant Garamond', serif;">Order Summary</h5>
+                        <h5 class="mb-0 fw-semibold"
+                            style="color: var(--charcoal); font-family: 'Cormorant Garamond', serif;">Order Summary</h5>
                     </div>
                 </div>
                 <div class="card-body px-4 pb-4">
                     <!-- Items List with Images -->
                     <div class="mb-4">
                         {% for item in cart_items %}
-                        <div class="d-flex align-items-center mb-3 pb-3" 
-                             style="border-bottom: 1px solid rgba(184, 155, 94, 0.1);"
-                             data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-                            
+                        <div class="d-flex align-items-center mb-3 pb-3"
+                            style="border-bottom: 1px solid rgba(184, 155, 94, 0.1);" data-aos="fade-up"
+                            data-aos-delay="{{ loop.index * 50 }}">
+
                             <!-- Product Image with tmp: support -->
-                            <div class="me-3" style="width: 60px; height: 60px; overflow: hidden; background: var(--bg-light);">
+                            <div class="me-3"
+                                style="width: 60px; height: 60px; overflow: hidden; background: var(--bg-light);">
                                 {% if item.product.image %}
-                                    {% if item.product.image.startswith('tmp:') %}
-                                        {% set filename = item.product.image.replace('tmp:', '') %}
-                                        <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
-                                             alt="{{ item.product.name }}"
-                                             style="width: 100%; height: 100%; object-fit: cover;"
-                                             onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=Product';">
-                                    {% else %}
-                                        <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}" 
-                                             alt="{{ item.product.name }}"
-                                             style="width: 100%; height: 100%; object-fit: cover;"
-                                             onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=Product';">
-                                    {% endif %}
+                                {% if item.product.image.startswith('http') %}
+                                <img src="{{ item.product.image }}" width="50" height="50" style="object-fit: cover;"
+                                    class="me-2">
+                                {% elif item.product.image.startswith('tmp:') %}
+                                {% set filename = item.product.image.replace('tmp:', '') %}
+                                <img src="{{ url_for('tmp_uploads', filename=filename) }}" width="50" height="50"
+                                    style="object-fit: cover;" class="me-2">
+                                {% elif item.product.image.startswith('user_uploads:') %}
+                                {% set filename = item.product.image.replace('user_uploads:', '') %}
+                                <img src="{{ url_for('user_uploads', filename=filename) }}" width="50" height="50"
+                                    style="object-fit: cover;" class="me-2">
                                 {% else %}
-                                    <div style="width: 100%; height: 100%; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-image" style="color: var(--gold); opacity: 0.3;"></i>
-                                    </div>
+                                <img src="{{ url_for('static', filename='images/products/' + item.product.image) }}"
+                                    width="50" height="50" style="object-fit: cover;" class="me-2">
+                                {% endif %}
                                 {% endif %}
                             </div>
-                            
+
                             <!-- Product Details -->
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span style="color: var(--charcoal); font-weight: 400;">{{ item.product.name }}</span>
-                                    <span style="color: var(--gold); font-weight: 500;">₦{{ "%.2f"|format(item.subtotal) }}</span>
+                                    <span style="color: var(--charcoal); font-weight: 400;">{{ item.product.name
+                                        }}</span>
+                                    <span style="color: var(--gold); font-weight: 500;">₦{{ "%.2f"|format(item.subtotal)
+                                        }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-1">
                                     <small class="text-muted">Qty: {{ item.quantity }}</small>
@@ -201,7 +229,7 @@
                         </div>
                         {% endfor %}
                     </div>
-                    
+
                     <!-- Price Breakdown -->
                     <div class="bg-light p-4 mb-4">
                         <div class="d-flex justify-content-between mb-2 small">
@@ -215,19 +243,24 @@
                         <hr class="my-3" style="border-color: rgba(184, 155, 94, 0.2);">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-semibold" style="color: var(--charcoal);">Total:</span>
-                            <span class="h4 mb-0" style="color: var(--gold); font-family: 'Cormorant Garamond', serif;">₦{{ "%.2f"|format(total) }}</span>
+                            <span class="h4 mb-0"
+                                style="color: var(--gold); font-family: 'Cormorant Garamond', serif;">₦{{
+                                "%.2f"|format(total) }}</span>
                         </div>
                     </div>
-                    
+
                     <!-- Delivery Info -->
                     <div class="small text-muted">
-                        <p class="mb-2"><i class="fas fa-truck me-2" style="color: var(--gold);"></i> Delivery within 3-5 business days</p>
-                        <p class="mb-2"><i class="fas fa-clock me-2" style="color: var(--gold);"></i> Tracking provided for all orders</p>
-                        <p class="mb-0"><i class="fas fa-shield-alt me-2" style="color: var(--gold);"></i> 256-bit SSL encryption</p>
+                        <p class="mb-2"><i class="fas fa-truck me-2" style="color: var(--gold);"></i> Delivery within
+                            3-5 business days</p>
+                        <p class="mb-2"><i class="fas fa-clock me-2" style="color: var(--gold);"></i> Tracking provided
+                            for all orders</p>
+                        <p class="mb-0"><i class="fas fa-shield-alt me-2" style="color: var(--gold);"></i> 256-bit SSL
+                            encryption</p>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Trust Badge -->
             <div class="text-center mt-4" data-aos="zoom-in" data-aos-delay="500">
                 <div class="d-inline-flex align-items-center px-4 py-2 bg-light">
@@ -242,20 +275,23 @@
 <!-- Custom Styles -->
 <style>
     /* Form Input Styles */
-    .form-control-lg, .form-select-lg {
+    .form-control-lg,
+    .form-select-lg {
         transition: all 0.3s ease;
     }
-    
-    .form-control-lg:hover, .form-select-lg:hover {
+
+    .form-control-lg:hover,
+    .form-select-lg:hover {
         background-color: #f0f0f0 !important;
     }
-    
-    .form-control-lg:focus, .form-select-lg:focus {
+
+    .form-control-lg:focus,
+    .form-select-lg:focus {
         box-shadow: none;
         background-color: #f0f0f0 !important;
         border-left: 2px solid var(--gold) !important;
     }
-    
+
     /* Icon Wrapper */
     .icon-wrapper {
         width: 40px;
@@ -266,28 +302,30 @@
         justify-content: center;
         transition: all 0.3s ease;
     }
-    
+
     .icon-wrapper:hover {
         background: rgba(184, 155, 94, 0.2);
         transform: rotate(360deg);
     }
-    
+
     /* Card Styles */
-    .checkout-card, .order-summary-card {
+    .checkout-card,
+    .order-summary-card {
         transition: all 0.3s ease;
     }
-    
-    .checkout-card:hover, .order-summary-card:hover {
+
+    .checkout-card:hover,
+    .order-summary-card:hover {
         box-shadow: 0 20px 40px rgba(184, 155, 94, 0.1) !important;
     }
-    
+
     /* Button Styles */
     .btn-lg {
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
     }
-    
+
     .btn-lg::after {
         content: '';
         position: absolute;
@@ -300,63 +338,69 @@
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
     }
-    
+
     .btn-lg:hover::after {
         width: 300px;
         height: 300px;
     }
-    
+
     .btn-lg:hover {
         transform: translateY(-2px);
     }
-    
+
     /* Checkbox Style */
     .form-check-input:checked {
         background-color: var(--gold);
         border-color: var(--gold);
     }
-    
+
     /* Animation for price breakdown */
     .bg-light {
         animation: slideInUp 0.8s ease;
     }
-    
+
     @keyframes slideInUp {
         from {
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
-    
+
     /* Loading Animation */
     .fa-spinner {
         animation: spin 1s linear infinite;
     }
-    
+
     @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
     }
-    
+
     /* Responsive Adjustments */
     @media (max-width: 768px) {
         .display-5 {
             font-size: 2rem;
         }
-        
+
         .btn-lg {
             padding: 0.8rem !important;
             font-size: 0.9rem;
         }
-        
+
         .gap-3 {
             flex-direction: column;
         }
-        
+
         .gap-3 .btn-lg {
             width: 100%;
         }
@@ -365,107 +409,107 @@
 
 {% block scripts %}
 <script>
-// Prevent double submission with animation
-document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
-    const btn = document.getElementById('placeOrderBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    btn.style.opacity = '0.8';
-});
-
-// Validate Nigerian phone number with real-time feedback
-document.getElementById('shipping_phone')?.addEventListener('input', function(e) {
-    const phone = this.value.replace(/\D/g, '');
-    
-    if (phone.length > 0 && !phone.match(/^(0|234)[0-9]{10}$/)) {
-        this.setCustomValidity('Please enter a valid Nigerian phone number');
-        this.style.borderLeft = '2px solid #dc3545';
-    } else {
-        this.setCustomValidity('');
-        this.style.borderLeft = '2px solid var(--gold)';
-    }
-});
-
-// Auto-format phone number
-document.getElementById('shipping_phone')?.addEventListener('blur', function(e) {
-    let phone = this.value.replace(/\D/g, '');
-    if (phone.length === 11 && phone.startsWith('0')) {
-        this.value = phone.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
-    } else if (phone.length === 13 && phone.startsWith('234')) {
-        this.value = '+' + phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
-    }
-});
-
-// Add floating labels effect
-document.querySelectorAll('.form-control-lg, .form-select-lg').forEach(input => {
-    input.addEventListener('focus', function() {
-        this.style.borderLeft = '2px solid var(--gold)';
+    // Prevent double submission with animation
+    document.getElementById('checkoutForm')?.addEventListener('submit', function (e) {
+        const btn = document.getElementById('placeOrderBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.style.opacity = '0.8';
     });
-    
-    input.addEventListener('blur', function() {
-        if (!this.value) {
-            this.style.borderLeft = 'none';
+
+    // Validate Nigerian phone number with real-time feedback
+    document.getElementById('shipping_phone')?.addEventListener('input', function (e) {
+        const phone = this.value.replace(/\D/g, '');
+
+        if (phone.length > 0 && !phone.match(/^(0|234)[0-9]{10}$/)) {
+            this.setCustomValidity('Please enter a valid Nigerian phone number');
+            this.style.borderLeft = '2px solid #dc3545';
+        } else {
+            this.setCustomValidity('');
+            this.style.borderLeft = '2px solid var(--gold)';
         }
     });
-});
 
-// Smooth scroll to top on validation error
-document.getElementById('checkoutForm')?.addEventListener('invalid', function(e) {
-    e.preventDefault();
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
+    // Auto-format phone number
+    document.getElementById('shipping_phone')?.addEventListener('blur', function (e) {
+        let phone = this.value.replace(/\D/g, '');
+        if (phone.length === 11 && phone.startsWith('0')) {
+            this.value = phone.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
+        } else if (phone.length === 13 && phone.startsWith('234')) {
+            this.value = '+' + phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+        }
     });
-}, true);
 
-// Confetti animation on successful order (triggered by flash message)
-function celebrateOrder() {
-    if (typeof confetti !== 'undefined') {
-        confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#B89B5E', '#2C2C2C', '#FFFFFF']
+    // Add floating labels effect
+    document.querySelectorAll('.form-control-lg, .form-select-lg').forEach(input => {
+        input.addEventListener('focus', function () {
+            this.style.borderLeft = '2px solid var(--gold)';
         });
-    }
-}
 
-// Check if order was successful
-// {% with messages = get_flashed_messages(with_categories=true) %}
-//     {% if messages %}
-//         {% for category, message in messages %}
-//             {% if category == 'success' and 'placed successfully' in message %}
-//                 setTimeout(celebrateOrder, 500);
-//             {% endif %}
-//         {% endfor %}
-//     {% endif %}
-// {% endwith %}
-
-// Auto-dismiss success message
-setTimeout(function() {
-    document.querySelectorAll('.alert-success').forEach(alert => {
-        alert.style.transition = 'opacity 0.5s ease';
-        alert.style.opacity = '0';
-        setTimeout(() => alert.remove(), 500);
+        input.addEventListener('blur', function () {
+            if (!this.value) {
+                this.style.borderLeft = 'none';
+            }
+        });
     });
-}, 5000);
 
-// Calculate and display estimated delivery date
-const today = new Date();
-const deliveryDate = new Date(today.setDate(today.getDate() + 5));
-const options = { weekday: 'long', month: 'long', day: 'numeric' };
-const estimatedDelivery = deliveryDate.toLocaleDateString('en-US', options);
+    // Smooth scroll to top on validation error
+    document.getElementById('checkoutForm')?.addEventListener('invalid', function (e) {
+        e.preventDefault();
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }, true);
 
-// Add delivery estimate to the page
-document.addEventListener('DOMContentLoaded', function() {
-    const deliveryInfo = document.querySelector('.small.text-muted');
-    if (deliveryInfo) {
-        const estimateEl = document.createElement('p');
-        estimateEl.className = 'mb-2';
-        estimateEl.innerHTML = '<i class="fas fa-calendar-check me-2" style="color: var(--gold);"></i> Estimated delivery: ' + estimatedDelivery;
-        deliveryInfo.insertBefore(estimateEl, deliveryInfo.firstChild);
+    // Confetti animation on successful order (triggered by flash message)
+    function celebrateOrder() {
+        if (typeof confetti !== 'undefined') {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#B89B5E', '#2C2C2C', '#FFFFFF']
+            });
+        }
     }
-});
+
+    // Check if order was successful
+    // {% with messages = get_flashed_messages(with_categories=true) %}
+    //     {% if messages %}
+    //         {% for category, message in messages %}
+    //             {% if category == 'success' and 'placed successfully' in message %}
+    //                 setTimeout(celebrateOrder, 500);
+    //             {% endif %}
+    //         {% endfor %}
+    //     {% endif %}
+    // {% endwith %}
+
+    // Auto-dismiss success message
+    setTimeout(function () {
+        document.querySelectorAll('.alert-success').forEach(alert => {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+
+    // Calculate and display estimated delivery date
+    const today = new Date();
+    const deliveryDate = new Date(today.setDate(today.getDate() + 5));
+    const options = { weekday: 'long', month: 'long', day: 'numeric' };
+    const estimatedDelivery = deliveryDate.toLocaleDateString('en-US', options);
+
+    // Add delivery estimate to the page
+    document.addEventListener('DOMContentLoaded', function () {
+        const deliveryInfo = document.querySelector('.small.text-muted');
+        if (deliveryInfo) {
+            const estimateEl = document.createElement('p');
+            estimateEl.className = 'mb-2';
+            estimateEl.innerHTML = '<i class="fas fa-calendar-check me-2" style="color: var(--gold);"></i> Estimated delivery: ' + estimatedDelivery;
+            deliveryInfo.insertBefore(estimateEl, deliveryInfo.firstChild);
+        }
+    });
 </script>
 
 <!-- Include confetti library for celebration effect -->

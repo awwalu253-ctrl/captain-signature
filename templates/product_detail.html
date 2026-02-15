@@ -26,20 +26,29 @@
                 <div class="product-image-wrapper">
                     {% if product.image %}
                     <div class="main-image-container">
-                        <!-- Handle all image path types -->
-                        {% if product.image.startswith('user_uploads:') %}
+                        <!-- Handle all image path types including Cloudinary -->
+                        {% if product.image.startswith('http') %}
+                            <!-- Cloudinary URL -->
+                            <img src="{{ product.image }}" 
+                                 class="img-fluid main-image" 
+                                 alt="{{ product.name }}"
+                                 id="mainProductImage">
+                        {% elif product.image.startswith('user_uploads:') %}
+                            <!-- Legacy user uploads -->
                             {% set filename = product.image.replace('user_uploads:', '') %}
                             <img src="{{ url_for('user_uploads', filename=filename) }}" 
                                  class="img-fluid main-image" 
                                  alt="{{ product.name }}"
                                  id="mainProductImage">
                         {% elif product.image.startswith('tmp:') %}
+                            <!-- Legacy tmp files -->
                             {% set filename = product.image.replace('tmp:', '') %}
                             <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
                                  class="img-fluid main-image" 
                                  alt="{{ product.name }}"
                                  id="mainProductImage">
                         {% else %}
+                            <!-- Local static files (development) -->
                             <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
                                  class="img-fluid main-image" 
                                  alt="{{ product.name }}"
@@ -634,7 +643,7 @@
             btn.innerHTML = originalText;
             btn.disabled = false;
             
-            // Show success notification (you can replace with your flash message)
+            // Show success notification
             showNotification('Product added to cart successfully!');
         }, 1500);
     });
@@ -688,7 +697,7 @@
         });
     });
 
-    // Initialize AOS for scroll animations (if not already in base.html)
+    // Initialize AOS for scroll animations
     if (typeof AOS !== 'undefined') {
         AOS.init({
             duration: 800,

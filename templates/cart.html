@@ -44,11 +44,18 @@
                              data-aos="fade-up"
                              data-aos-delay="{{ loop.index * 100 }}">
                             
-                            <!-- Product Image - UPDATED to handle tmp: and user_uploads: -->
+                            <!-- Product Image - UPDATED with Cloudinary support -->
                             <div class="cart-item-image">
                                 {% if item.product.image %}
+                                    {# Check for Cloudinary URL (starts with http) #}
+                                    {% if item.product.image.startswith('http') %}
+                                        <img src="{{ item.product.image }}" 
+                                             class="img-fluid rounded gold-border-hover"
+                                             alt="{{ item.product.name }}"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-image-placeholder\'><i class=\'fas fa-image fa-3x text-muted\'></i></div>';">
+                                    
                                     {# Check for tmp: prefix (Vercel uploads) #}
-                                    {% if item.product.image.startswith('tmp:') %}
+                                    {% elif item.product.image.startswith('tmp:') %}
                                         {% set filename = item.product.image.replace('tmp:', '') %}
                                         <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
                                              class="img-fluid rounded gold-border-hover"
@@ -147,7 +154,7 @@
                         <!-- Summary Table -->
                         <div class="summary-table">
                             <div class="summary-row">
-                                <span>Subtotal</span>
+                                <span>Subtotal (Items)</span>
                                 <span class="summary-value">{{ settings.currency }}{{ "%.2f"|format(subtotal) }}</span>
                             </div>
                             
