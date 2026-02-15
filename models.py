@@ -25,7 +25,7 @@ class Settings(db.Model):
     """Global settings for the application"""
     id = db.Column(db.Integer, primary_key=True)
     delivery_fee = db.Column(db.Float, default=1500.00)
-    free_delivery_threshold = db.Column(db.Float, default=0.00)  # Optional: free delivery above this amount
+    free_delivery_threshold = db.Column(db.Float, default=0.00)
     currency = db.Column(db.String(10), default='₦')
     site_name = db.Column(db.String(100), default='Captain Signature')
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -76,14 +76,14 @@ class Order(db.Model):
     order_date = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(50), default='pending')  # pending, processing, shipped, delivered, cancelled
     subtotal = db.Column(db.Float, default=0.0)
-    delivery_fee = db.Column(db.Float, default=1500.00)  # Will be updated from settings at checkout
+    delivery_fee = db.Column(db.Float, default=1500.00)
     total_amount = db.Column(db.Float, default=0.0)
     
     # Shipping Information (Nigeria only)
     shipping_name = db.Column(db.String(100), nullable=True)
     shipping_address = db.Column(db.Text, nullable=True)
     shipping_city = db.Column(db.String(100), nullable=True)
-    shipping_state = db.Column(db.String(100), nullable=True)  # Nigeria state
+    shipping_state = db.Column(db.String(100), nullable=True)
     shipping_phone = db.Column(db.String(20), nullable=True)
     shipping_email = db.Column(db.String(120), nullable=True)
     
@@ -97,6 +97,13 @@ class Order(db.Model):
     payment_method = db.Column(db.String(50), nullable=True)
     payment_status = db.Column(db.String(50), default='pending')  # pending, paid, failed
     
+    # NEW: Paystack Payment Fields
+    payment_reference = db.Column(db.String(100), nullable=True)
+    payment_access_code = db.Column(db.String(100), nullable=True)
+    payment_authorization_url = db.Column(db.String(500), nullable=True)
+    paystack_response = db.Column(db.JSON, nullable=True)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    
     # Notes
     admin_notes = db.Column(db.Text, nullable=True)
     customer_notes = db.Column(db.Text, nullable=True)
@@ -104,21 +111,15 @@ class Order(db.Model):
     # Relationships
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
     tracking_updates = db.relationship('OrderTracking', backref='order', lazy=True, cascade='all, delete-orphan')
-    # Payment fields
-    payment_reference = db.Column(db.String(100), nullable=True)
-    payment_access_code = db.Column(db.String(100), nullable=True)
-    payment_authorization_url = db.Column(db.String(500), nullable=True)
-    paystack_response = db.Column(db.JSON, nullable=True)
-    paid_at = db.Column(db.DateTime, nullable=True)
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-    price = db.Column(db.Float, nullable=False)  # Price at time of order
-    product_name = db.Column(db.String(100), nullable=True)  # Snapshot of product name
-    product_image = db.Column(db.String(200), nullable=True)  # Snapshot of product image
+    price = db.Column(db.Float, nullable=False)
+    product_name = db.Column(db.String(100), nullable=True)
+    product_image = db.Column(db.String(200), nullable=True)
 
 class OrderTracking(db.Model):
     """Track order status updates"""

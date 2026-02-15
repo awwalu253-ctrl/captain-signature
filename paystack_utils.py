@@ -1,7 +1,6 @@
 import requests
-import json
 import os
-from flask import current_app, url_for
+from flask import url_for
 from datetime import datetime
 import secrets
 
@@ -16,7 +15,7 @@ class Paystack:
         Initialize a Paystack transaction
         Args:
             email: Customer's email
-            amount: Amount in kobo (multiply Naira by 100)
+            amount: Amount in Naira (will be converted to kobo)
             reference: Unique transaction reference (optional)
             callback_url: URL to redirect after payment
             metadata: Additional data to pass to Paystack
@@ -98,38 +97,6 @@ class Paystack:
         except Exception as e:
             print(f"Error fetching banks: {e}")
             return {'status': False, 'message': str(e)}
-    
-    def charge_authorization(self, email, amount, authorization_code, reference=None):
-        """
-        Charge a previously authorized card (for recurring payments)
-        """
-        if not reference:
-            reference = f"CAPTAIN-CHARGE-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        
-        amount_in_kobo = int(amount * 100)
-        
-        headers = {
-            'Authorization': f'Bearer {self.secret_key}',
-            'Content-Type': 'application/json'
-        }
-        
-        data = {
-            'email': email,
-            'amount': amount_in_kobo,
-            'authorization_code': authorization_code,
-            'reference': reference
-        }
-        
-        try:
-            response = requests.post(
-                f'{self.base_url}/transaction/charge_authorization',
-                headers=headers,
-                json=data
-            )
-            return response.json()
-        except Exception as e:
-            print(f"Paystack charge error: {e}")
-            return {'status': False, 'message': str(e)}
 
 # Create a singleton instance
-paystack = Paystack()   
+paystack = Paystack()
