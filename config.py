@@ -104,19 +104,19 @@ class Config:
     # Site name
     SITE_NAME = 'Captain Signature'
     
-    # --- Monnify Configuration (Replacing Paystack) ---
-    MONNIFY_API_KEY = os.environ.get('MONNIFY_API_KEY')
-    MONNIFY_SECRET_KEY = os.environ.get('MONNIFY_SECRET_KEY')
-    MONNIFY_CONTRACT_CODE = os.environ.get('MONNIFY_CONTRACT_CODE')
+ # --- Paystack Configuration ---
+    PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
+    PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
     
-    # Monnify endpoints
-    MONNIFY_BASE_URL = 'https://sandbox.monnify.com'  # Change to 'https://api.monnify.com' for production
+    # Paystack endpoints
+    PAYSTACK_INITIALIZE_URL = 'https://api.paystack.co/transaction/initialize'
+    PAYSTACK_VERIFY_URL = 'https://api.paystack.co/transaction/verify/'
     
-    # Check if Monnify is configured
+    # Check if Paystack is configured
     if IS_VERCEL:
-        if MONNIFY_API_KEY and MONNIFY_SECRET_KEY and MONNIFY_CONTRACT_CODE:
-            print("✓ Monnify configured for payments", file=sys.stderr)
+        if PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY:
+            print("✓ Paystack configured for payments", file=sys.stderr)
         else:
-            print("⚠ WARNING: Monnify not fully configured!", file=sys.stderr)
-            print("  Please add MONNIFY_API_KEY, MONNIFY_SECRET_KEY, and MONNIFY_CONTRACT_CODE to Vercel env vars", file=sys.stderr)
-    # --- End Monnify Configuration ---
+            print("⚠ WARNING: Paystack not fully configured!", file=sys.stderr)
+            print("  Please add PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY to Vercel env vars", file=sys.stderr)
+    # --- End Paystack Configuration ---
