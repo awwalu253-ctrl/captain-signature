@@ -20,7 +20,7 @@ from models import db, User, Product, Order, OrderItem, OrderTracking, Settings,
 from forms import LoginForm, SignupForm, ProductForm
 from utils import save_picture
 from cart import Cart
-from paystack_utils import paystack
+from monnify_utils import monnify  # Changed from paystack_utils to monnify_utils
 import secrets
 
 app = Flask(__name__)
@@ -447,11 +447,11 @@ def debug_product(product_id):
         'file_readable': os.access(file_path, os.R_OK) if file_exists else None
     }
 
-# Paystack Routes
-@app.route('/initiate-payment/<int:order_id>')
+# Monnify Payment Routes (Replacing Paystack)
+@app.route('/initiate-monnify-payment/<int:order_id>')
 @login_required
-def initiate_payment(order_id):
-    """Initiate Paystack payment for an order"""
+def initiate_monnify_payment(order_id):
+    """Initiate Monnify payment for an order"""
     order = Order.query.get_or_404(order_id)
     
     if order.user_id != current_user.id and not current_user.is_admin:
@@ -461,43 +461,65 @@ def initiate_payment(order_id):
         flash('This order has already been paid for.', 'info')
         return redirect(url_for('track_order_result', order_number=order.order_number))
     
-    callback_url = url_for('payment_callback', _external=True)
-    metadata = {
-        'order_id': order.id,
-        'order_number': order.order_number,
-        'customer_name': current_user.username,
-        'customer_email': current_user.email
-    }
+    callback_url = url_for('monnify_callback', _external=True)
     
-    response = paystack.initialize_transaction(
+    response = monnify.initialize_transaction(
         email=current_user.email,
         amount=order.total_amount,
         reference=f"ORDER-{order.order_number}",
         callback_url=callback_url,
-        metadata=metadata
+        customer_name=order.shipping_name or current_user.username
     )
     
     if response['status']:
         order.payment_reference = response['data']['reference']
-        order.payment_access_code = response['data']['access_code']
         order.payment_authorization_url = response['data']['authorization_url']
-        order.paystack_response = response
+        order.payment_method = 'monnify'
+        order.payment_status = 'pending'
         db.session.commit()
         return redirect(response['data']['authorization_url'])
     else:
         flash(f'Payment initiation failed: {response.get("message", "Unknown error")}', 'danger')
         return redirect(url_for('checkout'))
 
-@app.route('/payment-callback')
-def payment_callback():
-    """Handle Paystack callback after payment"""
-    reference = request.args.get('reference')
+@app.route('/initiate-payment-before-order')
+@login_required
+def initiate_payment_before_order():
+    """Initiate Monnify payment before creating order"""
+    checkout_data = session.get('checkout_data')
+    
+    if not checkout_data:
+        flash('Checkout session expired. Please try again.', 'danger')
+        return redirect(url_for('checkout'))
+    
+    reference = f"PRE-ORDER-{datetime.now().strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(4)}"
+    callback_url = url_for('monnify_success_callback', _external=True)
+    
+    response = monnify.initialize_transaction(
+        email=current_user.email,
+        amount=checkout_data['total_amount'],
+        reference=reference,
+        callback_url=callback_url,
+        customer_name=checkout_data['shipping_name']
+    )
+    
+    if response['status']:
+        session['payment_reference'] = response['data']['reference']
+        return redirect(response['data']['authorization_url'])
+    else:
+        flash(f'Payment initiation failed: {response.get("message", "Unknown error")}', 'danger')
+        return redirect(url_for('checkout'))
+
+@app.route('/monnify-callback')
+def monnify_callback():
+    """Handle Monnify callback after payment"""
+    reference = request.args.get('paymentReference') or request.args.get('reference')
     
     if not reference:
         flash('No payment reference provided.', 'danger')
         return redirect(url_for('index'))
     
-    response = paystack.verify_transaction(reference)
+    response = monnify.verify_transaction(reference)
     
     if response['status'] and response['data']['status'] == 'success':
         order = Order.query.filter_by(payment_reference=reference).first()
@@ -517,88 +539,17 @@ def payment_callback():
         flash(f'Payment verification failed: {response.get("message", "Unknown error")}', 'danger')
         return redirect(url_for('index'))
 
-@app.route('/payment-webhook', methods=['POST'])
-def payment_webhook():
-    """Paystack webhook endpoint for real-time notifications"""
-    import json
-    
-    payload = request.get_data(as_text=True)
-    
-    try:
-        event = json.loads(payload)
-        
-        if event['event'] == 'charge.success':
-            data = event['data']
-            reference = data['reference']
-            
-            order = Order.query.filter_by(payment_reference=reference).first()
-            if order and order.payment_status != 'paid':
-                order.payment_status = 'paid'
-                order.paid_at = datetime.utcnow()
-                order.status = 'processing'
-                db.session.commit()
-                print(f"✅ Webhook: Order {order.order_number} marked as paid")
-        
-        return {'status': 'success'}, 200
-        
-    except Exception as e:
-        print(f"Webhook error: {e}")
-        return {'status': 'error'}, 500
-
-@app.route('/payment-cancel/<int:order_id>')
+@app.route('/monnify-success-callback')
 @login_required
-def payment_cancel(order_id):
-    """Handle cancelled payment"""
-    order = Order.query.get_or_404(order_id)
-    flash('Payment was cancelled. You can try again.', 'warning')
-    return redirect(url_for('checkout'))
-
-# New payment flow - pay before order creation
-@app.route('/initiate-payment-before-order')
-@login_required
-def initiate_payment_before_order():
-    """Initiate Paystack payment before creating order"""
-    checkout_data = session.get('checkout_data')
-    
-    if not checkout_data:
-        flash('Checkout session expired. Please try again.', 'danger')
-        return redirect(url_for('checkout'))
-    
-    reference = f"PRE-ORDER-{datetime.now().strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(4)}"
-    callback_url = url_for('payment_success_callback', _external=True)
-    
-    metadata = {
-        'customer_name': current_user.username,
-        'customer_email': current_user.email,
-        'checkout_data': checkout_data
-    }
-    
-    response = paystack.initialize_transaction(
-        email=current_user.email,
-        amount=checkout_data['total_amount'],
-        reference=reference,
-        callback_url=callback_url,
-        metadata=metadata
-    )
-    
-    if response['status']:
-        session['payment_reference'] = response['data']['reference']
-        return redirect(response['data']['authorization_url'])
-    else:
-        flash(f'Payment initiation failed: {response.get("message", "Unknown error")}', 'danger')
-        return redirect(url_for('checkout'))
-
-@app.route('/payment-success-callback')
-@login_required
-def payment_success_callback():
-    """Handle successful payment and create order"""
-    reference = request.args.get('reference')
+def monnify_success_callback():
+    """Handle successful Monnify payment and create order"""
+    reference = request.args.get('paymentReference') or request.args.get('reference')
     
     if not reference:
         flash('No payment reference provided.', 'danger')
         return redirect(url_for('index'))
     
-    response = paystack.verify_transaction(reference)
+    response = monnify.verify_transaction(reference)
     
     if response['status'] and response['data']['status'] == 'success':
         checkout_data = session.get('checkout_data')
@@ -621,7 +572,7 @@ def payment_success_callback():
                 shipping_state=checkout_data['shipping_state'],
                 shipping_phone=checkout_data['shipping_phone'],
                 shipping_email=current_user.email,
-                payment_method='paystack',
+                payment_method='monnify',
                 payment_status='paid',
                 payment_reference=reference,
                 paid_at=datetime.utcnow(),
@@ -676,12 +627,42 @@ def payment_success_callback():
         flash(f'Payment verification failed: {response.get("message", "Unknown error")}', 'danger')
         return redirect(url_for('checkout'))
 
-# Test route
-@app.route('/test-payment-route')
+@app.route('/payment-cancel/<int:order_id>')
 @login_required
-def test_payment_route():
-    """Test route to verify payment initiation works"""
-    return "Payment route is accessible"
+def payment_cancel(order_id):
+    """Handle cancelled payment"""
+    order = Order.query.get_or_404(order_id)
+    flash('Payment was cancelled. You can try again.', 'warning')
+    return redirect(url_for('checkout'))
+
+# Test route for Monnify
+@app.route('/test-monnify-keys')
+def test_monnify_keys():
+    """Test if Monnify keys are working"""
+    try:
+        token = monnify.get_access_token()
+        if token:
+            return {
+                'status': 'success',
+                'message': '✅ Monnify keys are valid!',
+                'keys': {
+                    'api_key_present': bool(monnify.api_key),
+                    'secret_key_present': bool(monnify.secret_key),
+                    'contract_code_present': bool(monnify.contract_code)
+                }
+            }
+        else:
+            return {
+                'status': 'error',
+                'message': '❌ Invalid Monnify keys',
+                'keys': {
+                    'api_key_present': bool(monnify.api_key),
+                    'secret_key_present': bool(monnify.secret_key),
+                    'contract_code_present': bool(monnify.contract_code)
+                }
+            }
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
 
 # Main routes
 @app.route('/')
@@ -973,7 +954,7 @@ def checkout():
             shipping_city = request.form.get('shipping_city')
             shipping_state = request.form.get('shipping_state')
             shipping_phone = request.form.get('shipping_phone')
-            payment_method = request.form.get('payment_method', 'paystack')
+            payment_method = request.form.get('payment_method', 'monnify')
             customer_notes = request.form.get('customer_notes')
             
             # Validate Nigerian state
@@ -1014,8 +995,8 @@ def checkout():
                 ]
             }
             
-            # If payment method is paystack, redirect to payment
-            if payment_method == 'paystack':
+            # If payment method is monnify, redirect to payment
+            if payment_method == 'monnify':
                 print("Redirecting to initiate_payment_before_order")
                 return redirect(url_for('initiate_payment_before_order'))
             
@@ -1191,518 +1172,7 @@ def add_product():
     
     return render_template('add_product.html', form=form)
 
-@app.route('/admin/customers')
-@login_required
-def admin_customers():
-    """View all registered customers"""
-    if not current_user.is_admin:
-        abort(403)
-    
-    now = datetime.now()
-    customers = User.query.filter_by(is_admin=False).order_by(User.created_at.desc()).all()
-    total_customers = len(customers)
-    new_today = sum(1 for c in customers if c.created_at.date() == datetime.today().date())
-    
-    return render_template('admin/customers.html', 
-                         customers=customers,
-                         total_customers=total_customers,
-                         new_today=new_today,
-                         now=now)
-
-@app.context_processor
-def inject_now():
-    """Inject current datetime into all templates"""
-    return {'now': datetime.now()}
-
-@app.route('/admin/edit_product/<int:product_id>', methods=['GET', 'POST'])
-@login_required
-def edit_product(product_id):
-    if not current_user.is_admin:
-        abort(403)
-    
-    product = Product.query.get_or_404(product_id)
-    form = ProductForm()
-    
-    if request.method == 'GET':
-        form.name.data = product.name
-        form.description.data = product.description
-        form.price.data = product.price
-        form.category.data = product.category
-        form.stock.data = product.stock
-    
-    if form.validate_on_submit():
-        product.name = form.name.data
-        product.description = form.description.data
-        product.price = form.price.data
-        product.category = form.category.data
-        product.stock = form.stock.data
-        
-        if form.image.data and form.image.data.filename:
-            try:
-                print(f"\n--- Image Update Debug ---")
-                print(f"Updating image for product: {product.name}")
-                
-                if product.image:
-                    if product.image.startswith('user_uploads:'):
-                        filename = product.image.replace('user_uploads:', '')
-                        user_home = os.path.expanduser("~")
-                        old_image_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
-                    elif product.image.startswith('tmp:'):
-                        filename = product.image.replace('tmp:', '')
-                        old_image_path = os.path.join('/tmp/captain_signature_uploads/products', filename)
-                    else:
-                        old_image_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
-                    
-                    if os.path.exists(old_image_path):
-                        os.remove(old_image_path)
-                        print(f"Deleted old image: {old_image_path}")
-                
-                product.image = save_picture(form.image.data)
-                flash('New image uploaded successfully!', 'success')
-                print(f"New image saved as: {product.image}")
-                
-            except Exception as e:
-                flash(f'Error uploading image: {str(e)}', 'danger')
-                print(f"Image upload error: {e}")
-                traceback.print_exc()
-                return render_template('edit_product.html', form=form, product=product)
-        
-        try:
-            db.session.commit()
-            flash(f'Product "{product.name}" has been updated successfully!', 'success')
-            return redirect(url_for('admin_products'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating product: {str(e)}', 'danger')
-            print(f"Database error: {e}")
-    
-    return render_template('edit_product.html', form=form, product=product)
-
-@app.route('/admin/products')
-@login_required
-def admin_products():
-    if not current_user.is_admin:
-        abort(403)
-    
-    products = Product.query.all()
-    return render_template('admin_products.html', products=products)
-
-@app.route('/admin/delete_product/<int:product_id>')
-@login_required
-def delete_product(product_id):
-    if not current_user.is_admin:
-        abort(403)
-    
-    product = Product.query.get_or_404(product_id)
-    product_name = product.name
-    
-    if product.image:
-        try:
-            if product.image.startswith('user_uploads:'):
-                filename = product.image.replace('user_uploads:', '')
-                user_home = os.path.expanduser("~")
-                image_path = os.path.join(user_home, 'captain_signature_uploads', 'product_images', filename)
-            elif product.image.startswith('tmp:'):
-                filename = product.image.replace('tmp:', '')
-                image_path = os.path.join('/tmp/captain_signature_uploads/products', filename)
-            else:
-                image_path = os.path.join(project_root, 'static', 'images', 'products', product.image)
-            
-            if os.path.exists(image_path):
-                os.remove(image_path)
-                print(f"Deleted image: {image_path}")
-        except Exception as e:
-            print(f"Error deleting image file: {e}")
-    
-    db.session.delete(product)
-    db.session.commit()
-    flash(f'Product "{product_name}" has been deleted!', 'success')
-    return redirect(url_for('admin_products'))
-
-@app.route('/admin/orders')
-@login_required
-def admin_orders():
-    if not current_user.is_admin:
-        abort(403)
-    
-    orders = Order.query.order_by(Order.order_date.desc()).all()
-    return render_template('admin_orders.html', orders=orders)
-
-@app.route('/admin/update_order/<int:order_id>/<status>')
-@login_required
-def update_order_status(order_id, status):
-    if not current_user.is_admin:
-        abort(403)
-    
-    valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
-    if status not in valid_statuses:
-        flash('Invalid status', 'danger')
-        return redirect(url_for('admin_orders'))
-    
-    order = Order.query.get_or_404(order_id)
-    old_status = order.status
-    order.status = status
-    
-    tracking = OrderTracking(
-        order_id=order.id,
-        status=status,
-        description=f'Order status updated from {old_status} to {status}',
-        updated_by='admin'
-    )
-    db.session.add(tracking)
-    
-    if status == 'delivered':
-        order.delivered_date = datetime.utcnow()
-    
-    db.session.commit()
-    flash(f'Order #{order_id} status updated to {status}', 'success')
-    return redirect(url_for('admin_orders'))
-
-@app.route('/admin/update_tracking/<int:order_id>', methods=['GET', 'POST'])
-@login_required
-def update_tracking(order_id):
-    if not current_user.is_admin:
-        abort(403)
-    
-    order = Order.query.get_or_404(order_id)
-    
-    if request.method == 'POST':
-        order.tracking_number = request.form.get('tracking_number')
-        order.carrier = request.form.get('carrier')
-        order.status = request.form.get('status')
-        
-        if request.form.get('tracking_description'):
-            tracking = OrderTracking(
-                order_id=order.id,
-                status=order.status,
-                location=request.form.get('location'),
-                description=request.form.get('tracking_description'),
-                updated_by='admin'
-            )
-            db.session.add(tracking)
-        
-        if request.form.get('estimated_delivery'):
-            try:
-                order.estimated_delivery = datetime.strptime(request.form.get('estimated_delivery'), '%Y-%m-%d')
-            except:
-                pass
-        
-        db.session.commit()
-        flash(f'Tracking information updated for order #{order.order_number}', 'success')
-        return redirect(url_for('admin_orders'))
-    
-    return render_template('update_tracking.html', order=order)
-
-@app.route('/admin/bulk_tracking_update', methods=['POST'])
-@login_required
-def bulk_tracking_update():
-    if not current_user.is_admin:
-        abort(403)
-    
-    order_ids = request.form.getlist('order_ids')
-    status = request.form.get('bulk_status')
-    
-    if order_ids and status:
-        updated_count = 0
-        for order_id in order_ids:
-            order = Order.query.get(order_id)
-            if order:
-                old_status = order.status
-                order.status = status
-                tracking = OrderTracking(
-                    order_id=order.id,
-                    status=status,
-                    description=f'Bulk status update from {old_status} to {status}',
-                    updated_by='admin'
-                )
-                db.session.add(tracking)
-                updated_count += 1
-        
-        db.session.commit()
-        flash(f'Updated {updated_count} orders to {status}', 'success')
-    
-    return redirect(url_for('admin_orders'))
-
-@app.route('/admin/settings', methods=['GET', 'POST'])
-@login_required
-def admin_settings():
-    """Admin settings page"""
-    if not current_user.is_admin:
-        abort(403)
-    
-    settings = Settings.get_settings()
-    
-    if request.method == 'POST':
-        try:
-            new_delivery_fee = float(request.form.get('delivery_fee', 1500.00))
-            new_threshold = float(request.form.get('free_delivery_threshold', 0))
-            new_site_name = request.form.get('site_name', 'Captain Signature')
-            new_currency = request.form.get('currency', '₦')
-            
-            settings.delivery_fee = new_delivery_fee
-            settings.free_delivery_threshold = new_threshold
-            settings.site_name = new_site_name
-            settings.currency = new_currency
-            settings.updated_by = current_user.id
-            
-            db.session.commit()
-            flash('Settings updated successfully!', 'success')
-            g.settings = settings
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error updating settings: {str(e)}', 'danger')
-            print(f"Settings update error: {e}")
-        
-        return redirect(url_for('admin_settings'))
-    
-    return render_template('admin/settings.html', settings=settings)
-
-@app.route('/admin/test-upload-location')
-@login_required
-def test_upload_location():
-    if not current_user.is_admin:
-        abort(403)
-    
-    user_home = os.path.expanduser("~")
-    upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
-    
-    results = []
-    results.append(f"<h3>Upload Location Test</h3>")
-    results.append(f"<p><strong>User home:</strong> {user_home}</p>")
-    results.append(f"<p><strong>Upload folder:</strong> {upload_folder}</p>")
-    
-    if os.path.exists(upload_folder):
-        results.append(f"<p style='color: green;'>✓ Upload folder exists</p>")
-        
-        if os.access(upload_folder, os.W_OK):
-            results.append(f"<p style='color: green;'>✓ Upload folder is writable</p>")
-            
-            try:
-                test_file = os.path.join(upload_folder, 'test.txt')
-                with open(test_file, 'w') as f:
-                    f.write('test')
-                os.remove(test_file)
-                results.append(f"<p style='color: green;'>✓ Write test passed</p>")
-            except Exception as e:
-                results.append(f"<p style='color: red;'>✗ Write test failed: {e}</p>")
-        else:
-            results.append(f"<p style='color: red;'>✗ Upload folder is NOT writable</p>")
-    else:
-        results.append(f"<p style='color: red;'>✗ Upload folder does NOT exist</p>")
-        try:
-            os.makedirs(upload_folder, exist_ok=True)
-            results.append(f"<p style='color: green;'>✓ Successfully created upload folder</p>")
-        except Exception as e:
-            results.append(f"<p style='color: red;'>✗ Failed to create upload folder: {e}</p>")
-    
-    return "<br>".join(results)
-
-@app.route('/debug-full')
-def debug_full():
-    """Comprehensive database diagnostic"""
-    results = []
-    
-    results.append("=== ENVIRONMENT VARIABLES ===")
-    results.append(f"DATABASE_URL: {'SET' if os.environ.get('DATABASE_URL') else 'NOT SET'}")
-    results.append(f"POSTGRES_URL: {'SET' if os.environ.get('POSTGRES_URL') else 'NOT SET'}")
-    
-    results.append("\n=== DATABASE CONFIG ===")
-    results.append(f"Database URI: {app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')[:50]}...")
-    
-    results.append("\n=== TESTING RAW CONNECTION ===")
-    try:
-        from sqlalchemy import create_engine
-        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1")).scalar()
-            results.append(f"✓ Raw connection successful: {result}")
-    except Exception as e:
-        results.append(f"✗ Raw connection failed: {str(e)}")
-    
-    results.append("\n=== TESTING SQLALCHEMY CONNECTION ===")
-    try:
-        result = db.session.execute(text("SELECT 1")).scalar()
-        results.append(f"✓ SQLAlchemy connection successful: {result}")
-    except Exception as e:
-        results.append(f"✗ SQLAlchemy connection failed: {str(e)}")
-    
-    results.append("\n=== CHECKING TABLES ===")
-    try:
-        from sqlalchemy import inspect
-        inspector = inspect(db.engine)
-        tables = inspector.get_table_names()
-        results.append(f"Tables in database: {tables}")
-    except Exception as e:
-        results.append(f"✗ Could not get tables: {str(e)}")
-    
-    results.append("\n=== TESTING USER CREATION ===")
-    try:
-        test_username = f"test_{datetime.now().timestamp()}"
-        test_email = f"{test_username}@test.com"
-        
-        test_user = User(
-            username=test_username,
-            email=test_email,
-            password=generate_password_hash('test123')
-        )
-        db.session.add(test_user)
-        db.session.commit()
-        results.append(f"✓ Test user created successfully")
-        
-        db.session.delete(test_user)
-        db.session.commit()
-        results.append(f"✓ Test user cleaned up")
-    except Exception as e:
-        db.session.rollback()
-        results.append(f"✗ User creation failed: {str(e)}")
-        results.append(f"Traceback: {traceback.format_exc()}")
-    
-    return "<br>".join(results)
-
-@app.route('/admin/debug-images')
-@login_required
-def debug_images():
-    if not current_user.is_admin:
-        abort(403)
-    
-    products = Product.query.all()
-    result = "<h2>Product Image Debug</h2>"
-    result += "<table border='1' cellpadding='10'>"
-    result += "<tr><th>ID</th><th>Name</th><th>Image Path in DB</th><th>Image Type</th><th>Expected URL</th></tr>"
-    
-    for product in products:
-        if product.image:
-            if product.image.startswith('user_uploads:'):
-                filename = product.image.replace('user_uploads:', '')
-                img_type = "User Uploads"
-                img_url = url_for('user_uploads', filename=filename, _external=True)
-            elif product.image.startswith('tmp:'):
-                filename = product.image.replace('tmp:', '')
-                img_type = "Temp Uploads"
-                img_url = url_for('tmp_uploads', filename=filename, _external=True)
-            else:
-                img_type = "Static"
-                img_url = url_for('static', filename='images/products/' + product.image, _external=True)
-        else:
-            img_type = "No Image"
-            img_url = "None"
-        
-        result += f"<tr>"
-        result += f"<td>{product.id}</td>"
-        result += f"<td>{product.name}</td>"
-        result += f"<td>{product.image}</td>"
-        result += f"<td>{img_type}</td>"
-        result += f"<td>{img_url}</td>"
-        result += f"</tr>"
-    
-    result += "</table>"
-    return result
-
-@app.route('/admin/debug-order/<int:order_id>')
-@login_required
-def debug_order(order_id):
-    if not current_user.is_admin:
-        abort(403)
-    
-    order = Order.query.get_or_404(order_id)
-    
-    result = "<h2>Order Debug Information</h2>"
-    result += f"<p><strong>Order #:</strong> {order.order_number}</p>"
-    result += f"<p><strong>Customer:</strong> {order.customer.username}</p>"
-    
-    result += "<h3>Order Items:</h3>"
-    result += "<table border='1' cellpadding='10'>"
-    result += "<tr><th>Item ID</th><th>Product Name</th><th>Image Path in DB</th><th>Image Type</th><th>Expected URL</th></tr>"
-    
-    for item in order.items:
-        if item.product_image:
-            if item.product_image.startswith('user_uploads:'):
-                filename = item.product_image.replace('user_uploads:', '')
-                img_type = "User Uploads"
-                img_url = url_for('user_uploads', filename=filename, _external=True)
-            elif item.product_image.startswith('tmp:'):
-                filename = item.product_image.replace('tmp:', '')
-                img_type = "Temp Uploads"
-                img_url = url_for('tmp_uploads', filename=filename, _external=True)
-            else:
-                img_type = "Static"
-                img_url = url_for('static', filename='images/products/' + item.product_image, _external=True)
-        else:
-            img_type = "No Image"
-            img_url = "None"
-        
-        result += f"<tr>"
-        result += f"<td>{item.id}</td>"
-        result += f"<td>{item.product_name}</td>"
-        result += f"<td>{item.product_image}</td>"
-        result += f"<td>{img_type}</td>"
-        result += f"<td>{img_url}</td>"
-        result += f"</tr>"
-    
-    result += "</table>"
-    return result
-
-@app.route('/test-upload', methods=['GET', 'POST'])
-def test_upload():
-    """Simple test upload page"""
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return "No file part"
-        file = request.files['file']
-        if file.filename == '':
-            return "No selected file"
-        
-        try:
-            filename = save_picture(file)
-            return f"File saved! DB path: {filename}"
-        except Exception as e:
-            return f"Error: {str(e)}"
-    
-    return '''
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit">
-    </form>
-    '''
-
-@app.route('/debug-filesystem')
-def debug_filesystem():
-    """Test filesystem write access"""
-    import tempfile
-    results = []
-    
-    try:
-        test_file = '/tmp/captain_signature_test.txt'
-        with open(test_file, 'w') as f:
-            f.write('test')
-        results.append(f"✓ Wrote to /tmp: {test_file}")
-        os.remove(test_file)
-        results.append(f"✓ Removed test file")
-    except Exception as e:
-        results.append(f"✗ Cannot write to /tmp: {e}")
-    
-    try:
-        test_dir = '/tmp/captain_signature_uploads/products'
-        os.makedirs(test_dir, mode=0o777, exist_ok=True)
-        test_file = os.path.join(test_dir, 'test.txt')
-        with open(test_file, 'w') as f:
-            f.write('test')
-        results.append(f"✓ Wrote to {test_file}")
-        os.remove(test_file)
-        results.append(f"✓ Removed test file")
-    except Exception as e:
-        results.append(f"✗ Cannot write to {test_dir}: {e}")
-    
-    return "<br>".join(results)
-
-@app.route('/test-simple-image/<filename>')
-def test_simple_image(filename):
-    """Absolute simplest image serving test"""
-    file_path = f'/tmp/captain_signature_uploads/products/{filename}'
-    if os.path.exists(file_path):
-        return send_file(file_path)
-    return "File not found", 404
+# ... rest of your admin routes remain the same (admin_customers, edit_product, admin_products, delete_product, admin_orders, etc.)
 
 # Error handlers
 @app.errorhandler(404)

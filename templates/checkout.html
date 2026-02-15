@@ -120,47 +120,39 @@
                                     <i class="fas fa-credit-card me-2" style="color: var(--gold);"></i>Payment Method *
                                 </label>
                                 
-                                <!-- Paystack Payment Option -->
+                                <!-- Monnify Payment Option (Replacing Paystack) -->
                                 <div class="payment-option mb-3 p-3" style="border: 1px solid var(--gold); background: rgba(184, 155, 94, 0.05);">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="payment_method" 
-                                               id="paystack" value="paystack" checked
+                                               id="monnify" value="monnify" checked
                                                style="border: 2px solid var(--gold);">
-                                        <label class="form-check-label d-flex align-items-center" for="paystack">
-                                            <img src="https://paystack.com/assets/img/logo.svg" alt="Paystack" height="30" class="me-3">
+                                        <label class="form-check-label d-flex align-items-center" for="monnify">
+                                            <img src="https://monnify.com/assets/img/logo.svg" alt="Monnify" height="30" class="me-3">
                                             <div>
-                                                <strong style="color: var(--charcoal);">Pay with Paystack</strong>
-                                                <p class="mb-0 small text-muted">Cards, Bank Transfer, USSD, QR Code, Mobile Money</p>
+                                                <strong style="color: var(--charcoal);">Pay with Monnify</strong>
+                                                <p class="mb-0 small text-muted">Cards, Bank Transfer, USSD</p>
                                             </div>
                                         </label>
                                     </div>
                                     
-                                    <!-- Paystack Features -->
+                                    <!-- Monnify Features -->
                                     <div class="paystack-features mt-3 pt-3" style="border-top: 1px dashed rgba(184, 155, 94, 0.3);">
                                         <div class="row g-2">
-                                            <div class="col-4 col-md-2 text-center">
+                                            <div class="col-4 col-md-3 text-center">
                                                 <i class="fas fa-credit-card" style="color: var(--gold);"></i>
                                                 <small class="d-block text-muted">Cards</small>
                                             </div>
-                                            <div class="col-4 col-md-2 text-center">
+                                            <div class="col-4 col-md-3 text-center">
                                                 <i class="fas fa-university" style="color: var(--gold);"></i>
                                                 <small class="d-block text-muted">Transfer</small>
                                             </div>
-                                            <div class="col-4 col-md-2 text-center">
+                                            <div class="col-4 col-md-3 text-center">
                                                 <i class="fas fa-mobile-alt" style="color: var(--gold);"></i>
                                                 <small class="d-block text-muted">USSD</small>
                                             </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-qrcode" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">QR Code</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-mobile" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">Mobile Money</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fab fa-google-pay" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">Google Pay</small>
+                                            <div class="col-4 col-md-3 text-center">
+                                                <i class="fas fa-lock" style="color: var(--gold);"></i>
+                                                <small class="d-block text-muted">Secure</small>
                                             </div>
                                         </div>
                                     </div>
@@ -320,10 +312,10 @@
                         </div>
                     </div>
 
-                    <!-- Paystack Badge -->
+                    <!-- Monnify Badge (Replacing Paystack) -->
                     <div class="text-center mb-3">
                         <small class="text-muted">Powered by</small>
-                        <img src="https://paystack.com/assets/img/logo.svg" alt="Paystack" height="25" class="d-block mx-auto mt-1">
+                        <img src="https://monnify.com/assets/img/logo.svg" alt="Monnify" height="25" class="d-block mx-auto mt-1">
                     </div>
 
                     <!-- Delivery Info -->
@@ -334,7 +326,7 @@
                             for all orders</p>
                         <p class="mb-2"><i class="fas fa-shield-alt me-2" style="color: var(--gold);"></i> 256-bit SSL
                             encryption</p>
-                        <p class="mb-0"><i class="fas fa-lock me-2" style="color: var(--gold);"></i> Secured by Paystack</p>
+                        <p class="mb-0"><i class="fas fa-lock me-2" style="color: var(--gold);"></i> Secured by Monnify</p>
                     </div>
                 </div>
             </div>
@@ -477,14 +469,14 @@
         }
     }
 
-    /* Paystack Features Grid */
+    /* Paystack Features Grid (renamed but styles same) */
     .paystack-features .col-4,
-    .paystack-features .col-md-2 {
+    .paystack-features .col-md-3 {
         transition: all 0.3s ease;
     }
 
     .paystack-features .col-4:hover,
-    .paystack-features .col-md-2:hover {
+    .paystack-features .col-md-3:hover {
         transform: translateY(-2px);
     }
 
@@ -572,18 +564,18 @@
                 option.style.background = 'transparent';
             });
             
-            if (this.value === 'paystack') {
-                const paystackOption = this.closest('.payment-option');
-                if (paystackOption) {
-                    paystackOption.style.borderColor = 'var(--gold)';
-                    paystackOption.style.background = 'rgba(184, 155, 94, 0.05)';
+            if (this.value === 'monnify') {
+                const monnifyOption = this.closest('.payment-option');
+                if (monnifyOption) {
+                    monnifyOption.style.borderColor = 'var(--gold)';
+                    monnifyOption.style.background = 'rgba(184, 155, 94, 0.05)';
                 }
             }
         });
     });
 
-    // Trigger initial highlight for paystack
-    document.getElementById('paystack')?.dispatchEvent(new Event('change'));
+    // Trigger initial highlight for monnify
+    document.getElementById('monnify')?.dispatchEvent(new Event('change'));
 
     // Smooth scroll to top on validation error
     document.getElementById('checkoutForm')?.addEventListener('invalid', function (e) {
