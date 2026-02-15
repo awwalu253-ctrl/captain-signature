@@ -1077,14 +1077,25 @@ def track_order_page():
         order_number = request.form.get('order_number')
         email = request.form.get('email')
         
+        # Debug print
+        print(f"Searching for order: {order_number} with email: {email}")
+        
         # Look up the order
         order = Order.query.filter_by(order_number=order_number).first()
         
-        if order and (order.customer.email == email or order.shipping_email == email):
-            return redirect(url_for('track_order_result', order_number=order.order_number))
+        if order:
+            print(f"Order found: {order.order_number}, Customer email: {order.customer.email if order.customer else 'No customer'}, Shipping email: {order.shipping_email}")
+            
+            # Check if email matches either customer email or shipping email
+            customer_email = order.customer.email if order.customer else None
+            if (customer_email and customer_email.lower() == email.lower()) or (order.shipping_email and order.shipping_email.lower() == email.lower()):
+                return redirect(url_for('track_order_result', order_number=order.order_number))
+            else:
+                flash('Email does not match this order.', 'danger')
         else:
             flash('Order not found. Please check your order number and email.', 'danger')
-            return redirect(url_for('track_order_page'))
+            
+        return redirect(url_for('track_order_page'))
     
     return render_template('track_order.html')
 
