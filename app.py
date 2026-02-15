@@ -383,6 +383,17 @@ def debug_config():
         'postgres_prisma_url_env': 'set' if os.environ.get('POSTGRES_PRISMA_URL') else 'not set',
     }
 
+@app.route('/debug-cloudinary')
+def debug_cloudinary():
+    """Check Cloudinary configuration"""
+    import os
+    return {
+        'cloud_name': os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT SET'),
+        'api_key': 'SET' if os.environ.get('CLOUDINARY_API_KEY') else 'NOT SET',
+        'api_secret': 'SET' if os.environ.get('CLOUDINARY_API_SECRET') else 'NOT SET',
+        'is_vercel': app.config.get('IS_VERCEL', False),
+    }
+    
 # Debug route to check database connection - FIXED with text()
 @app.route('/debug-db')
 def debug_db():
