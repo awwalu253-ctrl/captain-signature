@@ -275,6 +275,45 @@ def debug_file_check(filename):
     }
     return result
 
+@app.route('/find-all-files')
+def find_all_files():
+    """Search for image files in all possible tmp locations"""
+    import os
+    results = {}
+    
+    # Search common locations
+    search_paths = [
+        '/tmp',
+        '/tmp/captain_signature_uploads',
+        '/var/tmp'
+    ]
+    
+    for base_path in search_paths:
+        if os.path.exists(base_path):
+            results[base_path] = []
+            for root, dirs, files in os.walk(base_path):
+                for file in files:
+                    if file.endswith('.jpg') or file.endswith('.png'):
+                        full_path = os.path.join(root, file)
+                        results[base_path].append({
+                            'file': file,
+                            'path': full_path,
+                            'size': os.path.getsize(full_path)
+                        })
+    
+    return results
+
+@app.route('/debug-upload-location')
+def debug_upload_location():
+    """Check where files are being saved by the upload function"""
+    import tempfile
+    return {
+        'temp_dir': tempfile.gettempdir(),
+        'cwd': os.getcwd(),
+        'upload_folder_in_config': app.config.get('UPLOAD_FOLDER', 'Not set'),
+        'project_root': project_root,
+    }
+    
 # Find file in all possible locations
 @app.route('/find-file/<filename>')
 def find_file(filename):
