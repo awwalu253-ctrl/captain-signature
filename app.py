@@ -135,43 +135,85 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Create tables and admin user
+# Create tables and admin user - ROBUST VERSION
 with app.app_context():
     try:
-        # Create all tables
+        # Create all tables - this will work even if tables exist
         db.create_all()
         print("✓ Database tables created/verified")
         
-        # Create admin user if not exists
-        if not User.query.filter_by(email='admin@captainsignature.com').first():
-            admin = User(
-                username='admin',
-                email='admin@captainsignature.com',
-                password=generate_password_hash('admin123'),
-                is_admin=True
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print("✓ Admin user created successfully!")
-            print("  Email: admin@captainsignature.com")
-            print("  Password: admin123")
+        # Check if admin user exists - with error handling
+        try:
+            admin_exists = User.query.filter_by(email='admin@captainsignature.com').first()
+        except Exception as e:
+            print(f"⚠ Could not query users table: {e}")
+            admin_exists = None
         
-        # Create default settings if not exists
-        settings = Settings.query.first()
+        if not admin_exists:
+            try:
+                admin = User(
+                    username='admin',
+                    email='admin@captainsignature.com',
+                    password=generate_password_hash('admin123'),
+                    is_admin=True
+                )
+                db.session.add(admin)
+                db.session.commit()
+                print("✓ Admin user created successfully!")
+            except Exception as e:
+                print(f"⚠ Could not create admin user: {e}")
+                db.session.rollback()
+        
+        # Check if settings exist
+        try:
+            settings = Settings.query.first()
+        except Exception as e:
+            print(f"⚠ Could not query settings table: {e}")
+            settings = None
+        
         if not settings:
-            settings = Settings(
-                delivery_fee=1500.00,
-                free_delivery_threshold=0,
-                currency='₦',
-                site_name='Captain Signature'
-            )
-            db.session.add(settings)
-            db.session.commit()
-            print("✓ Default settings created successfully!")
-            print(f"  Delivery fee: ₦{settings.delivery_fee}")
+            try:
+                settings = Settings(
+                    delivery_fee=1500.00,
+                    free_delivery_threshold=0,
+                    currency='₦',
+                    site_name='Captain Signature'
+                )
+                db.session.add(settings)
+                db.session.commit()
+                print("✓ Default settings created successfully!")
+            except Exception as e:
+                print(f"⚠ Could not create settings: {e}")
+                db.session.rollback()
             
     except Exception as e:
         print(f"✗ Database initialization error: {e}")
         print(traceback.format_exc())
+        print("⚠ Continuing startup despite database errors - app may have limited functionality")
+        
+@app.route('/api/health')
+def health_check():
+    """Health check endpoint for Vercel"""
+    import platform
+    import sys
+    
+    # Check database connection
+    db_status = "unknown"
+    try:
+        db.session.execute(text('SELECT 1')).scalar()
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)[:50]}"
+    
+    return {
+        'status': 'running',
+        'timestamp': datetime.now().isoformat(),
+        'database': db_status,
+        'environment': {
+            'DATABASE_URL': 'set' if os.environ.get('DATABASE_URL') else 'not set',
+            'VERCEL_ENV': os.environ.get('VERCEL_ENV', 'not set'),
+        }
+    }
 
 # Route to serve images from user's home directory
 @app.route('/user-uploads/<filename>')
