@@ -113,89 +113,33 @@
                                 </select>
                             </div>
 
-                            <!-- Payment Methods Section -->
+                            <!-- Payment Info - Cash on Delivery Only -->
                             <div class="col-12" data-aos="fade-up" data-aos-delay="600">
-                                <label class="form-label small text-uppercase fw-semibold"
-                                    style="color: var(--charcoal); letter-spacing: 1px;">
-                                    <i class="fas fa-credit-card me-2" style="color: var(--gold);"></i>Payment Method *
-                                </label>
-                                
-                                <!-- Paystack Payment Option -->
-                                <div class="payment-option mb-3 p-3" style="border: 1px solid var(--gold); background: rgba(184, 155, 94, 0.05);">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="payment_method" 
-                                               id="paystack" value="paystack" checked
-                                               style="border: 2px solid var(--gold);">
-                                        <label class="form-check-label d-flex align-items-center" for="paystack">
-                                            <img src="https://paystack.com/assets/img/logo.svg" alt="Paystack" height="30" class="me-3">
-                                            <div>
-                                                <strong style="color: var(--charcoal);">Pay with Paystack</strong>
-                                                <p class="mb-0 small text-muted">Cards, Bank Transfer, USSD, QR Code, Mobile Money</p>
-                                            </div>
-                                        </label>
+                                <div class="payment-info p-4" style="background: rgba(184, 155, 94, 0.05); border: 1px solid var(--gold);">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-truck fa-2x me-3" style="color: var(--gold);"></i>
+                                        <div>
+                                            <h5 class="mb-1" style="color: var(--charcoal);">Cash on Delivery</h5>
+                                            <p class="mb-0 text-muted">Pay when you receive your order</p>
+                                        </div>
                                     </div>
-                                    
-                                    <!-- Paystack Features -->
-                                    <div class="paystack-features mt-3 pt-3" style="border-top: 1px dashed rgba(184, 155, 94, 0.3);">
-                                        <div class="row g-2">
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-credit-card" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">Cards</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-university" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">Transfer</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-mobile-alt" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">USSD</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-qrcode" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">QR Code</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fas fa-mobile" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">Mobile Money</small>
-                                            </div>
-                                            <div class="col-4 col-md-2 text-center">
-                                                <i class="fab fa-google-pay" style="color: var(--gold);"></i>
-                                                <small class="d-block text-muted">Google Pay</small>
-                                            </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block"><i class="fas fa-check-circle me-1" style="color: var(--gold);"></i> Pay with cash</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block"><i class="fas fa-check-circle me-1" style="color: var(--gold);"></i> Card payment on delivery</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block"><i class="fas fa-check-circle me-1" style="color: var(--gold);"></i> Transfer on delivery</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block"><i class="fas fa-check-circle me-1" style="color: var(--gold);"></i> POS payment available</small>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Other Payment Methods (Traditional) -->
-                                <div class="other-payment-methods mt-3">
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="payment_method" 
-                                               id="card" value="card">
-                                        <label class="form-check-label" for="card">
-                                            <i class="fas fa-credit-card me-2" style="color: var(--gold);"></i>
-                                            Card Payment (Manual)
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="payment_method" 
-                                               id="bank_transfer" value="bank_transfer">
-                                        <label class="form-check-label" for="bank_transfer">
-                                            <i class="fas fa-university me-2" style="color: var(--gold);"></i>
-                                            Bank Transfer
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="payment_method" 
-                                               id="cash_on_delivery" value="cash_on_delivery">
-                                        <label class="form-check-label" for="cash_on_delivery">
-                                            <i class="fas fa-truck me-2" style="color: var(--gold);"></i>
-                                            Cash on Delivery
-                                        </label>
-                                    </div>
-                                </div>
-                                
                                 <small class="text-muted mt-2 d-block"><i class="fas fa-shield-alt me-1"
-                                        style="color: var(--gold);"></i>All payments are secure and encrypted</small>
+                                        style="color: var(--gold);"></i>No online payment required - pay when your order arrives</small>
                             </div>
 
                             <div class="col-12" data-aos="fade-up" data-aos-delay="700">
@@ -225,7 +169,7 @@
                                 <div class="d-flex gap-3">
                                     <button type="submit" class="btn btn-lg flex-grow-1" id="placeOrderBtn"
                                         style="background: var(--gold); color: var(--charcoal); border: none; border-radius: 0; padding: 1rem; font-weight: 500; letter-spacing: 1px;">
-                                        <i class="fas fa-lock me-2"></i> Place Order
+                                        <i class="fas fa-check me-2"></i> Place Order (Cash on Delivery)
                                     </button>
                                     <a href="{{ url_for('view_cart') }}" class="btn btn-lg"
                                         style="background: transparent; color: var(--charcoal); border: 1px solid var(--gold); border-radius: 0; padding: 1rem; font-weight: 400; letter-spacing: 1px;">
@@ -320,10 +264,11 @@
                         </div>
                     </div>
 
-                    <!-- Paystack Badge -->
+                    <!-- Cash on Delivery Badge -->
                     <div class="text-center mb-3">
-                        <small class="text-muted">Powered by</small>
-                        <img src="https://paystack.com/assets/img/logo.svg" alt="Paystack" height="25" class="d-block mx-auto mt-1">
+                        <span class="badge p-3" style="background: var(--gold); color: var(--charcoal); font-size: 1rem;">
+                            <i class="fas fa-truck me-2"></i>Cash on Delivery Only
+                        </span>
                     </div>
 
                     <!-- Delivery Info -->
@@ -334,7 +279,7 @@
                             for all orders</p>
                         <p class="mb-2"><i class="fas fa-shield-alt me-2" style="color: var(--gold);"></i> 256-bit SSL
                             encryption</p>
-                        <p class="mb-0"><i class="fas fa-lock me-2" style="color: var(--gold);"></i> Secured by Paystack</p>
+                        <p class="mb-0"><i class="fas fa-money-bill me-2" style="color: var(--gold);"></i> Pay with cash/card on delivery</p>
                     </div>
                 </div>
             </div>
@@ -432,19 +377,15 @@
         border-color: var(--gold);
     }
 
-    /* Payment Option Styles */
-    .payment-option {
+    /* Payment Info Styles */
+    .payment-info {
+        border-radius: 0;
         transition: all 0.3s ease;
-        cursor: pointer;
     }
 
-    .payment-option:hover {
-        background: rgba(184, 155, 94, 0.1) !important;
-    }
-
-    .form-check-input[type="radio"]:checked {
-        background-color: var(--gold);
-        border-color: var(--gold);
+    .payment-info:hover {
+        box-shadow: 0 10px 30px rgba(184, 155, 94, 0.2);
+        transform: translateY(-2px);
     }
 
     /* Animation for price breakdown */
@@ -477,21 +418,6 @@
         }
     }
 
-    /* Paystack Features Grid */
-    .paystack-features .col-4,
-    .paystack-features .col-md-2 {
-        transition: all 0.3s ease;
-    }
-
-    .paystack-features .col-4:hover,
-    .paystack-features .col-md-2:hover {
-        transform: translateY(-2px);
-    }
-
-    .paystack-features i {
-        font-size: 1.2rem;
-    }
-
     /* Responsive Adjustments */
     @media (max-width: 768px) {
         .display-5 {
@@ -509,10 +435,6 @@
 
         .gap-3 .btn-lg {
             width: 100%;
-        }
-
-        .paystack-features .col-4 {
-            margin-bottom: 10px;
         }
     }
 </style>
@@ -562,28 +484,6 @@
             }
         });
     });
-
-    // Payment method selection enhancement
-    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Highlight selected payment method
-            document.querySelectorAll('.payment-option').forEach(option => {
-                option.style.borderColor = 'rgba(184, 155, 94, 0.3)';
-                option.style.background = 'transparent';
-            });
-            
-            if (this.value === 'paystack') {
-                const paystackOption = this.closest('.payment-option');
-                if (paystackOption) {
-                    paystackOption.style.borderColor = 'var(--gold)';
-                    paystackOption.style.background = 'rgba(184, 155, 94, 0.05)';
-                }
-            }
-        });
-    });
-
-    // Trigger initial highlight for paystack
-    document.getElementById('paystack')?.dispatchEvent(new Event('change'));
 
     // Smooth scroll to top on validation error
     document.getElementById('checkoutForm')?.addEventListener('invalid', function (e) {

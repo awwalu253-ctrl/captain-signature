@@ -33,13 +33,24 @@ class Settings(db.Model):
     
     @staticmethod
     def get_settings():
-        """Get or create settings"""
-        settings = Settings.query.first()
-        if not settings:
-            settings = Settings()
-            db.session.add(settings)
-            db.session.commit()
-        return settings
+        """Get or create settings with error handling"""
+        try:
+            settings = Settings.query.first()
+            if not settings:
+                settings = Settings()
+                db.session.add(settings)
+                db.session.commit()
+            return settings
+        except Exception as e:
+            print(f"⚠ Error in get_settings: {e}")
+            # Return a dummy settings object if database fails
+            from types import SimpleNamespace
+            return SimpleNamespace(
+                delivery_fee=1500.00,
+                free_delivery_threshold=0,
+                currency='₦',
+                site_name='Captain Signature'
+            )
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,16 +104,9 @@ class Order(db.Model):
     estimated_delivery = db.Column(db.DateTime, nullable=True)
     delivered_date = db.Column(db.DateTime, nullable=True)
     
-    # Payment Information
-    payment_method = db.Column(db.String(50), nullable=True)
-    payment_status = db.Column(db.String(50), default='pending')  # pending, paid, failed
-    
-    # Paystack Payment Fields
-    payment_reference = db.Column(db.String(100), nullable=True)
-    payment_access_code = db.Column(db.String(100), nullable=True)
-    payment_authorization_url = db.Column(db.String(500), nullable=True)
-    paystack_response = db.Column(db.JSON, nullable=True)
-    paid_at = db.Column(db.DateTime, nullable=True)
+    # Payment Information - SIMPLIFIED for Cash on Delivery only
+    payment_method = db.Column(db.String(50), default='cash_on_delivery')
+    payment_status = db.Column(db.String(50), default='pending')  # pending, paid
     
     # Notes
     admin_notes = db.Column(db.Text, nullable=True)

@@ -111,8 +111,14 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                {{ form.category(class="form-select") }}
+                                <select class="form-select" id="category" name="category">
+                                    <option value="mens">Men's Clothing</option>
+                                    <option value="mybrand">My Brand</option>
+                                    <option value="accessories">Accessories</option>
+                                    <option value="footwear">Footwear</option>
+                                </select>
                             {% endif %}
+                            <small class="text-muted">Select the appropriate category for your product</small>
                         </div>
                         
                         <!-- Image Upload -->

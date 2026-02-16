@@ -7,7 +7,8 @@
             <!-- Elegant Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-4" data-aos="fade-down">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i>Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}"><i
+                                class="fas fa-home me-1"></i>Home</a></li>
                     <li class="breadcrumb-item"><a href="{{ url_for('track_order_page') }}">Track Order</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Order #{{ order.order_number }}</li>
                 </ol>
@@ -33,7 +34,8 @@
                     <div class="status-timeline mb-5">
                         <div class="row justify-content-between">
                             <div class="col-3 text-center timeline-step">
-                                <div class="step-icon {% if order.status in ['pending', 'processing', 'shipped', 'delivered'] %}completed{% endif %}">
+                                <div
+                                    class="step-icon {% if order.status in ['pending', 'processing', 'shipped', 'delivered'] %}completed{% endif %}">
                                     <i class="fas fa-clipboard-check"></i>
                                 </div>
                                 <div class="step-label">
@@ -42,7 +44,8 @@
                                 </div>
                             </div>
                             <div class="col-3 text-center timeline-step">
-                                <div class="step-icon {% if order.status in ['processing', 'shipped', 'delivered'] %}completed{% endif %}">
+                                <div
+                                    class="step-icon {% if order.status in ['processing', 'shipped', 'delivered'] %}completed{% endif %}">
                                     <i class="fas fa-cog"></i>
                                 </div>
                                 <div class="step-label">
@@ -53,7 +56,8 @@
                                 </div>
                             </div>
                             <div class="col-3 text-center timeline-step">
-                                <div class="step-icon {% if order.status in ['shipped', 'delivered'] %}completed{% endif %}">
+                                <div
+                                    class="step-icon {% if order.status in ['shipped', 'delivered'] %}completed{% endif %}">
                                     <i class="fas fa-truck"></i>
                                 </div>
                                 <div class="step-label">
@@ -92,7 +96,8 @@
                                 {% if order.estimated_delivery %}
                                 <div class="delivery-info">
                                     <i class="fas fa-calendar-alt me-2 gold-text"></i>
-                                    <span>Estimated Delivery: <strong>{{ order.estimated_delivery.strftime('%B %d, %Y') }}</strong></span>
+                                    <span>Estimated Delivery: <strong>{{ order.estimated_delivery.strftime('%B %d, %Y')
+                                            }}</strong></span>
                                 </div>
                                 {% endif %}
                             </div>
@@ -100,20 +105,18 @@
                     </div>
 
                     <!-- Pay Now Button for Unpaid Orders -->
-                    {% if order.payment_status != 'paid' %}
-                    <div class="alert alert-warning mt-3 mb-4" style="background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; padding: 1rem;">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <!-- Cash on Delivery Notice - No online payment needed -->
+                    <div class="alert alert-info mt-3 mb-4"
+                        style="background: rgba(184, 155, 94, 0.05); border-left: 4px solid var(--gold); padding: 1rem;">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-truck fa-2x me-3" style="color: var(--gold);"></i>
                             <div>
-                                <i class="fas fa-exclamation-triangle me-2" style="color: #ffc107;"></i>
-                                <strong>Payment pending:</strong> This order has not been paid yet.
+                                <strong style="color: var(--charcoal);">Cash on Delivery</strong>
+                                <p class="mb-0 text-muted">You'll pay when you receive your order. No online payment
+                                    required.</p>
                             </div>
-                            <a href="{{ url_for('initiate_payment', order_id=order.id) }}" class="btn" 
-                               style="background: var(--gold); color: var(--charcoal); border: none; padding: 0.5rem 1.5rem; text-decoration: none;">
-                                <i class="fas fa-credit-card me-2"></i>Pay Now
-                            </a>
                         </div>
                     </div>
-                    {% endif %}
 
                     <!-- Tracking Timeline - Luxury Design -->
                     {% if order.tracking_updates %}
@@ -142,7 +145,8 @@
                                             </p>
                                             {% endif %}
                                         </div>
-                                        <small class="timestamp">{{ update.timestamp.strftime('%d %b %Y, %I:%M %p') }}</small>
+                                        <small class="timestamp">{{ update.timestamp.strftime('%d %b %Y, %I:%M %p')
+                                            }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -163,7 +167,8 @@
                                     <div>
                                         <small class="text-muted text-uppercase">Tracking Number</small>
                                         <h6 class="mb-1">{{ order.tracking_number }}</h6>
-                                        <p class="mb-0"><strong>Carrier:</strong> {{ order.carrier or 'Not specified' }}</p>
+                                        <p class="mb-0"><strong>Carrier:</strong> {{ order.carrier or 'Not specified' }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -203,30 +208,30 @@
                                         <div class="d-flex align-items-center">
                                             <div class="product-image-wrapper me-3">
                                                 {% if item.product_image %}
-                                                    {# Handle different image path types with Cloudinary support #}
-                                                    {% if item.product_image.startswith('http') %}
-                                                        {# Cloudinary URL or any full URL #}
-                                                        <img src="{{ item.product_image }}" 
-                                                             alt="{{ item.product_name }}" class="product-image">
-                                                    {% elif item.product_image.startswith('tmp:') %}
-                                                        {# Legacy tmp files #}
-                                                        {% set filename = item.product_image.replace('tmp:', '') %}
-                                                        <img src="{{ url_for('tmp_uploads', filename=filename) }}" 
-                                                             alt="{{ item.product_name }}" class="product-image">
-                                                    {% elif item.product_image.startswith('user_uploads:') %}
-                                                        {# Legacy user uploads #}
-                                                        {% set filename = item.product_image.replace('user_uploads:', '') %}
-                                                        <img src="{{ url_for('user_uploads', filename=filename) }}" 
-                                                             alt="{{ item.product_name }}" class="product-image">
-                                                    {% else %}
-                                                        {# Local static files #}
-                                                        <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}" 
-                                                             alt="{{ item.product_name }}" class="product-image">
-                                                    {% endif %}
+                                                {# Handle different image path types with Cloudinary support #}
+                                                {% if item.product_image.startswith('http') %}
+                                                {# Cloudinary URL or any full URL #}
+                                                <img src="{{ item.product_image }}" alt="{{ item.product_name }}"
+                                                    class="product-image">
+                                                {% elif item.product_image.startswith('tmp:') %}
+                                                {# Legacy tmp files #}
+                                                {% set filename = item.product_image.replace('tmp:', '') %}
+                                                <img src="{{ url_for('tmp_uploads', filename=filename) }}"
+                                                    alt="{{ item.product_name }}" class="product-image">
+                                                {% elif item.product_image.startswith('user_uploads:') %}
+                                                {# Legacy user uploads #}
+                                                {% set filename = item.product_image.replace('user_uploads:', '') %}
+                                                <img src="{{ url_for('user_uploads', filename=filename) }}"
+                                                    alt="{{ item.product_name }}" class="product-image">
                                                 {% else %}
-                                                    <div class="product-image-placeholder">
-                                                        <i class="fas fa-image"></i>
-                                                    </div>
+                                                {# Local static files #}
+                                                <img src="{{ url_for('static', filename='images/products/' + item.product_image) }}"
+                                                    alt="{{ item.product_name }}" class="product-image">
+                                                {% endif %}
+                                                {% else %}
+                                                <div class="product-image-placeholder">
+                                                    <i class="fas fa-image"></i>
+                                                </div>
                                                 {% endif %}
                                             </div>
                                             <div>
@@ -239,7 +244,8 @@
                                     <td class="text-center align-middle">
                                         <span class="quantity-badge">{{ item.quantity }}</span>
                                     </td>
-                                    <td class="text-end align-middle fw-semibold">₦{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                                    <td class="text-end align-middle fw-semibold">₦{{ "%.2f"|format(item.price *
+                                        item.quantity) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -287,9 +293,9 @@
                         <span class="info-label">Payment Method</span>
                         <span class="info-value">{{ order.payment_method or 'Not specified' }}</span>
                     </div>
-                    
+
                     <hr class="divider">
-                    
+
                     <div class="amount-row">
                         <span class="amount-label">Subtotal</span>
                         <span class="amount-value">₦{{ "%.2f"|format(order.subtotal) }}</span>
@@ -343,7 +349,8 @@
                     <h5 class="mb-0"><i class="fas fa-headset me-2 gold-text"></i>Need Help?</h5>
                 </div>
                 <div class="widget-body">
-                    <p class="text-muted mb-3">If you have any questions about your order, our concierge team is here to help.</p>
+                    <p class="text-muted mb-3">If you have any questions about your order, our concierge team is here to
+                        help.</p>
                     <div class="contact-method">
                         <i class="fas fa-envelope gold-text"></i>
                         <span>concierge@captainsignature.com</span>
@@ -396,7 +403,7 @@
         color: var(--gold);
     }
 
-    .breadcrumb-item + .breadcrumb-item::before {
+    .breadcrumb-item+.breadcrumb-item::before {
         color: var(--gold);
         content: "›";
     }
@@ -504,11 +511,30 @@
         letter-spacing: 1px;
     }
 
-    .status-badge.status-pending { background: var(--gold); color: var(--pure-white); }
-    .status-badge.status-processing { background: #17a2b8; color: var(--pure-white); }
-    .status-badge.status-shipped { background: #007bff; color: var(--pure-white); }
-    .status-badge.status-delivered { background: #28a745; color: var(--pure-white); }
-    .status-badge.status-cancelled { background: #dc3545; color: var(--pure-white); }
+    .status-badge.status-pending {
+        background: var(--gold);
+        color: var(--pure-white);
+    }
+
+    .status-badge.status-processing {
+        background: #17a2b8;
+        color: var(--pure-white);
+    }
+
+    .status-badge.status-shipped {
+        background: #007bff;
+        color: var(--pure-white);
+    }
+
+    .status-badge.status-delivered {
+        background: #28a745;
+        color: var(--pure-white);
+    }
+
+    .status-badge.status-cancelled {
+        background: #dc3545;
+        color: var(--pure-white);
+    }
 
     .delivery-info {
         color: var(--charcoal);
@@ -757,9 +783,20 @@
         border-radius: 0;
     }
 
-    .payment-badge.status-paid { background: #28a745; color: var(--pure-white); }
-    .payment-badge.status-pending { background: var(--gold); color: var(--pure-white); }
-    .payment-badge.status-failed { background: #dc3545; color: var(--pure-white); }
+    .payment-badge.status-paid {
+        background: #28a745;
+        color: var(--pure-white);
+    }
+
+    .payment-badge.status-pending {
+        background: var(--gold);
+        color: var(--pure-white);
+    }
+
+    .payment-badge.status-failed {
+        background: #dc3545;
+        color: var(--pure-white);
+    }
 
     .divider {
         margin: 1.5rem 0;
@@ -801,13 +838,15 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
 
-    .order-card, .sidebar-widget {
+    .order-card,
+    .sidebar-widget {
         animation: fadeInUp 0.6s ease forwards;
     }
 
@@ -816,34 +855,34 @@
         .status-timeline::before {
             display: none;
         }
-        
+
         .timeline-step {
             margin-bottom: 2rem;
         }
-        
+
         .tracking-item {
             padding-left: 1rem;
         }
-        
+
         .timestamp {
             white-space: normal;
             margin-top: 0.5rem;
         }
-        
+
         .tracking-content .d-flex {
             flex-direction: column;
         }
-        
+
         .btn-outline-gold {
             margin-top: 1rem;
             width: 100%;
         }
-        
+
         .info-row {
             flex-direction: column;
             text-align: left;
         }
-        
+
         .info-value {
             text-align: left;
             margin-top: 0.3rem;
@@ -863,7 +902,7 @@
 
 <!-- AOS Animation Script -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Initialize AOS if available
         if (typeof AOS !== 'undefined') {
             AOS.init({

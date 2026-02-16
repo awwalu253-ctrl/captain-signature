@@ -103,3 +103,6 @@ class Config:
     
     # Site name
     SITE_NAME = 'Captain Signature'
+    
+    # Note: Paystack and Monnify configurations have been removed
+    # The store now only accepts Cash on Delivery

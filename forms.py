@@ -34,7 +34,7 @@ class ProductForm(FlaskForm):
     price = FloatField('Price', validators=[DataRequired()])
     category = SelectField('Category', choices=[
         ('mens', 'Men\'s Clothing'),
-        ('womens', 'Women\'s Clothing'),
+        ('mybrand', 'My Brand'),
         ('accessories', 'Accessories'),
         ('footwear', 'Footwear')
     ], validators=[DataRequired()])
@@ -42,4 +42,4 @@ class ProductForm(FlaskForm):
     image = FileField('Product Image', validators=[
         FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
     ])
-    submit = SubmitField('Save Product')  # Default text
+    submit = SubmitField('Save Product')
