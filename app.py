@@ -1,5 +1,18 @@
 import os
 import sys
+from dotenv import load_dotenv  # Add this import
+
+# Load environment variables FIRST - before anything else
+load_dotenv()  # This loads from .env file
+
+# Optional: Print to verify loading (remove in production)
+print("=== ENVIRONMENT VARIABLES AFTER LOAD ===")
+print(f"MAIL_SERVER: {os.environ.get('MAIL_SERVER', 'NOT SET')}")
+print(f"MAIL_USERNAME: {os.environ.get('MAIL_USERNAME', 'NOT SET')}")
+print(f"ADMIN_EMAIL: {os.environ.get('ADMIN_EMAIL', 'NOT SET')}")
+print("========================================")
+
+# Now your other imports
 import traceback
 import logging
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, send_file, session, g, make_response
@@ -8,7 +21,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from sqlalchemy import text
 
-# Try to import extensions, with helpful error messages
+# Try to import extensions
 try:
     from flask_sqlalchemy import SQLAlchemy
 except ImportError:
@@ -24,6 +37,8 @@ from email_utils import send_order_notifications, send_order_status_update, send
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# ... rest of your code
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -269,6 +284,20 @@ def public_test_image(filename):
         return send_file(file_path)
     except Exception as e:
         return f"Error: {str(e)}", 500
+    
+@app.route('/debug-email')
+def debug_email():
+    """Debug email configuration"""
+    import os
+    return {
+        'MAIL_SERVER': os.environ.get('MAIL_SERVER', 'NOT SET'),
+        'MAIL_PORT': os.environ.get('MAIL_PORT', 'NOT SET'),
+        'MAIL_USE_TLS': os.environ.get('MAIL_USE_TLS', 'NOT SET'),
+        'MAIL_USERNAME': os.environ.get('MAIL_USERNAME', 'NOT SET'),
+        'MAIL_PASSWORD': 'SET' if os.environ.get('MAIL_PASSWORD') else 'NOT SET',
+        'MAIL_DEFAULT_SENDER': os.environ.get('MAIL_DEFAULT_SENDER', 'NOT SET'),
+        'ADMIN_EMAIL': os.environ.get('ADMIN_EMAIL', 'NOT SET'),
+    }
 
 # Debug route to check file details
 @app.route('/debug-file-check/<filename>')
