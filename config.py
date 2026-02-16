@@ -103,20 +103,3 @@ class Config:
     
     # Site name
     SITE_NAME = 'Captain Signature'
-    
- # --- Paystack Configuration ---
-    PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
-    PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
-    
-    # Paystack endpoints
-    PAYSTACK_INITIALIZE_URL = 'https://api.paystack.co/transaction/initialize'
-    PAYSTACK_VERIFY_URL = 'https://api.paystack.co/transaction/verify/'
-    
-    # Check if Paystack is configured
-    if IS_VERCEL:
-        if PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY:
-            print("✓ Paystack configured for payments", file=sys.stderr)
-        else:
-            print("⚠ WARNING: Paystack not fully configured!", file=sys.stderr)
-            print("  Please add PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY to Vercel env vars", file=sys.stderr)
-    # --- End Paystack Configuration ---
