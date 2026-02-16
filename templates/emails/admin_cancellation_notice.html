@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Cancelled by Customer</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            color: #D4AF37;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-family: 'Georgia', serif;
+        }
+        .header h2 {
+            margin: 10px 0 0;
+            color: #fff;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+            background: #fff;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        .order-details {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .customer-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #D4AF37;
+            color: #000;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #b8942f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-crown"></i> CAPTAIN SIGNATURE</h1>
+            <h2>⚠️ ORDER CANCELLATION</h2>
+        </div>
+        
+        <div class="content">
+            <div class="warning">
+                <strong>Order #{{ order.order_number }} has been cancelled by the customer.</strong>
+            </div>
+            
+            <div class="order-details">
+                <h3 style="margin-top: 0; color: #D4AF37;">Order Details</h3>
+                <p><strong>Order Date:</strong> {{ order.order_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                <p><strong>Total Amount:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
+                
+                <div class="customer-info">
+                    <h4 style="margin-top: 0;">Customer Information:</h4>
+                    <p><strong>Name:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Phone:</strong> {{ order.shipping_phone }}</p>
+                </div>
+            </div>
+            
+            <p><strong>Cancellation Reason:</strong> Customer-initiated cancellation (within allowed time window).</p>
+            
+            <p><strong>Note:</strong> Stock has been automatically restored for the cancelled items.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ url_for('admin_orders', _external=True) }}" class="button">
+                    VIEW IN ADMIN DASHBOARD
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 Captain Signature. All rights reserved.</p>
+            <p>This is an automated notification from your store.</p>
+        </div>
+    </div>
+</body>
+</html>

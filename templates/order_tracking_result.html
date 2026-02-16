@@ -104,7 +104,6 @@
                         </div>
                     </div>
 
-                    <!-- Pay Now Button for Unpaid Orders -->
                     <!-- Cash on Delivery Notice - No online payment needed -->
                     <div class="alert alert-info mt-3 mb-4"
                         style="background: rgba(184, 155, 94, 0.05); border-left: 4px solid var(--gold); padding: 1rem;">
@@ -118,8 +117,80 @@
                         </div>
                     </div>
 
-                    <!-- Tracking Timeline - Luxury Design -->
-                    {% if order.tracking_updates %}
+                    <!-- Customer Cancellation Option -->
+                    {% if order.status in ['pending', 'processing'] and order.user_id == current_user.id %}
+                        {% set time_diff = (now - order.order_date).total_seconds() %}
+                        {% if order.status == 'pending' or (order.status == 'processing' and time_diff < 3600) %}
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                    <strong>Cancel Order?</strong>
+                                    <p class="mb-0 small text-muted">
+                                        {% if order.status == 'pending' %}
+                                            You can cancel this order anytime before it's processed.
+                                        {% else %}
+                                            You can cancel within 1 hour of ordering. Time remaining: 
+                                            <span id="countdown">{{ (3600 - time_diff)|int }}</span> seconds
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="fas fa-times me-2"></i>Cancel Order
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Cancel Confirmation Modal -->
+                        <div class="modal fade" id="cancelModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Cancel Order #{{ order.order_number }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to cancel this order?</p>
+                                        <p class="text-muted small">This action cannot be undone. Your items will be returned to stock.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
+                                        <a href="{{ url_for('cancel_order', order_id=order.id) }}" class="btn btn-danger">
+                                            Yes, Cancel Order
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            // Countdown timer for cancellation window
+                            if (document.getElementById('countdown')) {
+                                let timeLeft = {{ (3600 - time_diff)|int }};
+                                const countdownEl = document.getElementById('countdown');
+                                
+                                const timer = setInterval(() => {
+                                    timeLeft--;
+                                    if (timeLeft <= 0) {
+                                        clearInterval(timer);
+                                        if (countdownEl) {
+                                            countdownEl.parentElement.innerHTML = 'Cancellation window closed';
+                                        }
+                                    } else {
+                                        const minutes = Math.floor(timeLeft / 60);
+                                        const seconds = timeLeft % 60;
+                                        if (countdownEl) {
+                                            countdownEl.textContent = `${minutes}m ${seconds}s`;
+                                        }
+                                    }
+                                }, 1000);
+                            }
+                        </script>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Tracking Timeline - Only show if order is trackable -->
+                    {% if show_tracking and order.tracking_updates %}
                     <div class="tracking-section mt-5">
                         <h5 class="section-title mb-4">
                             <i class="fas fa-history me-2 gold-text"></i>Tracking History
@@ -152,6 +223,16 @@
                             </div>
                             {% endfor %}
                         </div>
+                    </div>
+                    {% elif not show_tracking and order.status == 'delivered' %}
+                    <div class="alert alert-success mt-4">
+                        <i class="fas fa-check-circle me-2"></i>
+                        This order has been delivered. Tracking is no longer available.
+                    </div>
+                    {% elif not show_tracking and order.status == 'cancelled' %}
+                    <div class="alert alert-danger mt-4">
+                        <i class="fas fa-times-circle me-2"></i>
+                        This order has been cancelled. No tracking information available.
                     </div>
                     {% endif %}
 
@@ -291,7 +372,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Payment Method</span>
-                        <span class="info-value">{{ order.payment_method or 'Not specified' }}</span>
+                        <span class="info-value">{{ order.payment_method|replace('_', ' ')|title }}</span>
                     </div>
 
                     <hr class="divider">
@@ -328,7 +409,7 @@
                         <span class="info-value">
                             {{ order.shipping_address }}<br>
                             {{ order.shipping_city }}, {{ order.shipping_state }}<br>
-                            {{ order.shipping_country }}
+                            Nigeria
                         </span>
                     </div>
                     <div class="info-row">

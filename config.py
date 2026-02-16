@@ -104,5 +104,14 @@ class Config:
     # Site name
     SITE_NAME = 'Captain Signature'
     
-    # Note: Paystack and Monnify configurations have been removed
-    # The store now only accepts Cash on Delivery
+    # --- Email Configuration ---
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@captainsignature.com')
+    
+    # Admin email for notifications
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@captainsignature.com')
+    # --- End Email Configuration ---

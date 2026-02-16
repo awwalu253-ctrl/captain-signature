@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            color: #D4AF37;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-family: 'Georgia', serif;
+        }
+        .header i {
+            margin-right: 10px;
+        }
+        .content {
+            padding: 30px;
+            background: #fff;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .order-details {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #D4AF37;
+        }
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .order-table th {
+            background: #D4AF37;
+            color: #000;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .order-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .order-table tr:last-child td {
+            border-bottom: none;
+        }
+        .totals {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .totals p {
+            margin: 5px 0;
+        }
+        .total-amount {
+            font-size: 20px;
+            color: #D4AF37;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #D4AF37;
+            color: #000;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #b8942f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+        .social-links {
+            margin-top: 15px;
+        }
+        .social-links a {
+            color: #D4AF37;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .order-table th, .order-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-crown"></i> CAPTAIN SIGNATURE</h1>
+            <p style="color: #fff; margin: 10px 0 0;">Premium Fashion House</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                <p>Dear <strong>{{ user.username }}</strong>,</p>
+                <p>Thank you for your order! We're pleased to confirm that we've received your order and it's being processed.</p>
+            </div>
+            
+            <div class="order-details">
+                <h3 style="margin-top: 0; color: #D4AF37;">Order #{{ order.order_number }}</h3>
+                <p><strong>Order Date:</strong> {{ order.order_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                <p><strong>Payment Method:</strong> Cash on Delivery</p>
+                <p><strong>Payment Status:</strong> <span style="color: #ffc107;">Pending</span></p>
+                
+                <h4 style="margin-top: 20px;">Shipping Address:</h4>
+                <p>
+                    {{ order.shipping_name }}<br>
+                    {{ order.shipping_address }}<br>
+                    {{ order.shipping_city }}, {{ order.shipping_state }}<br>
+                    Nigeria
+                </p>
+                <p><strong>Phone:</strong> {{ order.shipping_phone }}</p>
+            </div>
+            
+            <h4>Order Items:</h4>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₦{{ "%.2f"|format(item.price) }}</td>
+                        <td>₦{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="totals">
+                <p><strong>Subtotal:</strong> ₦{{ "%.2f"|format(order.subtotal) }}</p>
+                <p><strong>Delivery Fee:</strong> ₦{{ "%.2f"|format(order.delivery_fee) }}</p>
+                <hr style="border: 1px solid #eee; margin: 10px 0;">
+                <p class="total-amount"><strong>Total:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
+            </div>
+            
+            {% if order.customer_notes %}
+            <div style="background: #f0f0f0; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                <p><strong>Your Notes:</strong></p>
+                <p>{{ order.customer_notes }}</p>
+            </div>
+            {% endif %}
+            
+            <div style="text-align: center;">
+                <a href="{{ url_for('track_order_result', order_number=order.order_number, _external=True) }}" class="button">
+                    TRACK YOUR ORDER
+                </a>
+            </div>
+            
+            <p style="margin-top: 20px;">If you have any questions about your order, please contact our customer service.</p>
+            <p>Best regards,<br>The Captain Signature Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 Captain Signature. All rights reserved.</p>
+            <p>This email was sent to {{ user.email }}</p>
+            <div class="social-links">
+                <a href="#">Facebook</a> |
+                <a href="#">Instagram</a> |
+                <a href="#">Twitter</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
