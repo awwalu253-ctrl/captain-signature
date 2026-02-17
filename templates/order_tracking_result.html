@@ -135,57 +135,11 @@
                                         {% endif %}
                                     </p>
                                 </div>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                <button type="button" class="btn btn-outline-danger" onclick="openCancelModal()">
                                     <i class="fas fa-times me-2"></i>Cancel Order
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Cancel Confirmation Modal -->
-                        <div class="modal fade" id="cancelModal" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Cancel Order #{{ order.order_number }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Are you sure you want to cancel this order?</p>
-                                        <p class="text-muted small">This action cannot be undone. Your items will be returned to stock.</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
-                                        <a href="{{ url_for('cancel_order', order_id=order.id) }}" class="btn btn-danger">
-                                            Yes, Cancel Order
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <script>
-                            // Countdown timer for cancellation window
-                            if (document.getElementById('countdown')) {
-                                let timeLeft = {{ (3600 - time_diff)|int }};
-                                const countdownEl = document.getElementById('countdown');
-                                
-                                const timer = setInterval(() => {
-                                    timeLeft--;
-                                    if (timeLeft <= 0) {
-                                        clearInterval(timer);
-                                        if (countdownEl) {
-                                            countdownEl.parentElement.innerHTML = 'Cancellation window closed';
-                                        }
-                                    } else {
-                                        const minutes = Math.floor(timeLeft / 60);
-                                        const seconds = timeLeft % 60;
-                                        if (countdownEl) {
-                                            countdownEl.textContent = `${minutes}m ${seconds}s`;
-                                        }
-                                    }
-                                }, 1000);
-                            }
-                        </script>
                         {% endif %}
                     {% endif %}
 
@@ -446,6 +400,38 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Cancel Order Modal -->
+<div class="modal-overlay" id="cancelModalOverlay" style="display: none;"></div>
+<div class="custom-modal" id="cancelModal" style="display: none;">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title text-white">
+                <i class="fas fa-times-circle me-2"></i>
+                Cancel Order #{{ order.order_number }}
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeCancelModal()">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div class="text-center mb-4">
+                <i class="fas fa-exclamation-triangle fa-4x" style="color: #dc3545;"></i>
+            </div>
+            <p class="fs-5 text-center mb-3">Are you sure you want to cancel this order?</p>
+            <p class="text-muted text-center small">This action cannot be undone. Your items will be returned to stock.</p>
+            
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> If you've already made a payment, refunds may take 3-5 business days to process.
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" onclick="closeCancelModal()">No, Keep Order</button>
+            <a href="{{ url_for('cancel_order', order_id=order.id) }}" class="btn btn-danger">
+                <i class="fas fa-times me-2"></i>Yes, Cancel Order
+            </a>
         </div>
     </div>
 </div>
@@ -913,13 +899,107 @@
         margin-bottom: 0;
     }
 
+    /* Custom Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+    }
+
+    .custom-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .custom-modal-content {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .custom-modal-header {
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+    }
+
+    .custom-modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+    }
+
+    .custom-modal-close {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 2rem;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-modal-close:hover {
+        opacity: 1;
+    }
+
+    .custom-modal-body {
+        padding: 2rem;
+    }
+
+    .custom-modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid rgba(220, 53, 69, 0.1);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    /* Prevent body scroll when modal is open */
+    body.modal-active {
+        overflow: hidden;
+    }
+
     /* Animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
             transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -981,9 +1061,65 @@
     }
 </style>
 
-<!-- AOS Animation Script -->
 <script>
+    // Countdown timer for cancellation window
     document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('countdown')) {
+            let timeLeft = {{ (3600 - time_diff)|int if order.status == 'processing' and time_diff is defined else 0 }};
+            const countdownEl = document.getElementById('countdown');
+            
+            if (timeLeft > 0) {
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        if (countdownEl) {
+                            countdownEl.parentElement.innerHTML = 'Cancellation window closed';
+                            // Hide the cancel button
+                            const cancelBtn = document.querySelector('.btn-outline-danger');
+                            if (cancelBtn) {
+                                cancelBtn.style.display = 'none';
+                            }
+                        }
+                    } else {
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        if (countdownEl) {
+                            countdownEl.textContent = `${minutes}m ${seconds}s`;
+                        }
+                    }
+                }, 1000);
+            }
+        }
+    });
+
+    // Modal functions
+    function openCancelModal() {
+        document.getElementById('cancelModalOverlay').style.display = 'block';
+        document.getElementById('cancelModal').style.display = 'block';
+        document.body.classList.add('modal-active');
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModalOverlay').style.display = 'none';
+        document.getElementById('cancelModal').style.display = 'none';
+        document.body.classList.remove('modal-active');
+    }
+
+    // Initialize modal close on overlay click
+    document.addEventListener('DOMContentLoaded', function () {
+        const overlay = document.getElementById('cancelModalOverlay');
+        if (overlay) {
+            overlay.addEventListener('click', closeCancelModal);
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeCancelModal();
+            }
+        });
+
         // Initialize AOS if available
         if (typeof AOS !== 'undefined') {
             AOS.init({

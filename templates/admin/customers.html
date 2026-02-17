@@ -7,8 +7,14 @@
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Customer Management</li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('dashboard') }}" class="dashboard-link">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <i class="fas fa-users me-1"></i>Customer Management
+                    </li>
                 </ol>
             </nav>
         </div>
@@ -22,7 +28,10 @@
                     <h2 class="display-6 fw-bold" style="color: var(--gold);">Customer Management</h2>
                     <p class="text-muted">View and manage your registered customers</p>
                 </div>
-                <div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-gold" onclick="printCustomers()">
+                        <i class="fas fa-print me-2"></i>Print List
+                    </button>
                     <button class="btn btn-outline-gold" onclick="exportCustomers()">
                         <i class="fas fa-download me-2"></i>Export List
                     </button>
@@ -144,7 +153,7 @@
                             data-name="{{ customer.username|lower }}"
                             data-email="{{ customer.email|lower }}"
                             data-id="{{ customer.id }}"
-                            data-orders="{{ customer.orders|length }}"
+                            data-orders="{{ customer.orders|length if customer.orders else 0 }}"
                             data-date="{{ customer.created_at.strftime('%Y-%m-%d') }}">
                             
                             <td>
@@ -158,7 +167,7 @@
                                     </div>
                                     <div>
                                         <span class="fw-bold">{{ customer.username }}</span>
-                                        {% if customer.orders|length > 0 %}
+                                        {% if customer.orders and customer.orders|length > 0 %}
                                         <span class="badge bg-success ms-2">Active</span>
                                         {% endif %}
                                     </div>
@@ -182,17 +191,17 @@
                             </td>
                             
                             <td>
-                                <span class="badge {% if customer.orders|length > 0 %}bg-gold{% else %}bg-secondary{% endif %} p-2">
-                                    {{ customer.orders|length }}
+                                <span class="badge {% if customer.orders and customer.orders|length > 0 %}bg-gold{% else %}bg-secondary{% endif %} p-2">
+                                    {{ customer.orders|length if customer.orders else 0 }}
                                 </span>
                             </td>
                             
                             <td>
-                                <span class="fw-bold text-gold">₦{{ "%.2f"|format(customer.orders|sum(attribute='total_amount')) }}</span>
+                                <span class="fw-bold text-gold">₦{{ "%.2f"|format(customer.orders|sum(attribute='total_amount') if customer.orders else 0) }}</span>
                             </td>
                             
                             <td>
-                                {% if customer.orders|length > 0 %}
+                                {% if customer.orders and customer.orders|length > 0 %}
                                 <span class="status-badge status-active">
                                     <i class="fas fa-circle me-1"></i>Active
                                 </span>
@@ -205,147 +214,28 @@
                             
                             <td>
                                 <div class="action-buttons">
-                                    <a href="#" class="btn-icon" data-bs-toggle="modal" data-bs-target="#customerModal{{ customer.id }}" 
-                                       title="View Details">
+                                    <button class="btn-icon view-customer-btn" 
+                                            data-customer-id="{{ customer.id }}"
+                                            data-customer-username="{{ customer.username }}"
+                                            data-customer-email="{{ customer.email }}"
+                                            data-customer-phone="{{ customer.phone or '' }}"
+                                            data-customer-created="{{ customer.created_at.strftime('%B %d, %Y') }}"
+                                            data-customer-address="{{ customer.address or '' }}"
+                                            data-customer-city="{{ customer.city or '' }}"
+                                            data-customer-state="{{ customer.state or '' }}"
+                                            data-customer-orders="{{ (customer.orders or [])|tojson|safe }}"
+                                            title="View Details">
                                         <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="#" class="btn-icon" title="Send Message" onclick="sendMessage('{{ customer.email }}')">
+                                    </button>
+                                    <button class="btn-icon" onclick="openEmailModal('{{ customer.id }}', '{{ customer.email }}', '{{ customer.username }}')" title="Send Message">
                                         <i class="fas fa-envelope"></i>
-                                    </a>
-                                    <a href="#" class="btn-icon" title="View Orders" onclick="viewOrders({{ customer.id }})">
+                                    </button>
+                                    <a href="{{ url_for('admin_orders') }}?customer={{ customer.id }}" class="btn-icon" title="View Orders">
                                         <i class="fas fa-shopping-bag"></i>
                                     </a>
                                 </div>
                             </td>
                         </tr>
-
-                        <!-- Customer Details Modal - Enhanced -->
-                        <div class="modal fade" id="customerModal{{ customer.id }}" tabindex="-1">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header" style="background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);">
-                                        <h5 class="modal-title text-white">
-                                            <i class="fas fa-user-circle me-2"></i>
-                                            Customer Profile: {{ customer.username }}
-                                        </h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-md-4 text-center mb-3">
-                                                <div class="avatar-large bg-gold-soft mx-auto mb-3">
-                                                    <span class="initials-large">{{ customer.username[:2]|upper }}</span>
-                                                </div>
-                                                <h5>{{ customer.username }}</h5>
-                                                <span class="badge {% if customer.orders|length > 0 %}bg-gold{% else %}bg-secondary{% endif %}">
-                                                    {% if customer.orders|length > 0 %}Active Customer{% else %}New Customer{% endif %}
-                                                </span>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="fw-bold text-gold">Email Address</label>
-                                                        <p><i class="fas fa-envelope me-2 text-gold"></i>{{ customer.email }}</p>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="fw-bold text-gold">Phone Number</label>
-                                                        <p><i class="fas fa-phone me-2 text-gold"></i>{{ customer.phone or 'Not provided' }}</p>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="fw-bold text-gold">Member Since</label>
-                                                        <p><i class="fas fa-calendar me-2 text-gold"></i>{{ customer.created_at.strftime('%B %d, %Y') }}</p>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="fw-bold text-gold">Last Active</label>
-                                                        <p><i class="fas fa-clock me-2 text-gold"></i>Today</p>
-                                                    </div>
-                                                    <div class="col-12 mb-3">
-                                                        <label class="fw-bold text-gold">Shipping Address</label>
-                                                        <p class="p-3 bg-light rounded">
-                                                            <i class="fas fa-map-marker-alt me-2 text-gold"></i>
-                                                            {% if customer.address %}
-                                                                {{ customer.address }}<br>
-                                                                {{ customer.city }}, {{ customer.state }}<br>
-                                                                Nigeria
-                                                            {% else %}
-                                                                No address provided
-                                                            {% endif %}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <hr>
-                                        
-                                        <!-- Order Summary -->
-                                        <h6 class="fw-bold mb-3">Order Summary</h6>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="stat-mini-card">
-                                                    <h3 class="text-gold">{{ customer.orders|length }}</h3>
-                                                    <small>Total Orders</small>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="stat-mini-card">
-                                                    <h3 class="text-gold">₦{{ "%.0f"|format(customer.orders|sum(attribute='total_amount')) }}</h3>
-                                                    <small>Total Spent</small>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="stat-mini-card">
-                                                    <h3 class="text-gold">₦{{ "%.0f"|format((customer.orders|sum(attribute='total_amount') / customer.orders|length) if customer.orders|length > 0 else 0) }}</h3>
-                                                    <small>Avg. Order Value</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        {% if customer.orders %}
-                                        <hr>
-                                        <h6 class="fw-bold mb-3">Recent Orders</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Order #</th>
-                                                        <th>Date</th>
-                                                        <th>Status</th>
-                                                        <th>Total</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for order in customer.orders[:3] %}
-                                                    <tr>
-                                                        <td>
-                                                            <a href="{{ url_for('track_order_result', order_number=order.order_number) }}" 
-                                                               class="text-gold">
-                                                                #{{ order.order_number }}
-                                                            </a>
-                                                        </td>
-                                                        <td>{{ order.order_date.strftime('%Y-%m-%d') }}</td>
-                                                        <td>
-                                                            <span class="badge {% if order.status == 'delivered' %}bg-success{% elif order.status == 'pending' %}bg-warning{% elif order.status == 'cancelled' %}bg-danger{% else %}bg-info{% endif %}">
-                                                                {{ order.status }}
-                                                            </span>
-                                                        </td>
-                                                        <td>₦{{ "%.2f"|format(order.total_amount) }}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                                        <a href="{{ url_for('admin_orders') }}?customer={{ customer.id }}" class="btn btn-gold">
-                                            <i class="fas fa-shopping-bag me-2"></i>View All Orders
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -378,6 +268,171 @@
     </div>
 </div>
 
+<!-- Customer Details Modal -->
+<div class="modal-overlay" id="customerModalOverlay" style="display: none;"></div>
+<div class="custom-modal" id="customerModal" style="display: none;">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title text-white">
+                <i class="fas fa-user-circle me-2"></i>
+                Customer Profile: <span id="modalUsername"></span>
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeCustomerModal()">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div class="row">
+                <div class="col-md-4 text-center mb-3">
+                    <div class="avatar-large bg-gold-soft mx-auto mb-3">
+                        <span class="initials-large" id="modalInitials"></span>
+                    </div>
+                    <h5 id="modalDisplayName"></h5>
+                    <span class="badge" id="modalStatus"></span>
+                </div>
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold text-gold">Email Address</label>
+                            <p><i class="fas fa-envelope me-2 text-gold"></i><span id="modalEmail"></span></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold text-gold">Phone Number</label>
+                            <p><i class="fas fa-phone me-2 text-gold"></i><span id="modalPhone"></span></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold text-gold">Member Since</label>
+                            <p><i class="fas fa-calendar me-2 text-gold"></i><span id="modalCreated"></span></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold text-gold">Last Active</label>
+                            <p><i class="fas fa-clock me-2 text-gold"></i>Today</p>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="fw-bold text-gold">Shipping Address</label>
+                            <p class="p-3 bg-light rounded" id="modalAddress">
+                                <i class="fas fa-map-marker-alt me-2 text-gold"></i>
+                                No address provided
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <!-- Order Summary -->
+            <h6 class="fw-bold mb-3">Order Summary</h6>
+            <div class="row" id="modalOrderSummary">
+                <div class="col-md-4">
+                    <div class="stat-mini-card">
+                        <h3 class="text-gold" id="modalTotalOrders">0</h3>
+                        <small>Total Orders</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-mini-card">
+                        <h3 class="text-gold" id="modalTotalSpent">₦0</h3>
+                        <small>Total Spent</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-mini-card">
+                        <h3 class="text-gold" id="modalAvgOrder">₦0</h3>
+                        <small>Avg. Order Value</small>
+                    </div>
+                </div>
+            </div>
+            
+            <hr id="modalOrdersDivider" style="display: none;">
+            <h6 class="fw-bold mb-3" id="modalRecentOrdersTitle" style="display: none;">Recent Orders</h6>
+            <div class="table-responsive" id="modalOrdersTable" style="display: none;">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalOrdersBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" onclick="closeCustomerModal()">Close</button>
+            <a href="#" class="btn btn-gold" id="modalViewAllOrders">
+                <i class="fas fa-shopping-bag me-2"></i>View All Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Email Composition Modal -->
+<div class="modal-overlay" id="emailModalOverlay" style="display: none;"></div>
+<div class="custom-modal" id="emailModal" style="display: none;">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header" style="background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);">
+            <h5 class="custom-modal-title text-white">
+                <i class="fas fa-envelope me-2"></i>
+                Compose Message
+            </h5>
+            <button type="button" class="custom-modal-close" onclick="closeEmailModal()">&times;</button>
+        </div>
+        <form id="emailForm" action="{{ url_for('send_customer_email') }}" method="POST">
+            <div class="custom-modal-body">
+                <input type="hidden" name="customer_id" id="emailCustomerId">
+                <input type="hidden" name="customer_name" id="emailCustomerName">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-gold">To:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-user text-gold"></i></span>
+                        <input type="email" class="form-control" id="emailTo" name="to" readonly style="background-color: #f8f9fa;">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-gold">Subject:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fas fa-heading text-gold"></i></span>
+                        <input type="text" class="form-control" id="emailSubject" name="subject" 
+                               placeholder="Enter subject" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-gold">Message:</label>
+                    <textarea class="form-control" id="emailBody" name="body" rows="8" 
+                              placeholder="Type your message here..." required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="sendCopy" name="send_copy">
+                        <label class="form-check-label" for="sendCopy">
+                            <i class="fas fa-copy me-1 text-gold"></i> Send a copy to myself
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info" role="alert" style="background-color: var(--gold-soft); border-color: var(--gold); color: var(--dark);">
+                    <i class="fas fa-info-circle me-2 text-gold"></i>
+                    Your message will be sent directly to the customer's email address.
+                </div>
+            </div>
+            <div class="custom-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" onclick="closeEmailModal()">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="submit" class="btn btn-gold">
+                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
 :root {
     --gold: #D4AF37;
@@ -389,6 +444,57 @@
 
 body{
     margin-top: 40px;
+}
+
+/* Breadcrumb Styling */
+.breadcrumb {
+    background: rgba(212, 175, 55, 0.05);
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.dashboard-link {
+    color: var(--gold);
+    text-decoration: none;
+    padding: 0.4rem 1rem;
+    border-radius: 30px;
+    background: var(--gold-soft);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 500;
+}
+
+.dashboard-link:hover {
+    background: var(--gold);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+}
+
+.dashboard-link i {
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item.active {
+    color: var(--gold-dark);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.breadcrumb-item.active i {
+    color: var(--gold);
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    color: var(--gold);
+    content: "›";
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
 /* Avatar Styles */
@@ -515,6 +621,8 @@ body{
     background: var(--gold-soft);
     transition: all 0.3s ease;
     text-decoration: none;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-icon:hover {
@@ -563,12 +671,14 @@ body{
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
     transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .btn-outline-gold:hover {
     background: var(--gold);
     color: white;
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
 
 /* Search Input */
@@ -597,6 +707,161 @@ body{
     background: var(--gold);
     border-color: var(--gold);
     color: white;
+}
+
+/* Gap utility */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+/* Print styles */
+@media print {
+    .btn-outline-gold, .btn-gold, .action-buttons, .modal, .breadcrumb, 
+    .input-group, .form-select, .card-footer, .dashboard-link {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    .badge {
+        border: 1px solid #000 !important;
+        color: #000 !important;
+        background: transparent !important;
+    }
+}
+
+/* Custom Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+}
+
+.custom-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-modal-header {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+}
+
+.custom-modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0;
+}
+
+.custom-modal-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.custom-modal-close:hover {
+    opacity: 1;
+}
+
+.custom-modal-body {
+    padding: 2rem;
+}
+
+.custom-modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(212, 175, 55, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Form Styles */
+.form-control {
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+}
+
+.input-group-text {
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 8px 0 0 8px;
+}
+
+.form-check-input:checked {
+    background-color: var(--gold);
+    border-color: var(--gold);
+}
+
+.alert-info {
+    border-radius: 8px;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-active {
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .custom-modal {
+        width: 95%;
+        max-width: 95%;
+    }
+    
+    .custom-modal-body {
+        padding: 1rem;
+    }
 }
 </style>
 
@@ -630,6 +895,14 @@ function filterCustomers() {
             case 'recent':
                 matchesFilter = date === new Date().toISOString().split('T')[0];
                 break;
+            case 'this-month':
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+                const joinedDate = new Date(date);
+                matchesFilter = joinedDate.getMonth() === currentMonth && joinedDate.getFullYear() === currentYear;
+                break;
+            default:
+                matchesFilter = true;
         }
         
         row.style.display = matchesSearch && matchesFilter ? '' : 'none';
@@ -660,18 +933,243 @@ function exportCustomers() {
     a.click();
 }
 
-// Send message to customer
-function sendMessage(email) {
-    window.location.href = `mailto:${email}`;
+// Print customers list
+function printCustomers() {
+    const printWindow = window.open('', '_blank');
+    const customers = [];
+    
+    document.querySelectorAll('.customer-row').forEach(row => {
+        customers.push({
+            id: row.dataset.id,
+            name: row.querySelector('.fw-bold').textContent.trim(),
+            email: row.querySelector('.contact-info div:first-child').textContent.replace(/\s+/g, ' ').trim(),
+            orders: row.dataset.orders,
+            joined: row.querySelector('.date-info div:first-child').textContent,
+            spent: row.querySelector('.fw-bold.text-gold').textContent
+        });
+    });
+    
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Customers List - Captain Signature</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h1 { color: #D4AF37; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background: #D4AF37; color: white; padding: 10px; text-align: left; }
+                td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+                tr:nth-child(even) { background: #f9f9f9; }
+                .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+                .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; }
+                .summary { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+            </style>
+        </head>
+        <body>
+            <h1>👥 Customer List - Captain Signature</h1>
+            <div class="summary">
+                <strong>Total Customers:</strong> ${customers.length} | 
+                <strong>Generated:</strong> ${new Date().toLocaleString()} | 
+                <strong>Active Customers:</strong> ${customers.filter(c => parseInt(c.orders) > 0).length}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Joined</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    customers.forEach(c => {
+        htmlContent += `
+            <tr>
+                <td>#${c.id}</td>
+                <td>${c.name}</td>
+                <td>${c.email}</td>
+                <td>${c.joined}</td>
+                <td>${c.orders}</td>
+                <td>${c.spent}</td>
+            </tr>
+        `;
+    });
+    
+    htmlContent += `
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>© ${new Date().getFullYear()} Captain Signature. All rights reserved.</p>
+                <p>This is a computer generated document. No signature is required.</p>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
 }
 
-// View customer orders
-function viewOrders(customerId) {
-    window.location.href = `{{ url_for('admin_orders') }}?customer=${customerId}`;
+// Customer Modal Functions
+function openCustomerModal(customerData) {
+    document.getElementById('modalUsername').textContent = customerData.username;
+    document.getElementById('modalDisplayName').textContent = customerData.username;
+    document.getElementById('modalInitials').textContent = customerData.username.substring(0, 2).toUpperCase();
+    document.getElementById('modalEmail').textContent = customerData.email;
+    document.getElementById('modalPhone').textContent = customerData.phone || 'Not provided';
+    document.getElementById('modalCreated').textContent = customerData.created;
+    
+    const statusBadge = document.getElementById('modalStatus');
+    if (customerData.orders && customerData.orders.length > 0) {
+        statusBadge.className = 'badge bg-gold';
+        statusBadge.textContent = 'Active Customer';
+    } else {
+        statusBadge.className = 'badge bg-secondary';
+        statusBadge.textContent = 'New Customer';
+    }
+    
+    const addressEl = document.getElementById('modalAddress');
+    if (customerData.address && customerData.address.trim() !== '') {
+        addressEl.innerHTML = `<i class="fas fa-map-marker-alt me-2 text-gold"></i>${customerData.address}<br>${customerData.city}, ${customerData.state}<br>Nigeria`;
+    } else {
+        addressEl.innerHTML = '<i class="fas fa-map-marker-alt me-2 text-gold"></i>No address provided';
+    }
+    
+    const orders = customerData.orders || [];
+    const totalOrders = orders.length;
+    const totalSpent = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+    const avgOrder = totalOrders > 0 ? totalSpent / totalOrders : 0;
+    
+    document.getElementById('modalTotalOrders').textContent = totalOrders;
+    document.getElementById('modalTotalSpent').innerHTML = `₦${totalSpent.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+    document.getElementById('modalAvgOrder').innerHTML = `₦${avgOrder.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+    
+    document.getElementById('modalViewAllOrders').href = `{{ url_for('admin_orders') }}?customer=${customerData.id}`;
+    
+    if (totalOrders > 0) {
+        document.getElementById('modalOrdersDivider').style.display = 'block';
+        document.getElementById('modalRecentOrdersTitle').style.display = 'block';
+        document.getElementById('modalOrdersTable').style.display = 'block';
+        
+        const ordersBody = document.getElementById('modalOrdersBody');
+        ordersBody.innerHTML = '';
+        
+        orders.slice(0, 3).forEach(order => {
+            const statusClass = order.status === 'delivered' ? 'bg-success' : 
+                               order.status === 'pending' ? 'bg-warning' : 
+                               order.status === 'cancelled' ? 'bg-danger' : 'bg-info';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><a href="{{ url_for('track_order_result', order_number='') }}${order.order_number}" class="text-gold">#${order.order_number}</a></td>
+                <td>${new Date(order.order_date).toISOString().split('T')[0]}</td>
+                <td><span class="badge ${statusClass}">${order.status}</span></td>
+                <td>₦${order.total_amount.toFixed(2)}</td>
+            `;
+            ordersBody.appendChild(row);
+        });
+    } else {
+        document.getElementById('modalOrdersDivider').style.display = 'none';
+        document.getElementById('modalRecentOrdersTitle').style.display = 'none';
+        document.getElementById('modalOrdersTable').style.display = 'none';
+    }
+    
+    document.getElementById('customerModalOverlay').style.display = 'block';
+    document.getElementById('customerModal').style.display = 'block';
+    document.body.classList.add('modal-active');
 }
 
-// Initialize tooltips
+function closeCustomerModal() {
+    document.getElementById('customerModalOverlay').style.display = 'none';
+    document.getElementById('customerModal').style.display = 'none';
+    document.body.classList.remove('modal-active');
+}
+
+// Email Modal Functions
+function openEmailModal(customerId, customerEmail, customerName) {
+    document.getElementById('emailCustomerId').value = customerId;
+    document.getElementById('emailCustomerName').value = customerName;
+    document.getElementById('emailTo').value = customerEmail;
+    document.getElementById('emailSubject').value = `Message for ${customerName} - Captain Signature`;
+    document.getElementById('emailBody').value = `Dear ${customerName},\n\n`;
+    
+    document.getElementById('emailModalOverlay').style.display = 'block';
+    document.getElementById('emailModal').style.display = 'block';
+    document.body.classList.add('modal-active');
+}
+
+function closeEmailModal() {
+    document.getElementById('emailModalOverlay').style.display = 'none';
+    document.getElementById('emailModal').style.display = 'none';
+    document.body.classList.remove('modal-active');
+}
+
+// Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to view buttons
+    document.querySelectorAll('.view-customer-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            try {
+                let ordersData = [];
+                const ordersAttr = this.dataset.customerOrders;
+                
+                if (ordersAttr && ordersAttr !== '[]' && ordersAttr !== 'null' && ordersAttr !== 'undefined') {
+                    try {
+                        ordersData = JSON.parse(ordersAttr) || [];
+                    } catch (parseError) {
+                        console.warn('Error parsing orders data:', parseError);
+                        ordersData = [];
+                    }
+                }
+                
+                const customerData = {
+                    id: this.dataset.customerId,
+                    username: this.dataset.customerUsername,
+                    email: this.dataset.customerEmail,
+                    phone: this.dataset.customerPhone,
+                    created: this.dataset.customerCreated,
+                    address: this.dataset.customerAddress,
+                    city: this.dataset.customerCity,
+                    state: this.dataset.customerState,
+                    orders: ordersData
+                };
+                
+                openCustomerModal(customerData);
+            } catch (error) {
+                console.error('Error processing customer data:', error);
+            }
+        });
+    });
+    
+    // Close modals when clicking overlay
+    const customerOverlay = document.getElementById('customerModalOverlay');
+    if (customerOverlay) {
+        customerOverlay.addEventListener('click', closeCustomerModal);
+    }
+    
+    const emailOverlay = document.getElementById('emailModalOverlay');
+    if (emailOverlay) {
+        emailOverlay.addEventListener('click', closeEmailModal);
+    }
+    
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCustomerModal();
+            closeEmailModal();
+        }
+    });
+    
+    // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

@@ -1,9 +1,9 @@
 import os
 import sys
-from dotenv import load_dotenv  # Add this import
+from dotenv import load_dotenv
 
 # Load environment variables FIRST - before anything else
-load_dotenv()  # This loads from .env file
+load_dotenv()
 
 # Optional: Print to verify loading (remove in production)
 print("=== ENVIRONMENT VARIABLES AFTER LOAD ===")
@@ -15,12 +15,13 @@ print("========================================")
 # Now your other imports
 import traceback
 import logging
+import time
+from collections import defaultdict
 from flask import Flask, render_template, redirect, url_for, flash, request, abort, send_from_directory, send_file, session, g, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from sqlalchemy import text
-from datetime import timedelta  # Add this import if missing
 
 # Try to import extensions
 try:
@@ -30,20 +31,36 @@ except ImportError:
     sys.exit(1)
 
 from config import Config
-from models import db, User, Product, Order, OrderItem, OrderTracking, Settings, NIGERIA_STATES
+from models import db, User, Product, Order, OrderItem, OrderTracking, Settings, NIGERIA_STATES, PasswordResetToken
 from forms import LoginForm, SignupForm, ProductForm
 from utils import save_picture
 from cart import Cart
-from email_utils import send_order_notifications, send_order_status_update, send_cancellation_notification, send_delivery_notification
+from email_utils import send_order_notifications, send_order_status_update, send_cancellation_notification, send_delivery_notification, send_password_reset_email
 
-
-from models import PasswordResetToken
-from email_utils import send_password_reset_email
-
+# Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# ... rest of your code
+# Initialize Flask-Limiter
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
+    print("✓ Flask-Limiter initialized successfully")
+except ImportError:
+    print("⚠ Flask-Limiter not installed. Run: pip install flask-limiter")
+    # Create a dummy limiter that doesn't do anything
+    class DummyLimiter:
+        def limit(self, *args, **kwargs):
+            def decorator(f):
+                return f
+            return decorator
+    limiter = DummyLimiter()
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -56,6 +73,31 @@ print(f"POSTGRES_URL: {'Set' if os.environ.get('POSTGRES_URL') else 'NOT SET'}")
 print(f"POSTGRES_PRISMA_URL: {'Set' if os.environ.get('POSTGRES_PRISMA_URL') else 'NOT SET'}")
 print(f"VERCEL_ENV: {os.environ.get('VERCEL_ENV', 'not set')}")
 print("===================================")
+
+# Simple in-memory rate limiter (use Redis in production)
+reset_requests = defaultdict(list)
+
+def check_rate_limit(email, max_requests=3, time_window=3600):
+    """
+    Check if email has exceeded rate limit
+    max_requests: maximum number of requests allowed in time_window (seconds)
+    """
+    now = time.time()
+    
+    # Clean old requests
+    reset_requests[email] = [req_time for req_time in reset_requests[email] 
+                            if now - req_time < time_window]
+    
+    # Check if under limit
+    if len(reset_requests[email]) < max_requests:
+        reset_requests[email].append(now)
+        return True, None
+    else:
+        oldest = reset_requests[email][0]
+        wait_time = int(time_window - (now - oldest))
+        minutes = wait_time // 60
+        seconds = wait_time % 60
+        return False, f"Too many reset attempts. Please wait {minutes} minute(s) and {seconds} second(s)."
 
 # Function to ensure directories exist with proper permissions
 def ensure_directories():
@@ -110,6 +152,16 @@ project_root = ensure_directories()
 user_home = os.path.expanduser("~")
 upload_folder = os.path.join(user_home, 'captain_signature_uploads', 'product_images')
 
+# Initialize extensions
+db.init_app(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 # Make session, cart, and settings available to all templates
 @app.before_request
 def before_request():
@@ -135,16 +187,6 @@ def before_request():
             currency='₦',
             site_name='Captain Signature'
         )
-
-# Initialize extensions
-db.init_app(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 # Create tables and admin user - ROBUST VERSION
 with app.app_context():
@@ -1277,20 +1319,83 @@ def add_product():
 @app.route('/admin/customers')
 @login_required
 def admin_customers():
-    """View all registered customers"""
+    """View all registered customers with calculated metrics"""
     if not current_user.is_admin:
         abort(403)
     
     now = datetime.now()
     customers = User.query.filter_by(is_admin=False).order_by(User.created_at.desc()).all()
-    total_customers = len(customers)
-    new_today = sum(1 for c in customers if c.created_at.date() == datetime.today().date())
     
-    return render_template('admin/customers.html', 
-                         customers=customers,
+    # Calculate metrics for each customer
+    customer_data = []
+    total_orders_all = 0
+    
+    for customer in customers:
+        order_count = len(customer.orders)
+        total_spent = sum(order.total_amount for order in customer.orders)
+        total_orders_all += order_count
+        
+        customer_data.append({
+            'id': customer.id,
+            'username': customer.username,
+            'email': customer.email,
+            'phone': customer.phone,
+            'address': customer.address,
+            'city': customer.city,
+            'state': customer.state,
+            'created_at': customer.created_at,
+            'order_count': order_count,
+            'total_spent': total_spent,
+            'has_orders': order_count > 0,
+            'recent_orders': customer.orders[:5] if customer.orders else []
+        })
+    
+    # Calculate statistics
+    total_customers = len(customer_data)
+    new_today = sum(1 for c in customer_data if c['created_at'].date() == datetime.today().date())
+    active_customers = sum(1 for c in customer_data if c['has_orders'])
+    
+    return render_template('admin/customers.html',
+                         customers=customer_data,
                          total_customers=total_customers,
                          new_today=new_today,
+                         active_customers=active_customers,
+                         total_orders_all=total_orders_all,
                          now=now)
+    
+@app.route('/admin/send-customer-email', methods=['POST'])
+@login_required
+def send_customer_email():
+    """Send email to customer from admin panel"""
+    if not current_user.is_admin:
+        abort(403)
+    
+    from email_utils import send_email
+    
+    customer_id = request.form.get('customer_id')
+    to_email = request.form.get('to')
+    subject = request.form.get('subject')
+    body = request.form.get('body')
+    send_copy = request.form.get('send_copy') == 'on'
+    
+    customer = User.query.get_or_404(customer_id)
+    
+    try:
+        # Send email to customer
+        send_email(app, to_email, subject, 'admin_custom_message.html', 
+                  customer=customer, message=body, admin=current_user)
+        
+        # Send copy to admin if requested
+        if send_copy:
+            send_email(app, current_user.email, f"COPY: {subject}", 'admin_custom_message.html',
+                      customer=customer, message=body, admin=current_user, copy=True)
+        
+        flash(f'Message sent successfully to {customer.username}!', 'success')
+    except Exception as e:
+        flash(f'Error sending message: {str(e)}', 'danger')
+        print(f"Email error: {e}")
+    
+    return redirect(url_for('admin_customers'))
 
 @app.context_processor
 def inject_now():
@@ -1456,7 +1561,7 @@ def update_order_status(order_id, status):
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    """Handle forgot password requests"""
+    """Handle forgot password requests with rate limiting"""
     print("\n" + "="*60)
     print("📧 FORGOT PASSWORD REQUEST")
     print("="*60)
@@ -1465,6 +1570,13 @@ def forgot_password():
         email = request.form.get('email')
         print(f"Email submitted: {email}")
         
+        # Apply rate limit check
+        can_request, message = check_rate_limit(email, max_requests=3, time_window=3600)
+        if not can_request:
+            print(f"Rate limit exceeded for {email}: {message}")
+            flash(message, 'warning')
+            return redirect(url_for('forgot_password'))
+        
         user = User.query.filter_by(email=email).first()
         print(f"User found: {user is not None}")
         
@@ -1472,12 +1584,15 @@ def forgot_password():
             try:
                 print(f"Processing password reset for user: {user.username} ({user.email})")
                 
-                # Delete any existing unused tokens for this user
-                deleted = PasswordResetToken.query.filter_by(
+                # Mark any existing unused tokens as used
+                unused_tokens = PasswordResetToken.query.filter_by(
                     user_id=user.id, 
                     used=False
-                ).delete()
-                print(f"Deleted {deleted} existing unused tokens")
+                ).all()
+                
+                for token in unused_tokens:
+                    token.used = True
+                    print(f"Marked token {token.token[:20]}... as used")
                 
                 # Create new token
                 reset_token = PasswordResetToken.generate_token(user.id)
@@ -1509,7 +1624,7 @@ def forgot_password():
             # Always show the same message for security
             print(f"Email {email} not found in database")
             flash('If your email is registered, you will receive a reset link.', 'info')
-            return redirect(url_for('login'))
+            return redirect(url_for('forgot_password'))
     
     return render_template('forgot_password.html')
 

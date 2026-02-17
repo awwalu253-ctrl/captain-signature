@@ -164,3 +164,24 @@ class PasswordResetToken(db.Model):
         """Check if token is still valid"""
         return (not self.used and 
                 datetime.utcnow() < self.expires_at)
+    
+    @staticmethod
+    def can_request_new(user_id):
+        """Check if user can request a new reset token"""
+        # Get the most recent token for this user
+        last_token = PasswordResetToken.query.filter_by(
+            user_id=user_id
+        ).order_by(PasswordResetToken.created_at.desc()).first()
+        
+        if not last_token:
+            return True, None  # No previous tokens
+        
+        # Check if last token was created within the last 5 minutes
+        time_since_last = datetime.utcnow() - last_token.created_at
+        if time_since_last.total_seconds() < 300:  # 5 minutes
+            wait_time = 300 - int(time_since_last.total_seconds())
+            minutes = wait_time // 60
+            seconds = wait_time % 60
+            return False, f"Please wait {minutes} minute(s) and {seconds} second(s) before requesting another reset link."
+        
+        return True, None
