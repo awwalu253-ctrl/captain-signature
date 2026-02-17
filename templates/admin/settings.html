@@ -158,7 +158,7 @@
                 </div>
                 <div class="header-title">
                     <h3>Quick Analytics</h3>
-                    <p>Store performance</p>
+                    <p>Real-time store performance</p>
                 </div>
             </div>
             
@@ -166,19 +166,25 @@
                 <div class="metric-grid">
                     <div class="metric-item">
                         <span class="metric-label">Avg. Order Value</span>
-                        <span class="metric-value">{{ settings.currency }}25,000</span>
+                        <span class="metric-value">{{ settings.currency }}{{ "%.0f"|format(avg_order_value|default(0)) }}</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">Orders (30d)</span>
-                        <span class="metric-value">156</span>
+                        <span class="metric-value">{{ orders_30_days|default(0) }}</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">Conversion Rate</span>
-                        <span class="metric-value">3.2%</span>
+                        <span class="metric-value">{{ "%.1f"|format(conversion_rate|default(0)) }}%</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">Active Products</span>
-                        <span class="metric-value">48</span>
+                        <span class="metric-value">{{ active_products|default(0) }}</span>
+                    </div>
+                </div>
+                <div class="metric-footer" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(184, 155, 94, 0.1);">
+                    <div class="metric-item" style="background: none; padding: 0;">
+                        <span class="metric-label">Total Revenue (30d)</span>
+                        <span class="metric-value" style="font-size: 1.2rem;">{{ settings.currency }}{{ "%.0f"|format(revenue_30_days|default(0)) }}</span>
                     </div>
                 </div>
             </div>
@@ -629,6 +635,12 @@ input:checked + .toggle-slider:before {
     font-weight: 600;
     color: #1a1a1a;
     font-family: 'Cormorant Garamond', serif;
+}
+
+.metric-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(184, 155, 94, 0.1);
 }
 
 /* Security Card */

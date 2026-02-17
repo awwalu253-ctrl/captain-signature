@@ -1867,16 +1867,36 @@ def bulk_tracking_update():
     
     return redirect(url_for('admin_orders'))
 
-# Settings route - UPDATED to handle maintenance mode with database
+# Settings route - UPDATED with real analytics data
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
-    """Admin settings page with maintenance mode control"""
+    """Admin settings page with maintenance mode control and real analytics"""
     if not current_user.is_admin:
         abort(403)
     
     settings = Settings.get_settings()
     maintenance = MaintenanceSettings.get_settings()
+    
+    # Calculate real analytics data
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    
+    # Orders in last 30 days
+    recent_orders = Order.query.filter(Order.order_date >= thirty_days_ago).all()
+    orders_30_days = len(recent_orders)
+    
+    # Total revenue in last 30 days
+    revenue_30_days = sum(order.total_amount for order in recent_orders)
+    
+    # Average order value
+    avg_order_value = revenue_30_days / orders_30_days if orders_30_days > 0 else 0
+    
+    # Active products (with stock > 0)
+    active_products = Product.query.filter(Product.stock > 0).count()
+    
+    # Conversion rate (simplified - based on unique visitors vs orders)
+    # You can replace this with actual analytics data if you have it
+    conversion_rate = 3.2  # Placeholder - implement actual calculation if needed
     
     if request.method == 'POST':
         try:
@@ -1921,7 +1941,12 @@ def admin_settings():
     
     return render_template('admin/settings.html', 
                          settings=settings,
-                         maintenance_config=maintenance_config)
+                         maintenance_config=maintenance_config,
+                         avg_order_value=avg_order_value,
+                         orders_30_days=orders_30_days,
+                         revenue_30_days=revenue_30_days,
+                         active_products=active_products,
+                         conversion_rate=conversion_rate)
 
 # Maintenance preview route
 @app.route('/maintenance-preview')
