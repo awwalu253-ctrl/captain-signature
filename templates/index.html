@@ -184,9 +184,11 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="100">
                 <a href="{{ url_for('products', category='mens') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                             alt="Men's Fashion" class="category-image w-100">
-                        <div class="category-overlay">
+                        <div class="category-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=1000&q=80" 
+                                 alt="Men's Fashion" class="category-image">
+                        </div>
+                        <div class="category-overlay d-flex align-items-center justify-content-center">
                             <div class="category-content text-center">
                                 <i class="fas fa-tshirt fa-3x mb-3 text-gold"></i>
                                 <h4 class="text-white mb-2">Men's</h4>
@@ -202,9 +204,11 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="200">
                 <a href="{{ url_for('products', category='womens') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                             alt="Women's Fashion" class="category-image w-100">
-                        <div class="category-overlay">
+                        <div class="category-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=1000&q=80" 
+                                 alt="Women's Fashion" class="category-image">
+                        </div>
+                        <div class="category-overlay d-flex align-items-center justify-content-center">
                             <div class="category-content text-center">
                                 <i class="fas fa-female fa-3x mb-3 text-gold"></i>
                                 <h4 class="text-white mb-2">My Brand</h4>
@@ -220,9 +224,11 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="300">
                 <a href="{{ url_for('products', category='footwear') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                             alt="Footwear" class="category-image w-100">
-                        <div class="category-overlay">
+                        <div class="category-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=1000&q=80" 
+                                 alt="Footwear" class="category-image">
+                        </div>
+                        <div class="category-overlay d-flex align-items-center justify-content-center">
                             <div class="category-content text-center">
                                 <i class="fas fa-shoe-prints fa-3x mb-3 text-gold"></i>
                                 <h4 class="text-white mb-2">Footwear</h4>
@@ -238,9 +244,11 @@
             <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="400">
                 <a href="{{ url_for('products', category='accessories') }}" class="text-decoration-none">
                     <div class="category-card position-relative overflow-hidden rounded-4">
-                        <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                             alt="Accessories" class="category-image w-100">
-                        <div class="category-overlay">
+                        <div class="category-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&h=1000&q=80" 
+                                 alt="Accessories" class="category-image">
+                        </div>
+                        <div class="category-overlay d-flex align-items-center justify-content-center">
                             <div class="category-content text-center">
                                 <i class="fas fa-clock fa-3x mb-3 text-gold"></i>
                                 <h4 class="text-white mb-2">Accessories</h4>
@@ -322,11 +330,22 @@
 </section>
 
 <style>
+:root {
+    --gold: #B89B5E;
+    --light-gold: #D4B483;
+    --dark-gold: #8B6F40;
+    --charcoal: #2C2C2C;
+    --light-gray: #F5F5F5;
+    --border-color: rgba(184, 155, 94, 0.2);
+    --pure-white: #FFFFFF;
+}
+
 /* Hero Section Styles */
 .hero-section {
     position: relative;
     height: 80vh;
     overflow: hidden;
+    margin-top: -1px; /* Fix any gap */
 }
 
 .hero-background {
@@ -581,14 +600,34 @@
 
 /* Category Card Styles */
 .category-card {
-    height: 300px;
+    height: 400px;
     cursor: pointer;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-image-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
 }
 
 .category-image {
+    width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     transition: transform 0.6s ease;
+    display: block;
+    min-width: 100%;
+    min-height: 100%;
+    flex-shrink: 0;
 }
 
 .category-card:hover .category-image {
@@ -602,9 +641,9 @@
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     opacity: 0;
     transition: all 0.4s ease;
 }
@@ -616,6 +655,10 @@
 .category-content {
     transform: translateY(20px);
     transition: all 0.4s ease;
+    width: 100%;
+    padding: 1rem;
+    text-align: center;
+    margin: 0 auto;
 }
 
 .category-card:hover .category-content {
@@ -657,7 +700,7 @@
 /* Custom Buttons */
 .btn-gold {
     background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
-    color: var(--black);
+    color: white;
     border: none;
     font-weight: 600;
     transition: all 0.3s ease;
@@ -666,7 +709,7 @@
 .btn-gold:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-    color: var(--black);
+    color: white;
 }
 
 .btn-outline-gold {
@@ -678,7 +721,7 @@
 
 .btn-outline-gold:hover {
     background: var(--gold);
-    color: var(--black);
+    color: black;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
@@ -716,6 +759,503 @@
 .border-gold {
     border-color: var(--gold) !important;
 }
+
+/* ===== RESPONSIVE MEDIA QUERIES ===== */
+
+/* Large Desktop (1200px and up) */
+@media (min-width: 1400px) {
+    .hero-section {
+        height: 85vh;
+    }
+    
+    .hero-title {
+        font-size: 5rem;
+    }
+    
+    .product-image {
+        height: 320px;
+    }
+    
+    .category-card {
+        height: 450px;
+    }
+}
+
+/* Desktop (992px to 1199px) */
+@media (max-width: 1199px) {
+    .hero-title {
+        font-size: 4rem;
+    }
+    
+    .typewriter p {
+        font-size: 1.5rem !important;
+    }
+    
+    .product-image {
+        height: 250px;
+    }
+    
+    .category-card {
+        height: 350px;
+    }
+}
+
+/* Tablet Landscape (768px to 991px) */
+@media (max-width: 991px) {
+    .hero-section {
+        height: 70vh;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+    }
+    
+    .typewriter p {
+        font-size: 1.3rem !important;
+        white-space: normal;
+        animation: none;
+    }
+    
+    .hero-description {
+        font-size: 1rem !important;
+        padding: 0 1rem;
+    }
+    
+    .cta-buttons .btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        margin: 0.5rem !important;
+    }
+    
+    .cta-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .cta-buttons .btn {
+        width: 80%;
+        margin: 0 !important;
+    }
+    
+    .product-image {
+        height: 220px;
+    }
+    
+    .category-card {
+        height: 300px;
+    }
+    
+    .feature-card {
+        padding: 1.5rem !important;
+    }
+    
+    .feature-card h5 {
+        font-size: 1rem;
+    }
+    
+    .feature-card p {
+        font-size: 0.85rem;
+    }
+    
+    .scroll-indicator {
+        display: none;
+    }
+    
+    .py-6 {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+    
+    .section-title {
+        font-size: 2rem !important;
+    }
+    
+    .section-subtitle {
+        font-size: 0.8rem;
+    }
+}
+
+/* Tablet Portrait (576px to 767px) */
+@media (max-width: 767px) {
+    .hero-section {
+        height: 60vh;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .gold-bar {
+        width: 80px;
+        margin-bottom: 1rem !important;
+    }
+    
+    .typewriter p {
+        font-size: 1rem !important;
+        padding: 0 1rem;
+    }
+    
+    .hero-description {
+        font-size: 0.9rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .cta-buttons .btn {
+        width: 90%;
+        font-size: 0.85rem;
+    }
+    
+    .product-image {
+        height: 200px;
+    }
+    
+    .product-title {
+        font-size: 1rem;
+    }
+    
+    .product-price {
+        font-size: 1rem !important;
+    }
+    
+    .category-card {
+        height: 280px;
+    }
+    
+    .category-content h4 {
+        font-size: 1.3rem;
+    }
+    
+    .category-content p {
+        font-size: 0.9rem;
+    }
+    
+    .category-content i {
+        font-size: 2.5rem !important;
+    }
+    
+    .feature-card {
+        padding: 1rem !important;
+    }
+    
+    .feature-icon i {
+        font-size: 2rem !important;
+    }
+    
+    .feature-card h5 {
+        font-size: 0.9rem;
+    }
+    
+    .feature-card p {
+        font-size: 0.8rem;
+    }
+    
+    .newsletter-section h3 {
+        font-size: 1.5rem;
+    }
+    
+    .newsletter-section p {
+        font-size: 0.9rem;
+    }
+    
+    .newsletter-form .btn {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem;
+    }
+    
+    .section-title {
+        font-size: 1.8rem !important;
+    }
+    
+    .divider-line {
+        width: 30px;
+    }
+    
+    .particles {
+        display: none;
+    }
+}
+
+/* Mobile (575px and below) */
+@media (max-width: 575px) {
+    .hero-section {
+        height: 60vh;
+        min-height: 500px;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .gold-bar {
+        width: 60px;
+    }
+    
+    .typewriter p {
+        font-size: 0.9rem !important;
+    }
+    
+    .hero-description {
+        font-size: 0.85rem !important;
+        padding: 0 0.5rem;
+    }
+    
+    .cta-buttons .btn {
+        width: 95%;
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .product-image {
+        height: 180px;
+    }
+    
+    .product-actions .btn {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+    
+    .category-card {
+        height: 250px;
+    }
+    
+    .category-content h4 {
+        font-size: 1.2rem;
+    }
+    
+    .category-content p {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .category-content .btn {
+        padding: 0.3rem 1rem !important;
+        font-size: 0.8rem;
+    }
+    
+    .category-content i {
+        font-size: 2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .feature-card {
+        padding: 0.8rem !important;
+    }
+    
+    .feature-icon i {
+        font-size: 1.5rem !important;
+    }
+    
+    .feature-card h5 {
+        font-size: 0.8rem;
+    }
+    
+    .feature-card p {
+        font-size: 0.7rem;
+    }
+    
+    .newsletter-section {
+        padding: 2rem 0 !important;
+    }
+    
+    .newsletter-section i {
+        font-size: 2.5rem !important;
+    }
+    
+    .newsletter-section h3 {
+        font-size: 1.2rem;
+    }
+    
+    .newsletter-section p {
+        font-size: 0.8rem;
+        padding: 0 1rem;
+    }
+    
+    .newsletter-form .input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .newsletter-form .form-control {
+        border-radius: 8px !important;
+        width: 100%;
+    }
+    
+    .newsletter-form .btn {
+        border-radius: 8px !important;
+        width: 100%;
+    }
+    
+    .section-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .section-subtitle {
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+    }
+    
+    .divider i {
+        font-size: 1rem;
+        margin: 0 0.5rem !important;
+    }
+    
+    .py-6 {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Hide scroll indicator on mobile */
+    .scroll-indicator {
+        display: none;
+    }
+}
+
+/* Small Mobile (375px and below) */
+@media (max-width: 375px) {
+    .hero-section {
+        min-height: 450px;
+    }
+    
+    .hero-title {
+        font-size: 1.6rem;
+    }
+    
+    .typewriter p {
+        font-size: 0.8rem !important;
+    }
+    
+    .hero-description {
+        font-size: 0.75rem !important;
+    }
+    
+    .cta-buttons .btn {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .product-image {
+        height: 160px;
+    }
+    
+    .product-title {
+        font-size: 0.9rem;
+    }
+    
+    .product-price {
+        font-size: 0.9rem !important;
+    }
+    
+    .category-card {
+        height: 220px;
+    }
+    
+    .section-title {
+        font-size: 1.3rem !important;
+    }
+    
+    .divider-line {
+        width: 20px;
+    }
+}
+
+/* Landscape Mode */
+@media (max-height: 600px) and (orientation: landscape) {
+    .hero-section {
+        height: 100vh;
+        min-height: 400px;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .typewriter p {
+        font-size: 1rem !important;
+    }
+    
+    .hero-description {
+        margin-bottom: 1rem !important;
+    }
+    
+    .cta-buttons {
+        flex-direction: row;
+    }
+    
+    .cta-buttons .btn {
+        width: auto;
+    }
+    
+    .scroll-indicator {
+        display: none;
+    }
+}
+
+/* Fix for tablets in landscape */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .hero-section {
+        height: 80vh;
+    }
+    
+    .hero-title {
+        font-size: 3rem;
+    }
+    
+    .typewriter p {
+        font-size: 1.2rem !important;
+        white-space: nowrap;
+    }
+    
+    .product-image {
+        height: 200px;
+    }
+    
+    .category-card {
+        height: 320px;
+    }
+}
+
+/* Ensure proper spacing on very large screens */
+@media (min-width: 2000px) {
+    .container {
+        max-width: 1600px;
+    }
+    
+    .hero-section {
+        height: 70vh;
+    }
+    
+    .product-image {
+        height: 350px;
+    }
+    
+    .category-card {
+        height: 500px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .hero-section,
+    .categories-section,
+    .features-section,
+    .newsletter-section,
+    .scroll-indicator,
+    .particles {
+        display: none !important;
+    }
+    
+    .featured-products {
+        padding: 2rem 0 !important;
+    }
+    
+    .product-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
 </style>
 
 <script>
@@ -731,7 +1271,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Animate button
             button.innerHTML = '<i class="fas fa-check"></i>';
             button.style.background = 'var(--gold)';
-            button.style.color = 'var(--black)';
+            button.style.color = 'white';
             
             // Show success message
             const toast = document.createElement('div');

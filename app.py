@@ -36,6 +36,7 @@ from forms import LoginForm, SignupForm, ProductForm
 from utils import save_picture
 from cart import Cart
 from email_utils import send_order_notifications, send_order_status_update, send_cancellation_notification, send_delivery_notification, send_password_reset_email
+from maintenance_config import MaintenanceConfig
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -73,6 +74,9 @@ print(f"POSTGRES_URL: {'Set' if os.environ.get('POSTGRES_URL') else 'NOT SET'}")
 print(f"POSTGRES_PRISMA_URL: {'Set' if os.environ.get('POSTGRES_PRISMA_URL') else 'NOT SET'}")
 print(f"VERCEL_ENV: {os.environ.get('VERCEL_ENV', 'not set')}")
 print("===================================")
+
+# Initialize maintenance config
+maintenance = MaintenanceConfig()
 
 # Simple in-memory rate limiter (use Redis in production)
 reset_requests = defaultdict(list)
@@ -162,6 +166,47 @@ login_manager.login_message_category = 'info'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Maintenance mode check - MUST BE FIRST before_request handler
+@app.before_request
+def check_maintenance_mode():
+    """Check if site is in maintenance mode"""
+    # Skip for static files
+    if request.path.startswith('/static'):
+        return
+    
+    # Allow login page during maintenance (so admin can log in)
+    if request.path == url_for('login'):
+        return
+    
+    # Allow admin routes during maintenance
+    if request.path.startswith('/admin'):
+        # But still check if user is authenticated for non-login admin pages
+        if request.path != url_for('login') and not current_user.is_authenticated:
+            # If not authenticated, redirect to login
+            if request.path != url_for('login'):
+                return redirect(url_for('login'))
+        return
+    
+    # Check if maintenance mode is enabled from config
+    if maintenance.enabled:
+        # Allow admin users to bypass maintenance
+        if current_user.is_authenticated and current_user.is_admin:
+            return
+        
+        # Allow access to allowed paths
+        if request.path in maintenance.config.get('allowed_paths', []):
+            return
+        
+        # Allow access from allowed IPs
+        if request.remote_addr in maintenance.config.get('allowed_ips', []):
+            return
+        
+        # Show maintenance page for everyone else
+        return render_template('maintenance.html', 
+                             message=maintenance.message,
+                             estimated_return=maintenance.config.get('estimated_return', 'soon'),
+                             social_links=maintenance.config.get('social_links', {})), 503
+
 # Make session, cart, and settings available to all templates
 @app.before_request
 def before_request():
@@ -187,6 +232,9 @@ def before_request():
             currency='₦',
             site_name='Captain Signature'
         )
+    
+    # Make maintenance config available to all templates for admin panel
+    g.maintenance_config = maintenance.config
 
 # Create tables and admin user - ROBUST VERSION
 with app.app_context():
@@ -1769,11 +1817,11 @@ def bulk_tracking_update():
     
     return redirect(url_for('admin_orders'))
 
-# Settings route
+# Settings route - UPDATED to handle maintenance mode
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
-    """Admin settings page"""
+    """Admin settings page with maintenance mode control"""
     if not current_user.is_admin:
         abort(403)
     
@@ -1781,6 +1829,7 @@ def admin_settings():
     
     if request.method == 'POST':
         try:
+            # Update store settings
             new_delivery_fee = float(request.form.get('delivery_fee', 1500.00))
             new_threshold = float(request.form.get('free_delivery_threshold', 0))
             new_site_name = request.form.get('site_name', 'Captain Signature')
@@ -1791,6 +1840,15 @@ def admin_settings():
             settings.site_name = new_site_name
             settings.currency = new_currency
             settings.updated_by = current_user.id
+            
+            # Update maintenance settings
+            maintenance_enabled = 'maintenance_enabled' in request.form
+            maintenance.message = request.form.get('maintenance_message', maintenance.message)
+            maintenance.estimated_return = request.form.get('estimated_return', maintenance.config.get('estimated_return', 'soon'))
+            
+            # Update maintenance config
+            maintenance.enabled = maintenance_enabled
+            maintenance.config['estimated_return'] = maintenance.estimated_return
             
             db.session.commit()
             flash('Settings updated successfully!', 'success')
@@ -1803,7 +1861,20 @@ def admin_settings():
         
         return redirect(url_for('admin_settings'))
     
-    return render_template('admin/settings.html', settings=settings)
+    # Pass maintenance config to template
+    return render_template('admin/settings.html', 
+                         settings=settings,
+                         maintenance_config=maintenance.config)
+
+# Maintenance preview route
+@app.route('/maintenance-preview')
+def maintenance_preview():
+    """Preview the maintenance page"""
+    return render_template('maintenance.html', 
+                         message=maintenance.message,
+                         estimated_return=maintenance.config.get('estimated_return', 'soon'),
+                         social_links=maintenance.config.get('social_links', {}),
+                         preview=True)
 
 # Test route to verify upload location
 @app.route('/admin/test-upload-location')
@@ -2237,6 +2308,7 @@ if __name__ == '__main__':
     print("📁 Upload folder: " + upload_folder)
     print("💰 Current delivery fee: ₦1,500 (configurable in Settings)")
     print("📍 Shipping: Nigeria only")
+    print(f"🔧 Maintenance Mode: {'ON' if maintenance.enabled else 'OFF'}")
     print("=" * 60 + "\n")
     
     app.run(debug=True, host='127.0.0.1', port=5000)

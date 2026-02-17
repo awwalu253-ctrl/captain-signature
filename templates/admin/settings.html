@@ -1,637 +1,866 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="settings-page">
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- Animated Breadcrumb -->
-                <nav aria-label="breadcrumb" data-aos="fade-down" data-aos-duration="800">
-                    <ol class="breadcrumb custom-breadcrumb">
-                        <li class="breadcrumb-item">
-                            <a href="{{ url_for('dashboard') }}" class="gold-link">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            <i class="fas fa-cog me-2"></i>Settings
-                        </li>
-                    </ol>
-                </nav>
-            </div>
+<div class="settings-container">
+    <!-- Header Section -->
+    <div class="settings-header">
+        <div class="header-content">
+            <h1 class="page-title">Settings</h1>
+            <p class="page-subtitle">Configure your store preferences</p>
         </div>
-        
-        <div class="row">
-            <div class="col-md-8 mx-auto">
-                <!-- Main Settings Card -->
-                <div class="card settings-card gold-border" data-aos="flip-up" data-aos-duration="1000">
-                    <div class="card-header gold-gradient text-white">
-                        <h4 class="mb-0 animate__animated animate__pulse animate__infinite">
-                            <i class="fas fa-cog fa-spin me-2"></i>Store Settings
-                        </h4>
+        <div class="header-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Settings Grid -->
+    <div class="settings-grid">
+        <!-- Maintenance Mode Card -->
+        <div class="settings-card maintenance-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <div class="header-title">
+                    <h3>Maintenance Mode</h3>
+                    <p>Control site accessibility</p>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="toggle-section">
+                    <div class="toggle-info">
+                        <span class="toggle-label">Site Status</span>
+                        <span class="status-badge {% if maintenance_config and maintenance_config.enabled %}status-active{% else %}status-inactive{% endif %}">
+                            {% if maintenance_config and maintenance_config.enabled %}Active{% else %}Inactive{% endif %}
+                        </span>
                     </div>
-                    
-                    <div class="card-body">
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__slideInRight" role="alert">
-                                        <i class="fas 
-                                            {% if category == 'success' %}fa-check-circle text-success
-                                            {% elif category == 'danger' %}fa-exclamation-circle text-danger
-                                            {% elif category == 'warning' %}fa-exclamation-triangle text-warning
-                                            {% elif category == 'info' %}fa-info-circle text-info
-                                            {% endif %} me-2">
-                                        </i>
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="maintenance_enabled" id="maintenanceSwitch" 
+                               {% if maintenance_config and maintenance_config.enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="maintenance-options" id="maintenanceOptions" style="{% if not maintenance_config or not maintenance_config.enabled %}opacity: 0.5; pointer-events: none;{% endif %}">
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-message"></i>
+                            <span>Message</span>
+                        </label>
+                        <textarea name="maintenance_message" placeholder="Enter maintenance message">{{ maintenance_config.message if maintenance_config and maintenance_config.message else 'We are currently performing scheduled maintenance.' }}</textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-clock"></i>
+                            <span>Estimated Return</span>
+                        </label>
+                        <input type="text" name="estimated_return" value="{{ maintenance_config.estimated_return if maintenance_config and maintenance_config.estimated_return else '2-3 hours' }}" placeholder="e.g., 2 hours">
+                    </div>
+
+                    <div class="ips-section">
+                        <label>
+                            <i class="fas fa-shield"></i>
+                            <span>Bypass IPs</span>
+                        </label>
+                        <div class="ip-list">
+                            {% if maintenance_config and maintenance_config.allowed_ips %}
+                                {% for ip in maintenance_config.allowed_ips %}
+                                    <span class="ip-badge">{{ ip }}</span>
                                 {% endfor %}
+                            {% else %}
+                                <span class="no-ips">No IPs configured</span>
                             {% endif %}
-                        {% endwith %}
-                        
-                        <form method="POST" action="{{ url_for('admin_settings') }}" class="settings-form">
-                            <!-- Delivery Settings Section -->
-                            <div class="settings-section mb-4" data-aos="fade-right" data-aos-delay="200">
-                                <h5 class="section-title gold-text">
-                                    <i class="fas fa-truck me-2"></i>Delivery Settings
-                                </h5>
-                                
-                                <div class="mb-3">
-                                    <label for="delivery_fee" class="form-label fw-bold">
-                                        <i class="fas fa-money-bill-wave text-gold me-2"></i>Delivery Fee
-                                    </label>
-                                    <div class="input-group input-group-lg hover-shadow">
-                                        <span class="input-group-text gold-bg text-white">{{ settings.currency }}</span>
-                                        <input type="number" class="form-control form-control-lg gold-focus" 
-                                               id="delivery_fee" name="delivery_fee" 
-                                               value="{{ settings.delivery_fee }}" 
-                                               step="100" min="0" required
-                                               placeholder="Enter delivery fee">
-                                    </div>
-                                    <small class="text-muted d-block mt-2">
-                                        <i class="fas fa-info-circle me-1 text-gold"></i>
-                                        Fixed delivery fee for all orders within Nigeria
-                                    </small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="free_delivery_threshold" class="form-label fw-bold">
-                                        <i class="fas fa-gift text-gold me-2"></i>Free Delivery Threshold
-                                    </label>
-                                    <div class="input-group input-group-lg hover-shadow">
-                                        <span class="input-group-text gold-bg text-white">{{ settings.currency }}</span>
-                                        <input type="number" class="form-control form-control-lg gold-focus" 
-                                               id="free_delivery_threshold" name="free_delivery_threshold" 
-                                               value="{{ settings.free_delivery_threshold }}" 
-                                               step="1000" min="0"
-                                               placeholder="Enter threshold amount">
-                                    </div>
-                                    <small class="text-muted d-block mt-2">
-                                        <i class="fas fa-info-circle me-1 text-gold"></i>
-                                        Orders above this amount get free delivery (set to 0 to disable)
-                                    </small>
-                                </div>
-                            </div>
-                            
-                            <!-- Store Information Section -->
-                            <div class="settings-section mb-4" data-aos="fade-left" data-aos-delay="400">
-                                <h5 class="section-title gold-text">
-                                    <i class="fas fa-store me-2"></i>Store Information
-                                </h5>
-                                
-                                <div class="mb-3">
-                                    <label for="site_name" class="form-label fw-bold">
-                                        <i class="fas fa-tag text-gold me-2"></i>Store Name
-                                    </label>
-                                    <input type="text" class="form-control form-control-lg gold-focus hover-shadow" 
-                                           id="site_name" name="site_name" 
-                                           value="{{ settings.site_name }}" 
-                                           required
-                                           placeholder="Enter store name">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="currency" class="form-label fw-bold">
-                                        <i class="fas fa-coins text-gold me-2"></i>Currency Symbol
-                                    </label>
-                                    <input type="text" class="form-control form-control-lg gold-focus hover-shadow" 
-                                           id="currency" name="currency" 
-                                           value="{{ settings.currency }}" 
-                                           maxlength="5" required
-                                           placeholder="e.g., ₦, $, €">
-                                    <small class="text-muted d-block mt-2">
-                                        <i class="fas fa-info-circle me-1 text-gold"></i>
-                                        Currency symbol to display throughout the store
-                                    </small>
-                                </div>
-                            </div>
-                            
-                            <!-- Info Alert -->
-                            <div class="alert alert-info gold-border animate__animated animate__pulse animate__infinite" 
-                                 data-aos="zoom-in" data-aos-delay="600">
-                                <i class="fas fa-info-circle fa-2x me-3 float-start gold-text"></i>
-                                <div class="alert-content">
-                                    <strong class="gold-text">Note:</strong>
-                                    <p class="mb-0">Changes will apply to new orders only. Existing orders will keep their original delivery fee.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Action Buttons -->
-                            <div class="d-flex justify-content-between align-items-center mt-4" 
-                                 data-aos="fade-up" data-aos-delay="800">
-                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-gold btn-lg hover-float">
-                                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                                </a>
-                                <button type="submit" class="btn btn-gold btn-lg hover-pulse">
-                                    <i class="fas fa-save me-2"></i>Save Settings
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <!-- Card Footer with Last Updated -->
-                    <div class="card-footer gold-gradient-light text-center" data-aos="fade-up" data-aos-delay="900">
-                        <i class="fas fa-clock text-gold me-2"></i>
-                        <span class="fw-bold">Last updated:</span>
-                        {% if settings.updated_at %}
-                            <span class="gold-text">{{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
-                        {% else %}
-                            <span class="text-muted">Never</span>
-                        {% endif %}
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Delivery Fee Information Card -->
-                <div class="card info-card gold-border mt-4" data-aos="zoom-in-up" data-aos-delay="1000">
-                    <div class="card-header gold-gradient text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-history fa-spin me-2"></i>Delivery Fee Information
-                        </h5>
+            </div>
+        </div>
+
+        <!-- Delivery Settings Card -->
+        <div class="settings-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="header-title">
+                    <h3>Delivery Settings</h3>
+                    <p>Manage shipping costs</p>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="input-group">
+                    <label>
+                        <i class="fas fa-tag"></i>
+                        <span>Delivery Fee</span>
+                    </label>
+                    <div class="currency-input">
+                        <span class="currency-symbol">{{ settings.currency }}</span>
+                        <input type="number" name="delivery_fee" value="{{ settings.delivery_fee }}" step="100" min="0">
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="info-box text-center p-4 gold-border rounded hover-scale">
-                                    <i class="fas fa-truck fa-3x gold-text mb-3"></i>
-                                    <h6 class="text-uppercase text-muted">Current Delivery Fee</h6>
-                                    <h2 class="display-6 gold-text animate__animated animate__pulse animate__infinite">
-                                        {{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}
-                                    </h2>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="info-box text-center p-4 gold-border rounded hover-scale">
-                                    <i class="fas fa-gift fa-3x gold-text mb-3"></i>
-                                    <h6 class="text-uppercase text-muted">Free Delivery Threshold</h6>
-                                    <h2 class="display-6 gold-text">
-                                        {% if settings.free_delivery_threshold > 0 %}
-                                            {{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}+
-                                        {% else %}
-                                            <span class="badge bg-secondary">Disabled</span>
-                                        {% endif %}
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr class="gold-hr">
-                        
-                        <h6 class="gold-text mb-3">
-                            <i class="fas fa-question-circle me-2"></i>How Delivery Fee Works:
-                        </h6>
-                        <ul class="list-unstyled">
-                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-1s">
-                                <i class="fas fa-check-circle text-gold me-2"></i>
-                                Fixed delivery fee of 
-                                <strong class="gold-text">{{ settings.currency }}{{ "%.2f"|format(settings.delivery_fee) }}</strong> 
-                                applies to all orders within Nigeria
-                            </li>
-                            {% if settings.free_delivery_threshold > 0 %}
-                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-2s">
-                                <i class="fas fa-check-circle text-gold me-2"></i>
-                                Free delivery for orders above 
-                                <strong class="gold-text">{{ settings.currency }}{{ "%.2f"|format(settings.free_delivery_threshold) }}</strong>
-                            </li>
-                            {% endif %}
-                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-3s">
-                                <i class="fas fa-check-circle text-gold me-2"></i>
-                                Delivery typically takes <strong class="gold-text">3-5 business days</strong>
-                            </li>
-                            <li class="mb-2 animate__animated animate__fadeInRight animate__delay-4s">
-                                <i class="fas fa-check-circle text-gold me-2"></i>
-                                <strong class="gold-text">Tracking provided</strong> for all orders
-                            </li>
-                        </ul>
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        <i class="fas fa-gift"></i>
+                        <span>Free Delivery Threshold</span>
+                    </label>
+                    <div class="currency-input">
+                        <span class="currency-symbol">{{ settings.currency }}</span>
+                        <input type="number" name="free_delivery_threshold" value="{{ settings.free_delivery_threshold }}" step="1000" min="0">
                     </div>
+                    <span class="input-hint">Set to 0 to disable</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Store Information Card -->
+        <div class="settings-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="header-title">
+                    <h3>Store Information</h3>
+                    <p>Basic store details</p>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="input-group">
+                    <label>
+                        <i class="fas fa-heading"></i>
+                        <span>Store Name</span>
+                    </label>
+                    <input type="text" name="site_name" value="{{ settings.site_name }}" placeholder="Enter store name">
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        <i class="fas fa-coins"></i>
+                        <span>Currency Symbol</span>
+                    </label>
+                    <input type="text" name="currency" value="{{ settings.currency }}" maxlength="5" placeholder="₦, $, €">
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Card -->
+        <div class="settings-card analytics-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="header-title">
+                    <h3>Quick Analytics</h3>
+                    <p>Store performance</p>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Avg. Order Value</span>
+                        <span class="metric-value">{{ settings.currency }}25,000</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Orders (30d)</span>
+                        <span class="metric-value">156</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Conversion Rate</span>
+                        <span class="metric-value">3.2%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Active Products</span>
+                        <span class="metric-value">48</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Status Card -->
+        <div class="settings-card security-card">
+            <div class="card-header">
+                <div class="header-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="header-title">
+                    <h3>Security Status</h3>
+                    <p>System protection</p>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="security-item">
+                    <div class="security-info">
+                        <i class="fas fa-check-circle"></i>
+                        <span>SSL Certificate</span>
+                    </div>
+                    <span class="security-status valid">Valid</span>
+                </div>
+                <div class="security-item">
+                    <div class="security-info">
+                        <i class="fas fa-shield"></i>
+                        <span>Firewall</span>
+                    </div>
+                    <span class="security-status active">Active</span>
+                </div>
+                <div class="security-item">
+                    <div class="security-info">
+                        <i class="fas fa-database"></i>
+                        <span>Daily Backups</span>
+                    </div>
+                    <span class="security-status enabled">Enabled</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Last Updated Card -->
+        <div class="settings-card update-card">
+            <div class="card-body">
+                <i class="fas fa-clock"></i>
+                <div class="update-info">
+                    <span class="update-label">Last Updated</span>
+                    <span class="update-time">
+                        {% if settings.updated_at %}
+                            {{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </span>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Form Footer -->
+    <div class="settings-footer">
+        <button type="submit" form="settingsForm" class="btn-save">
+            <i class="fas fa-check"></i>
+            <span>Save Changes</span>
+        </button>
+    </div>
 </div>
 
+<!-- Hidden Form -->
+<form id="settingsForm" method="POST" action="{{ url_for('admin_settings') }}" style="display: none;">
+    <input type="hidden" name="maintenance_enabled" id="maintenanceEnabledInput">
+    <input type="hidden" name="maintenance_message" id="maintenanceMessageInput">
+    <input type="hidden" name="estimated_return" id="estimatedReturnInput">
+    <input type="hidden" name="delivery_fee" id="deliveryFeeInput">
+    <input type="hidden" name="free_delivery_threshold" id="freeDeliveryInput">
+    <input type="hidden" name="site_name" id="siteNameInput">
+    <input type="hidden" name="currency" id="currencyInput">
+</form>
+
 <style>
-/* Custom Styles for Settings Page */
-:root {
-    --black: #000000;
-    --white: #ffffff;
-    --gold: #D4AF37;
-    --light-gold: #F0E68C;
-    --dark-gold: #B8860B;
+/* Premium Settings Page Styles */
+.settings-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 2rem;
 }
 
-body{
-    margin-top: 90px;
+/* Header Styles */
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(184, 155, 94, 0.2);
 }
 
-/* Gold Text */
-.gold-text {
-    color: var(--gold) !important;
+.header-content {
+    flex: 1;
 }
 
-/* Gold Border */
-.gold-border {
-    border: 1px solid var(--gold) !important;
-}
-
-/* Gold Background */
-.gold-bg {
-    background: linear-gradient(135deg, var(--gold), var(--dark-gold)) !important;
-}
-
-/* Gold Gradient */
-.gold-gradient {
-    background: linear-gradient(135deg, var(--black) 0%, #1a1a1a 100%);
-    border-bottom: 2px solid var(--gold);
-}
-
-.gold-gradient-light {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    border-top: 1px solid var(--gold);
-}
-
-/* Custom Breadcrumb */
-.custom-breadcrumb {
-    background: rgba(255,255,255,0.95);
-    padding: 1rem 1.5rem;
-    border-radius: 50px;
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--gold);
-}
-
-.custom-breadcrumb .breadcrumb-item a {
-    color: var(--black);
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.custom-breadcrumb .breadcrumb-item a:hover {
-    color: var(--gold);
-    transform: translateX(-5px);
-}
-
-.custom-breadcrumb .breadcrumb-item.active {
-    color: var(--gold);
+.page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
     font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin: 0.5rem 0 0;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 1px solid rgba(184, 155, 94, 0.3);
+    border-radius: 40px;
+    color: #1a1a1a;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: white;
+}
+
+/* Settings Grid */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 /* Settings Card */
 .settings-card {
-    border: none;
+    background: white;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    transition: all 0.3s ease;
-    background: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(184, 155, 94, 0.1);
+    transition: all 0.2s ease;
 }
 
 .settings-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.3);
+    border-color: rgba(184, 155, 94, 0.3);
+    box-shadow: 0 8px 30px rgba(184, 155, 94, 0.05);
 }
 
-/* Section Title */
-.section-title {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    position: relative;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+.card-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(184, 155, 94, 0.1);
+    background: rgba(184, 155, 94, 0.02);
 }
 
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 50px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--gold), transparent);
-    animation: expandWidth 1s ease forwards;
+.header-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, rgba(184, 155, 94, 0.1), rgba(184, 155, 94, 0.05));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-@keyframes expandWidth {
-    from { width: 0; }
-    to { width: 50px; }
+.header-icon i {
+    font-size: 1.5rem;
+    color: #B89B5E;
 }
 
-/* Form Controls */
-.form-control-lg, .input-group-text {
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s ease;
-}
-
-.form-control-lg:focus, .gold-focus:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
-    transform: scale(1.02);
-}
-
-.input-group-text {
-    background: linear-gradient(135deg, var(--gold), var(--dark-gold));
-    color: white;
+.header-title h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
     font-weight: 600;
-    border: none;
+    color: #1a1a1a;
+    margin: 0 0 0.25rem;
 }
 
-.hover-shadow:hover {
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
-    transform: translateY(-2px);
+.header-title p {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+    font-weight: 300;
 }
 
-/* Buttons */
-.btn-gold {
-    background: linear-gradient(135deg, var(--gold), var(--dark-gold));
-    color: var(--black);
-    font-weight: 600;
-    border: none;
-    padding: 12px 30px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
+.card-body {
+    padding: 1.5rem;
 }
 
-.btn-gold::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
+/* Input Groups */
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group:last-child {
+    margin-bottom: 0;
+}
+
+.input-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.input-group label i {
+    color: #B89B5E;
+    font-size: 0.9rem;
+}
+
+.input-group input,
+.input-group textarea {
     width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s ease;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: white;
 }
 
-.btn-gold:hover::before {
-    left: 100%;
+.input-group textarea {
+    min-height: 80px;
+    resize: vertical;
 }
 
-.btn-gold:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.4);
+.input-group input:focus,
+.input-group textarea:focus {
+    outline: none;
+    border-color: #B89B5E;
+    box-shadow: 0 0 0 3px rgba(184, 155, 94, 0.1);
 }
 
-.btn-outline-gold {
-    border: 2px solid var(--gold);
-    color: var(--gold);
-    background: transparent;
-    padding: 12px 30px;
+.currency-input {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.currency-symbol {
+    padding: 0.75rem 1rem;
+    background: rgba(184, 155, 94, 0.1);
+    color: #B89B5E;
     font-weight: 600;
-    transition: all 0.3s ease;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.btn-outline-gold:hover {
-    background: linear-gradient(135deg, var(--gold), var(--dark-gold));
-    color: var(--black);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
-}
-
-/* Hover Animations */
-.hover-float {
-    transition: transform 0.3s ease;
-}
-
-.hover-float:hover {
-    transform: translateY(-5px);
-}
-
-.hover-pulse {
-    transition: all 0.3s ease;
-}
-
-.hover-pulse:hover {
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-/* Info Box */
-.info-box {
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
-    transition: all 0.3s ease;
-}
-
-.hover-scale:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
-}
-
-/* Gold HR */
-.gold-hr {
+.currency-input input {
     border: none;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 2rem 0;
-    animation: shimmer 2s infinite;
+    border-radius: 0;
+    flex: 1;
 }
 
-@keyframes shimmer {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
+.currency-input input:focus {
+    box-shadow: none;
 }
 
-/* Alert */
-.alert-info {
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
-    border-left: 4px solid var(--gold);
-    border-radius: 10px;
-    color: var(--black);
+.input-hint {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.5rem;
 }
 
-.alert .fa-info-circle {
-    animation: rotate 2s linear infinite;
+/* Toggle Section */
+.toggle-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(184, 155, 94, 0.1);
 }
 
-@keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+.toggle-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-/* Card Footer */
-.card-footer {
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
-    border-top: 1px solid rgba(212, 175, 55, 0.3);
+.toggle-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a1a1a;
 }
 
-/* Loading Animation for Inputs */
-.form-control:focus {
-    animation: glow 1s ease infinite alternate;
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 40px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-@keyframes glow {
-    from { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
-    to { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+.status-active {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-inactive {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: .2s;
+    border-radius: 30px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+input:checked + .toggle-slider {
+    background-color: #B89B5E;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(30px);
+}
+
+/* Maintenance Options */
+.maintenance-options {
+    transition: opacity 0.2s ease;
+}
+
+/* IP List */
+.ips-section {
+    margin-top: 1.5rem;
+}
+
+.ips-section label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 0.75rem;
+}
+
+.ips-section label i {
+    color: #B89B5E;
+}
+
+.ip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ip-badge {
+    padding: 0.4rem 0.75rem;
+    background: rgba(184, 155, 94, 0.1);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    color: #B89B5E;
+    border: 1px solid rgba(184, 155, 94, 0.2);
+}
+
+.no-ips {
+    font-size: 0.9rem;
+    color: #999;
+    font-style: italic;
+}
+
+/* Analytics Card */
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.metric-item {
+    padding: 1rem;
+    background: rgba(184, 155, 94, 0.02);
+    border-radius: 12px;
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+/* Security Card */
+.security-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(184, 155, 94, 0.1);
+}
+
+.security-item:last-child {
+    border-bottom: none;
+}
+
+.security-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.security-info i {
+    color: #B89B5E;
+    font-size: 1rem;
+}
+
+.security-info span {
+    font-size: 0.95rem;
+    color: #1a1a1a;
+}
+
+.security-status {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.security-status.valid,
+.security-status.active,
+.security-status.enabled {
+    color: #28a745;
+}
+
+/* Update Card */
+.update-card .card-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.update-card i {
+    font-size: 1.5rem;
+    color: #B89B5E;
+}
+
+.update-info {
+    flex: 1;
+}
+
+.update-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.update-time {
+    display: block;
+    font-size: 0.95rem;
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+/* Settings Footer */
+.settings-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2.5rem;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-save:hover {
+    background: #B89B5E;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(184, 155, 94, 0.3);
+}
+
+.btn-save i {
+    font-size: 1.1rem;
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-container {
+        padding: 0 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+    }
+}
+
 @media (max-width: 768px) {
-    .custom-breadcrumb {
-        border-radius: 10px;
-        padding: 0.75rem 1rem;
+    .settings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
     }
     
-    .btn-gold, .btn-outline-gold {
-        padding: 8px 20px;
-        font-size: 0.9rem;
+    .header-actions {
+        width: 100%;
     }
     
-    .info-box h2 {
-        font-size: 1.5rem;
+    .btn-back {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .card-header {
+        padding: 1.25rem;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    .metric-grid {
+        grid-template-columns: 1fr;
     }
 }
 
-/* List Items Animation */
-.list-unstyled li {
-    opacity: 0;
-    animation: slideInRight 0.5s ease forwards;
+/* Flash Messages */
+.alert {
+    margin-bottom: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid;
 }
 
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+.alert-success {
+    background: rgba(40, 167, 69, 0.05);
+    border-left-color: #28a745;
 }
 
-/* Stagger animations for list items */
-.list-unstyled li:nth-child(1) { animation-delay: 0.1s; }
-.list-unstyled li:nth-child(2) { animation-delay: 0.3s; }
-.list-unstyled li:nth-child(3) { animation-delay: 0.5s; }
-.list-unstyled li:nth-child(4) { animation-delay: 0.7s; }
-
-/* Gold Link */
-.gold-link {
-    color: var(--black);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    position: relative;
+.alert-danger {
+    background: rgba(220, 53, 69, 0.05);
+    border-left-color: #dc3545;
 }
 
-.gold-link::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--gold);
-    transition: width 0.3s ease;
-}
-
-.gold-link:hover::after {
-    width: 100%;
-}
-
-.gold-link:hover {
-    color: var(--gold);
-}
-
-/* Settings Page Background */
-.settings-page {
-    min-height: 80vh;
-    padding: 2rem 0;
-    background: 
-        radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 30%),
-        radial-gradient(circle at 90% 80%, rgba(0, 0, 0, 0.03) 0%, transparent 40%);
+.alert-info {
+    background: rgba(184, 155, 94, 0.05);
+    border-left-color: #B89B5E;
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add floating effect to cards
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(card => {
-        card.addEventListener('mousemove', function(e) {
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = (y - centerY) / 20;
-            const rotateY = (centerX - x) / 20;
-            
-            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+    // Form handling
+    const form = document.getElementById('settingsForm');
+    const saveButton = document.querySelector('.btn-save');
+    
+    // Maintenance toggle
+    const maintenanceSwitch = document.getElementById('maintenanceSwitch');
+    const maintenanceOptions = document.getElementById('maintenanceOptions');
+    const statusBadge = document.querySelector('.status-badge');
+    
+    if (maintenanceSwitch) {
+        maintenanceSwitch.addEventListener('change', function() {
+            if (this.checked) {
+                maintenanceOptions.style.opacity = '1';
+                maintenanceOptions.style.pointerEvents = 'all';
+                statusBadge.textContent = 'Active';
+                statusBadge.className = 'status-badge status-active';
+            } else {
+                maintenanceOptions.style.opacity = '0.5';
+                maintenanceOptions.style.pointerEvents = 'none';
+                statusBadge.textContent = 'Inactive';
+                statusBadge.className = 'status-badge status-inactive';
+            }
         });
+    }
+    
+    // Save button click handler
+    saveButton.addEventListener('click', function(e) {
+        e.preventDefault();
         
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-        });
+        // Collect all values
+        document.getElementById('maintenanceEnabledInput').value = maintenanceSwitch.checked ? 'on' : '';
+        document.getElementById('maintenanceMessageInput').value = document.querySelector('textarea[name="maintenance_message"]')?.value || '';
+        document.getElementById('estimatedReturnInput').value = document.querySelector('input[name="estimated_return"]')?.value || '';
+        document.getElementById('deliveryFeeInput').value = document.querySelector('input[name="delivery_fee"]')?.value || '';
+        document.getElementById('freeDeliveryInput').value = document.querySelector('input[name="free_delivery_threshold"]')?.value || '';
+        document.getElementById('siteNameInput').value = document.querySelector('input[name="site_name"]')?.value || '';
+        document.getElementById('currencyInput').value = document.querySelector('input[name="currency"]')?.value || '';
+        
+        // Submit form
+        form.submit();
     });
     
-    // Add counter animation to numbers
-    const numbers = document.querySelectorAll('.display-6');
-    numbers.forEach(number => {
-        const finalValue = parseFloat(number.innerText.replace(/[^0-9.-]+/g, ''));
-        if (!isNaN(finalValue)) {
-            let currentValue = 0;
-            const increment = finalValue / 50;
-            const timer = setInterval(() => {
-                currentValue += increment;
-                if (currentValue >= finalValue) {
-                    clearInterval(timer);
-                    currentValue = finalValue;
-                }
-                if (number.innerText.includes('₦')) {
-                    number.innerText = '₦' + currentValue.toFixed(2);
-                }
-            }, 20);
-        }
-    });
-    
-    // Form field validation with animation
-    const form = document.querySelector('form');
-    const inputs = form.querySelectorAll('input[required]');
-    
-    inputs.forEach(input => {
-        input.addEventListener('invalid', function(e) {
-            e.preventDefault();
-            this.classList.add('animate__animated', 'animate__shakeX');
-            setTimeout(() => {
-                this.classList.remove('animate__animated', 'animate__shakeX');
-            }, 1000);
-        });
-    });
-    
-    // Success message auto-hide
+    // Auto-hide flash messages
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {
-            alert.classList.add('animate__animated', 'animate__fadeOutRight');
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 500);
-        }, 5000);
+            alert.style.transition = 'opacity 0.3s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        }, 4000);
     });
 });
 </script>

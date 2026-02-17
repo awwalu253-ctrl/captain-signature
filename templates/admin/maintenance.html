@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-gold text-white">
+                    <h4 class="mb-0"><i class="fas fa-tools me-2"></i>Maintenance Mode Settings</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="enabled" id="maintenanceSwitch"
+                                       {% if maintenance.enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="maintenanceSwitch">
+                                    <strong>Enable Maintenance Mode</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted">When enabled, all users will see the maintenance page</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Maintenance Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="3">{{ maintenance.message }}</textarea>
+                            <small class="text-muted">This message will be displayed to users</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Allowed IPs</label>
+                            <div class="bg-light p-3 rounded">
+                                {% for ip in maintenance.allowed_ips %}
+                                <span class="badge bg-secondary me-2">{{ ip }}</span>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">These IPs can bypass maintenance mode</small>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-gold">
+                                <i class="fas fa-save me-2"></i>Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Preview Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Preview</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This is how your maintenance page will look
+                    </div>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-gold" target="_blank">
+                        <i class="fas fa-eye me-2"></i>Preview Maintenance Page
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+}
+
+.btn-gold {
+    background: var(--gold);
+    color: white;
+    border: none;
+}
+
+.btn-gold:hover {
+    background: var(--dark-gold);
+    color: white;
+}
+
+.form-check-input:checked {
+    background-color: var(--gold);
+    border-color: var(--gold);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(184, 155, 94, 0.25);
+    border-color: var(--gold);
+}
+</style>
+{% endblock %}
