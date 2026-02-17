@@ -31,12 +31,11 @@ except ImportError:
     sys.exit(1)
 
 from config import Config
-from models import db, User, Product, Order, OrderItem, OrderTracking, Settings, NIGERIA_STATES, PasswordResetToken
+from models import db, User, Product, Order, OrderItem, OrderTracking, Settings, NIGERIA_STATES, PasswordResetToken, MaintenanceSettings
 from forms import LoginForm, SignupForm, ProductForm
 from utils import save_picture
 from cart import Cart
 from email_utils import send_order_notifications, send_order_status_update, send_cancellation_notification, send_delivery_notification, send_password_reset_email
-from maintenance_config import MaintenanceConfig
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -74,9 +73,6 @@ print(f"POSTGRES_URL: {'Set' if os.environ.get('POSTGRES_URL') else 'NOT SET'}")
 print(f"POSTGRES_PRISMA_URL: {'Set' if os.environ.get('POSTGRES_PRISMA_URL') else 'NOT SET'}")
 print(f"VERCEL_ENV: {os.environ.get('VERCEL_ENV', 'not set')}")
 print("===================================")
-
-# Initialize maintenance config
-maintenance = MaintenanceConfig()
 
 # Simple in-memory rate limiter (use Redis in production)
 reset_requests = defaultdict(list)
@@ -166,13 +162,33 @@ login_manager.login_message_category = 'info'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Helper function to get maintenance settings
+def get_maintenance_settings():
+    """Get maintenance settings from database"""
+    try:
+        return MaintenanceSettings.get_settings()
+    except Exception as e:
+        print(f"Error getting maintenance settings: {e}")
+        # Return a dummy object if database fails
+        from types import SimpleNamespace
+        return SimpleNamespace(
+            enabled=False,
+            message='Under Maintenance',
+            estimated_return='soon',
+            get_allowed_ips_list=lambda: ['127.0.0.1'],
+            get_allowed_paths_list=lambda: ['/static', '/admin/maintenance']
+        )
+
 # Maintenance mode check - MUST BE FIRST before_request handler
 @app.before_request
 def check_maintenance_mode():
-    """Check if site is in maintenance mode"""
+    """Check if site is in maintenance mode using database settings"""
     # Skip for static files
     if request.path.startswith('/static'):
         return
+    
+    # Get current maintenance settings
+    maintenance = get_maintenance_settings()
     
     # Allow login page during maintenance (so admin can log in)
     if request.path == url_for('login'):
@@ -187,25 +203,26 @@ def check_maintenance_mode():
                 return redirect(url_for('login'))
         return
     
-    # Check if maintenance mode is enabled from config
+    # Check if maintenance mode is enabled
     if maintenance.enabled:
         # Allow admin users to bypass maintenance
         if current_user.is_authenticated and current_user.is_admin:
             return
         
         # Allow access to allowed paths
-        if request.path in maintenance.config.get('allowed_paths', []):
+        allowed_paths = maintenance.get_allowed_paths_list()
+        if request.path in allowed_paths:
             return
         
         # Allow access from allowed IPs
-        if request.remote_addr in maintenance.config.get('allowed_ips', []):
+        allowed_ips = maintenance.get_allowed_ips_list()
+        if request.remote_addr in allowed_ips:
             return
         
         # Show maintenance page for everyone else
         return render_template('maintenance.html', 
                              message=maintenance.message,
-                             estimated_return=maintenance.config.get('estimated_return', 'soon'),
-                             social_links=maintenance.config.get('social_links', {})), 503
+                             estimated_return=maintenance.estimated_return), 503
 
 # Make session, cart, and settings available to all templates
 @app.before_request
@@ -234,13 +251,42 @@ def before_request():
         )
     
     # Make maintenance config available to all templates for admin panel
-    g.maintenance_config = maintenance.config
+    try:
+        maintenance = MaintenanceSettings.get_settings()
+        g.maintenance_config = {
+            'enabled': maintenance.enabled,
+            'message': maintenance.message,
+            'estimated_return': maintenance.estimated_return,
+            'allowed_ips': maintenance.get_allowed_ips_list(),
+            'allowed_paths': maintenance.get_allowed_paths_list()
+        }
+    except Exception as e:
+        print(f"Error getting maintenance settings for template: {e}")
+        g.maintenance_config = {
+            'enabled': False,
+            'message': 'Under Maintenance',
+            'estimated_return': 'soon',
+            'allowed_ips': ['127.0.0.1'],
+            'allowed_paths': ['/static', '/admin/maintenance']
+        }
 
 # Create tables and admin user - ROBUST VERSION
 with app.app_context():
     try:
         db.create_all()
         print("✓ Database tables created/verified")
+        
+        # Create default maintenance settings if none exist
+        try:
+            maintenance = MaintenanceSettings.query.first()
+            if not maintenance:
+                maintenance = MaintenanceSettings()
+                db.session.add(maintenance)
+                db.session.commit()
+                print("✓ Default maintenance settings created")
+        except Exception as e:
+            print(f"⚠ Could not create maintenance settings: {e}")
+            db.session.rollback()
         
         try:
             admin_exists = User.query.filter_by(email='admin@captainsignature.com').first()
@@ -289,7 +335,11 @@ with app.app_context():
         print(f"✗ Database initialization error: {e}")
         print(traceback.format_exc())
         print("⚠ Continuing startup despite database errors - app may have limited functionality")
-        
+
+# Remove the old maintenance config import and instance
+# from maintenance_config import MaintenanceConfig  <- REMOVE THIS
+# maintenance = MaintenanceConfig()  <- REMOVE THIS
+
 @app.route('/test-email-simple')
 def test_email_simple():
     """Ultra-simple email test"""
@@ -1817,7 +1867,7 @@ def bulk_tracking_update():
     
     return redirect(url_for('admin_orders'))
 
-# Settings route - UPDATED to handle maintenance mode
+# Settings route - UPDATED to handle maintenance mode with database
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
 def admin_settings():
@@ -1826,6 +1876,7 @@ def admin_settings():
         abort(403)
     
     settings = Settings.get_settings()
+    maintenance = MaintenanceSettings.get_settings()
     
     if request.method == 'POST':
         try:
@@ -1842,13 +1893,10 @@ def admin_settings():
             settings.updated_by = current_user.id
             
             # Update maintenance settings
-            maintenance_enabled = 'maintenance_enabled' in request.form
+            maintenance.enabled = 'maintenance_enabled' in request.form
             maintenance.message = request.form.get('maintenance_message', maintenance.message)
-            maintenance.estimated_return = request.form.get('estimated_return', maintenance.config.get('estimated_return', 'soon'))
-            
-            # Update maintenance config
-            maintenance.enabled = maintenance_enabled
-            maintenance.config['estimated_return'] = maintenance.estimated_return
+            maintenance.estimated_return = request.form.get('estimated_return', maintenance.estimated_return)
+            maintenance.updated_by = current_user.id
             
             db.session.commit()
             flash('Settings updated successfully!', 'success')
@@ -1858,22 +1906,31 @@ def admin_settings():
             db.session.rollback()
             flash(f'Error updating settings: {str(e)}', 'danger')
             print(f"Settings update error: {e}")
+            print(traceback.format_exc())
         
         return redirect(url_for('admin_settings'))
     
-    # Pass maintenance config to template
+    # Format for template
+    maintenance_config = {
+        'enabled': maintenance.enabled,
+        'message': maintenance.message,
+        'estimated_return': maintenance.estimated_return,
+        'allowed_ips': maintenance.get_allowed_ips_list(),
+        'allowed_paths': maintenance.get_allowed_paths_list()
+    }
+    
     return render_template('admin/settings.html', 
                          settings=settings,
-                         maintenance_config=maintenance.config)
+                         maintenance_config=maintenance_config)
 
 # Maintenance preview route
 @app.route('/maintenance-preview')
 def maintenance_preview():
     """Preview the maintenance page"""
+    maintenance = MaintenanceSettings.get_settings()
     return render_template('maintenance.html', 
                          message=maintenance.message,
-                         estimated_return=maintenance.config.get('estimated_return', 'soon'),
-                         social_links=maintenance.config.get('social_links', {}),
+                         estimated_return=maintenance.estimated_return,
                          preview=True)
 
 # Test route to verify upload location
@@ -2300,6 +2357,12 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
+    with app.app_context():
+        # Create tables if they don't exist
+        db.create_all()
+        # Get maintenance status for display
+        maintenance = MaintenanceSettings.get_settings()
+    
     print("\n" + "=" * 60)
     print("🚀 Captain Signature Nigeria - Starting...")
     print("=" * 60)

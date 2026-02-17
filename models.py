@@ -185,3 +185,48 @@ class PasswordResetToken(db.Model):
             return False, f"Please wait {minutes} minute(s) and {seconds} second(s) before requesting another reset link."
         
         return True, None
+    
+class MaintenanceSettings(db.Model):
+    """Maintenance mode settings stored in database"""
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, default=False)
+    message = db.Column(db.Text, default='We are currently performing scheduled maintenance. We\'ll be back shortly!')
+    estimated_return = db.Column(db.String(100), default='soon')
+    allowed_ips = db.Column(db.Text, default='127.0.0.1')  # Comma-separated IPs
+    allowed_paths = db.Column(db.Text, default='/static,/admin/maintenance')  # Comma-separated paths
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    @staticmethod
+    def get_settings():
+        """Get or create maintenance settings"""
+        try:
+            settings = MaintenanceSettings.query.first()
+            if not settings:
+                settings = MaintenanceSettings()
+                db.session.add(settings)
+                db.session.commit()
+            return settings
+        except Exception as e:
+            print(f"⚠ Error in MaintenanceSettings.get_settings: {e}")
+            # Return a dummy settings object if database fails
+            from types import SimpleNamespace
+            return SimpleNamespace(
+                enabled=False,
+                message='Under Maintenance',
+                estimated_return='soon',
+                allowed_ips=['127.0.0.1'],
+                allowed_paths=['/static', '/admin/maintenance']
+            )
+    
+    def get_allowed_ips_list(self):
+        """Convert comma-separated IPs to list"""
+        if not self.allowed_ips:
+            return ['127.0.0.1']
+        return [ip.strip() for ip in self.allowed_ips.split(',') if ip.strip()]
+    
+    def get_allowed_paths_list(self):
+        """Convert comma-separated paths to list"""
+        if not self.allowed_paths:
+            return ['/static', '/admin/maintenance']
+        return [path.strip() for path in self.allowed_paths.split(',') if path.strip()]
