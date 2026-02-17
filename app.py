@@ -20,6 +20,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 from sqlalchemy import text
+from datetime import timedelta  # Add this import if missing
 
 # Try to import extensions
 try:
@@ -34,6 +35,10 @@ from forms import LoginForm, SignupForm, ProductForm
 from utils import save_picture
 from cart import Cart
 from email_utils import send_order_notifications, send_order_status_update, send_cancellation_notification, send_delivery_notification
+
+
+from models import PasswordResetToken
+from email_utils import send_password_reset_email
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -1449,6 +1454,141 @@ def update_order_status(order_id, status):
     flash(f'Order #{order_id} status updated to {status}', 'success')
     return redirect(url_for('admin_orders'))
 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Handle forgot password requests"""
+    print("\n" + "="*60)
+    print("📧 FORGOT PASSWORD REQUEST")
+    print("="*60)
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        print(f"Email submitted: {email}")
+        
+        user = User.query.filter_by(email=email).first()
+        print(f"User found: {user is not None}")
+        
+        if user:
+            try:
+                print(f"Processing password reset for user: {user.username} ({user.email})")
+                
+                # Delete any existing unused tokens for this user
+                deleted = PasswordResetToken.query.filter_by(
+                    user_id=user.id, 
+                    used=False
+                ).delete()
+                print(f"Deleted {deleted} existing unused tokens")
+                
+                # Create new token
+                reset_token = PasswordResetToken.generate_token(user.id)
+                db.session.add(reset_token)
+                db.session.commit()
+                print(f"Created new token: {reset_token.token[:20]}...")
+                
+                # Generate reset URL
+                reset_url = url_for('reset_password', 
+                                   token=reset_token.token, 
+                                   _external=True)
+                print(f"Reset URL: {reset_url}")
+                
+                # Send email
+                print("Attempting to send password reset email...")
+                email_sent = send_password_reset_email(app, user, reset_url)
+                print(f"Email sent successfully: {email_sent}")
+                
+                flash('Password reset link has been sent to your email.', 'success')
+                return redirect(url_for('login'))
+                
+            except Exception as e:
+                db.session.rollback()
+                print(f"❌ ERROR in forgot_password: {str(e)}")
+                print("Full traceback:")
+                traceback.print_exc()
+                flash('An error occurred. Please try again.', 'danger')
+        else:
+            # Always show the same message for security
+            print(f"Email {email} not found in database")
+            flash('If your email is registered, you will receive a reset link.', 'info')
+            return redirect(url_for('login'))
+    
+    return render_template('forgot_password.html')
+
+@app.route('/test-password-reset-email/<email>')
+def test_password_reset_email(email):
+    """Test password reset email with detailed logging"""
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return f"User with email {email} not found"
+    
+    try:
+        # Generate reset URL
+        reset_token = PasswordResetToken.generate_token(user.id)
+        db.session.add(reset_token)
+        db.session.commit()
+        
+        reset_url = url_for('reset_password', token=reset_token.token, _external=True)
+        
+        # Send email
+        result = send_password_reset_email(app, user, reset_url)
+        
+        return {
+            'success': result,
+            'user': user.email,
+            'reset_url': reset_url,
+            'message': 'Email sent successfully' if result else 'Email sending failed'
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Handle password reset"""
+    # Find valid token
+    reset_token = PasswordResetToken.query.filter_by(
+        token=token,
+        used=False
+    ).first()
+    
+    if not reset_token or not reset_token.is_valid():
+        flash('Invalid or expired reset link. Please request a new one.', 'danger')
+        return redirect(url_for('forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters.', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        try:
+            # Update password
+            user = reset_token.user
+            user.password = generate_password_hash(password)
+            
+            # Mark token as used
+            reset_token.used = True
+            
+            db.session.commit()
+            
+            flash('Your password has been reset successfully! You can now log in.', 'success')
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error resetting password: {e}")
+            flash('An error occurred. Please try again.', 'danger')
+    
+    return render_template('reset_password.html', token=token)
+
 @app.route('/admin/update_tracking/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def update_tracking(order_id):
@@ -1590,6 +1730,166 @@ def test_upload_location():
             results.append(f"<p style='color: red;'>✗ Failed to create upload folder: {e}</p>")
     
     return "<br>".join(results)
+
+@app.route('/debug-email-config')
+def debug_email_config():
+    """Test email with current config"""
+    import smtplib
+    from email.mime.text import MIMEText
+    
+    results = []
+    results.append("<h2>Email Configuration Debug</h2>")
+    
+    # Check environment variables
+    results.append("<h3>Environment Variables:</h3>")
+    results.append(f"MAIL_SERVER: {os.environ.get('MAIL_SERVER', 'NOT SET')}")
+    results.append(f"MAIL_PORT: {os.environ.get('MAIL_PORT', 'NOT SET')}")
+    results.append(f"MAIL_USE_TLS: {os.environ.get('MAIL_USE_TLS', 'NOT SET')}")
+    results.append(f"MAIL_USERNAME: {os.environ.get('MAIL_USERNAME', 'NOT SET')}")
+    results.append(f"MAIL_PASSWORD: {'✅ SET' if os.environ.get('MAIL_PASSWORD') else '❌ NOT SET'}")
+    results.append(f"MAIL_DEFAULT_SENDER: {os.environ.get('MAIL_DEFAULT_SENDER', 'NOT SET')}")
+    
+    # Test SMTP connection
+    results.append("<h3>Testing SMTP Connection:</h3>")
+    try:
+        server = smtplib.SMTP(
+            os.environ.get('MAIL_SERVER', 'smtp.gmail.com'),
+            int(os.environ.get('MAIL_PORT', 587))
+        )
+        server.set_debuglevel(1)
+        server.starttls()
+        results.append("✅ TLS started")
+        
+        server.login(
+            os.environ.get('MAIL_USERNAME'),
+            os.environ.get('MAIL_PASSWORD')
+        )
+        results.append("✅ Login successful")
+        
+        # Try to send a test email
+        msg = MIMEText("This is a test email from Captain Signature")
+        msg['Subject'] = "Test Email"
+        msg['From'] = os.environ.get('MAIL_DEFAULT_SENDER')
+        msg['To'] = os.environ.get('MAIL_USERNAME')
+        
+        server.send_message(msg)
+        results.append("✅ Test email sent successfully")
+        
+        server.quit()
+        results.append("✅ Connection closed")
+        
+    except Exception as e:
+        results.append(f"❌ Error: {str(e)}")
+        results.append(f"Traceback: {traceback.format_exc()}")
+    
+    return "<br>".join(results)
+
+@app.route('/simple-test')
+def simple_test():
+    return "If you can see this, routing is working!"
+
+@app.route('/check-template')
+def check_template():
+    """Check if email template exists"""
+    import os
+    results = []
+    
+    # Check multiple possible locations
+    locations = [
+        'templates/email/password_reset.html',
+        'templates/emails/password_reset.html',
+        'template/email/password_reset.html',
+        'template/emails/password_reset.html'
+    ]
+    
+    for location in locations:
+        exists = os.path.exists(location)
+        results.append(f"{location}: {'✅ FOUND' if exists else '❌ NOT FOUND'}")
+    
+    # Also check current directory
+    results.append(f"\nCurrent directory: {os.getcwd()}")
+    results.append("Files in templates/email/:")
+    
+    email_dir = 'templates/email'
+    if os.path.exists(email_dir):
+        results.append(str(os.listdir(email_dir)))
+    else:
+        results.append(f"{email_dir} does not exist")
+    
+    return "<br>".join(results)
+
+@app.route('/test-password-reset/<email>')
+def test_password_reset_debug(email):
+    """Test password reset with detailed debugging"""
+    from email_utils import send_password_reset_email
+    import traceback
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return f"User {email} not found"
+    
+    output = []
+    output.append(f"<h2>Testing Password Reset for {email}</h2>")
+    
+    try:
+        # Check template
+        import os
+        template_path = 'templates/email/password_reset.html'
+        output.append(f"<h3>Template Check:</h3>")
+        output.append(f"Template exists: {os.path.exists(template_path)}")
+        if os.path.exists(template_path):
+            output.append(f"Template size: {os.path.getsize(template_path)} bytes")
+        
+        # Generate token
+        output.append(f"<h3>Generating Token:</h3>")
+        reset_token = PasswordResetToken.generate_token(user.id)
+        db.session.add(reset_token)
+        db.session.commit()
+        output.append(f"Token created: {reset_token.token[:20]}...")
+        
+        reset_url = url_for('reset_password', token=reset_token.token, _external=True)
+        output.append(f"Reset URL: {reset_url}")
+        
+        # Send email
+        output.append(f"<h3>Sending Email:</h3>")
+        result = send_password_reset_email(app, user, reset_url)
+        output.append(f"Send result: {result}")
+        
+        if result:
+            output.append("<h3 style='color:green'>✅ SUCCESS! Check your email.</h3>")
+        else:
+            output.append("<h3 style='color:red'>❌ FAILED - Check console for errors</h3>")
+            
+    except Exception as e:
+        output.append(f"<h3 style='color:red'>ERROR:</h3>")
+        output.append(str(e))
+        output.append("<pre>" + traceback.format_exc() + "</pre>")
+    
+    return "<br>".join(output)
+
+@app.route('/create-test-user')
+def create_test_user():
+    """Create a test user for password reset testing"""
+    try:
+        # Check if user already exists
+        user = User.query.filter_by(email='awwalu253@gmail.com').first()
+        if user:
+            return f"User already exists: {user.username} (ID: {user.id})"
+        
+        # Create new user
+        from werkzeug.security import generate_password_hash
+        test_user = User(
+            username='testuser',
+            email='awwalu253@gmail.com',
+            password=generate_password_hash('password123')
+        )
+        db.session.add(test_user)
+        db.session.commit()
+        
+        return f"✅ Test user created successfully!<br>Email: awwalu253@gmail.com<br>Password: password123"
+    except Exception as e:
+        db.session.rollback()
+        return f"❌ Error: {str(e)}"
 
 @app.route('/debug-full')
 def debug_full():

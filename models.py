@@ -1,8 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta  # Add timedelta here
+from time import time
 import random
 import string
+import secrets
+
 
 db = SQLAlchemy()
 
@@ -134,3 +137,30 @@ class OrderTracking(db.Model):
     description = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     updated_by = db.Column(db.String(50), nullable=True)  # 'system', 'admin', 'carrier'
+    
+class PasswordResetToken(db.Model):
+    """Store password reset tokens"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    
+    user = db.relationship('User', backref='reset_tokens')
+    
+    @staticmethod
+    def generate_token(user_id):
+        """Generate a unique reset token"""
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
+        return PasswordResetToken(
+            user_id=user_id,
+            token=token,
+            expires_at=expires_at
+        )
+    
+    def is_valid(self):
+        """Check if token is still valid"""
+        return (not self.used and 
+                datetime.utcnow() < self.expires_at)

@@ -277,3 +277,30 @@ def send_cancellation_notification(app, order, user, cancelled_by='customer'):
         return results.get('customer', False) and results.get('admin', False)
     
     return results.get('customer', False)
+
+def send_password_reset_email(app, user, reset_url):
+    """Send password reset email"""
+    print(f"\n{'='*60}")
+    print(f"📧 SENDING PASSWORD RESET EMAIL TO {user.email}")
+    print(f"{'='*60}")
+    
+    subject = "Reset Your Password - Captain Signature"
+    
+    try:
+        # Check if template exists
+        from flask import render_template_string
+        import os
+        
+        # Try to render the template to see if it exists
+        template_path = os.path.join('templates', 'email', 'password_reset.html')
+        print(f"Looking for template at: {template_path}")
+        print(f"Template exists: {os.path.exists(template_path)}")
+        
+        result = send_email(app, user.email, subject, 'password_reset.html', 
+                           user=user, reset_url=reset_url)
+        print(f"send_email returned: {result}")
+        return result
+    except Exception as e:
+        print(f"❌ Error in send_password_reset_email: {e}")
+        traceback.print_exc()
+        return False
