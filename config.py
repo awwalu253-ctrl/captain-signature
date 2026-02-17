@@ -37,18 +37,23 @@ class Config:
             print(f"✓ Formatted URL to use 'postgresql://'", file=sys.stderr)
 
         SQLALCHEMY_DATABASE_URI = database_url
-        print(f"✓ Using PostgreSQL database: {database_url.split('@')[-1][:20]}...", file=sys.stderr)
+        print(f"✓ Using database: {database_url.split('@')[-1][:20]}...", file=sys.stderr)
         
-        # Add connection pooling and SSL options for Supabase
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            'pool_size': 5,
-            'max_overflow': 10,
-            'pool_timeout': 30,
-            'pool_recycle': 1800,
-            'connect_args': {
-                'sslmode': 'require'
+        # Only add PostgreSQL-specific options if using PostgreSQL
+        if 'postgresql' in database_url:
+            SQLALCHEMY_ENGINE_OPTIONS = {
+                'pool_size': 5,
+                'max_overflow': 10,
+                'pool_timeout': 30,
+                'pool_recycle': 1800,
+                'connect_args': {
+                    'sslmode': 'require'
+                }
             }
-        }
+            print("✓ Added PostgreSQL connection pooling and SSL options", file=sys.stderr)
+        else:
+            # For SQLite, don't add any engine options
+            SQLALCHEMY_ENGINE_OPTIONS = {}
 
     print("*******************************************", file=sys.stderr)
     # --- End Database Configuration ---

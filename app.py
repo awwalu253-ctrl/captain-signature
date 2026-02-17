@@ -163,6 +163,7 @@ with app.app_context():
                 )
                 db.session.add(admin)
                 db.session.commit()
+                
                 print("✓ Admin user created successfully!")
             except Exception as e:
                 print(f"⚠ Could not create admin user: {e}")
@@ -193,6 +194,86 @@ with app.app_context():
         print(f"✗ Database initialization error: {e}")
         print(traceback.format_exc())
         print("⚠ Continuing startup despite database errors - app may have limited functionality")
+        
+@app.route('/test-email-simple')
+def test_email_simple():
+    """Ultra-simple email test"""
+    import smtplib
+    from email.mime.text import MIMEText
+    
+    results = []
+    
+    try:
+        # Create a simple test message
+        msg = MIMEText("This is a test email from Captain Signature")
+        msg['Subject'] = "Test Email from Captain Signature"
+        msg['From'] = "awwalu253@gmail.com"
+        msg['To'] = "awwalu253@gmail.com"
+        
+        # Connect to Gmail
+        results.append("Connecting to smtp.gmail.com:587...")
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.set_debuglevel(1)  # This will show SMTP conversation
+        server.starttls()
+        
+        results.append("Logging in...")
+        server.login("awwalu253@gmail.com", "wfoh ybsx wbmd kpwp")
+        
+        results.append("Sending email...")
+        server.send_message(msg)
+        
+        results.append("Closing connection...")
+        server.quit()
+        
+        results.append("✓ Email sent successfully!")
+        
+    except Exception as e:
+        results.append(f"✗ Error: {str(e)}")
+        import traceback
+        results.append(traceback.format_exc())
+    
+    return "<pre>" + "\n".join(results) + "</pre>"
+
+@app.route('/test-email-direct')
+def test_email_direct():
+    """Ultra simple email test - no spaces in password"""
+    import smtplib
+    from email.mime.text import MIMEText
+    
+    results = []
+    
+    try:
+        # Create a simple test message
+        msg = MIMEText("This is a direct test email from Captain Signature")
+        msg['Subject'] = "Direct Test Email"
+        msg['From'] = "awwalu253@gmail.com"
+        msg['To'] = "awwalu253@gmail.com"
+        
+        # Connect to Gmail
+        results.append("Connecting to smtp.gmail.com:587...")
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.set_debuglevel(1)
+        server.starttls()
+        
+        # Login with password (NO SPACES)
+        password = "wfohybsxwbmdkpwp"  # <-- Remove spaces here
+        results.append(f"Logging in with password length: {len(password)}")
+        server.login("awwalu253@gmail.com", password)
+        
+        results.append("Sending email...")
+        server.send_message(msg)
+        
+        results.append("Closing connection...")
+        server.quit()
+        
+        results.append("✅ Email sent successfully!")
+        
+    except Exception as e:
+        results.append(f"❌ Error: {str(e)}")
+        import traceback
+        results.append(traceback.format_exc())
+    
+    return "<pre>" + "\n".join(results) + "</pre>"
 
 @app.route('/api/health')
 def health_check():
@@ -734,6 +815,67 @@ def clear_cart():
     flash('Cart has been cleared.', 'info')
     return redirect(url_for('view_cart'))
 
+@app.route('/debug-order-email/<order_number>')
+@login_required
+def debug_order_email(order_number):
+    """Detailed debug for order email"""
+    from email_utils import send_order_notifications
+    import traceback
+    
+    order = Order.query.filter_by(order_number=order_number).first_or_404()
+    
+    # Check if order belongs to current user or admin
+    if order.user_id != current_user.id and not current_user.is_admin:
+        return "Unauthorized", 403
+    
+    results = []
+    results.append(f"<h2>Debugging Email for Order #{order.order_number}</h2>")
+    
+    # Check order details
+    results.append("<h3>Order Details:</h3>")
+    results.append(f"<p>Customer: {order.customer.username} ({order.customer.email})</p>")
+    results.append(f"<p>Total: ₦{order.total_amount}</p>")
+    results.append(f"<p>Date: {order.order_date}</p>")
+    
+    # Check if email templates exist
+    import os
+    templates_dir = os.path.join('templates', 'emails')
+    results.append(f"<h3>Checking Email Templates:</h3>")
+    results.append(f"<p>Templates directory: {os.path.abspath(templates_dir)}</p>")
+    
+    required_templates = ['order_confirmation.html', 'admin_new_order.html']
+    for template in required_templates:
+        template_path = os.path.join(templates_dir, template)
+        if os.path.exists(template_path):
+            results.append(f"<p style='color:green;'>✅ {template} found</p>")
+        else:
+            results.append(f"<p style='color:red;'>❌ {template} MISSING!</p>")
+    
+    # Try to send email with detailed error catching
+    results.append("<h3>Attempting to Send Email:</h3>")
+    try:
+        result = send_order_notifications(app, order, order.customer)
+        results.append(f"<p>send_order_notifications returned: {result}</p>")
+        
+        if result:
+            results.append("<p style='color:green;'>✅ Email sent successfully!</p>")
+        else:
+            results.append("<p style='color:red;'>❌ Email sending failed - check console for errors</p>")
+    except Exception as e:
+        results.append(f"<p style='color:red;'>❌ Exception: {str(e)}</p>")
+        results.append("<pre>" + traceback.format_exc() + "</pre>")
+    
+    # Check environment variables (without showing passwords)
+    results.append("<h3>Environment Variables:</h3>")
+    results.append(f"<p>MAIL_SERVER: {os.environ.get('MAIL_SERVER', 'NOT SET')}</p>")
+    results.append(f"<p>MAIL_PORT: {os.environ.get('MAIL_PORT', 'NOT SET')}</p>")
+    results.append(f"<p>MAIL_USERNAME: {os.environ.get('MAIL_USERNAME', 'NOT SET')}</p>")
+    results.append(f"<p>MAIL_PASSWORD: {'✅ SET' if os.environ.get('MAIL_PASSWORD') else '❌ NOT SET'}</p>")
+    results.append(f"<p>MAIL_DEFAULT_SENDER: {os.environ.get('MAIL_DEFAULT_SENDER', 'NOT SET')}</p>")
+    results.append(f"<p>ADMIN_EMAIL: {os.environ.get('ADMIN_EMAIL', 'NOT SET')}</p>")
+    
+    return "<br>".join(results)
+
 @app.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
@@ -815,12 +957,28 @@ def checkout():
             db.session.commit()
             cart.clear()
             
+            # ****** IMPORTANT: This is where emails are sent ******
             # Send email notifications
+            print("\n" + "="*60)
+            print(f"ORDER #{order.order_number} PLACED - SENDING EMAILS")
+            print("="*60)
+            
             try:
-                send_order_notifications(app, order, current_user)
-                print(f"✓ Notifications sent for order #{order.order_number}")
+                from email_utils import send_order_notifications
+                print("Calling send_order_notifications...")
+                result = send_order_notifications(app, order, current_user)
+                print(f"send_order_notifications returned: {result}")
+                
+                if result:
+                    print("✅ Emails sent successfully!")
+                else:
+                    print("❌ Email sending failed - check email_utils.py for errors")
+                    
             except Exception as e:
-                print(f"✗ Failed to send notifications: {e}")
+                print(f"✗ ERROR in email sending: {e}")
+                import traceback
+                traceback.print_exc()
+            # *******************************************************
             
             flash(f'Order #{order.order_number} placed successfully! You\'ll pay on delivery.', 'success')
             return redirect(url_for('track_order_result', order_number=order.order_number))
@@ -862,6 +1020,92 @@ def checkout():
         print(traceback.format_exc())
         flash(f'An error occurred: {str(e)}', 'danger')
         return redirect(url_for('view_cart'))
+
+@app.route('/test-last-order-email')
+@login_required
+def test_last_order_email():
+    """Test sending email for the most recent order"""
+    from email_utils import send_order_notifications
+    
+    # Get the most recent order for this user
+    order = Order.query.filter_by(user_id=current_user.id).order_by(Order.order_date.desc()).first()
+    
+    if not order:
+        return "No orders found for this user"
+    
+    print(f"\n{'='*60}")
+    print(f"TESTING EMAIL FOR ORDER #{order.order_number}")
+    print(f"{'='*60}")
+    
+    try:
+        result = send_order_notifications(app, order, current_user)
+        if result:
+            return f"✅ Emails sent successfully for order #{order.order_number}"
+        else:
+            return f"❌ Email sending failed for order #{order.order_number}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+    
+@app.route('/test-email-now')
+def test_email_now():
+    """Test email with sample data"""
+    from email_utils import send_order_notifications
+    
+    # Create a fake order object for testing
+    class FakeOrder:
+        def __init__(self):
+            self.order_number = "TEST-123456"
+            self.total_amount = 5000.00
+            self.subtotal = 4500.00
+            self.delivery_fee = 500.00
+            self.shipping_name = "Test User"
+            self.shipping_address = "123 Test St"
+            self.shipping_city = "Lagos"
+            self.shipping_state = "Lagos"
+            self.shipping_phone = "08012345678"
+            self.customer_notes = "Test order"
+    
+    fake_order = FakeOrder()
+    
+    try:
+        result = send_order_notifications(app, fake_order, current_user)
+        return f"Email test result: {result}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+    
+@app.route('/test-email-public')
+def test_email_public():
+    """Test email without requiring login"""
+    from email_utils import send_order_notifications
+    
+    # Create a fake user
+    class FakeUser:
+        def __init__(self):
+            self.username = "Test User"
+            self.email = "awwalu253@gmail.com"
+    
+    # Create a fake order object for testing
+    class FakeOrder:
+        def __init__(self):
+            self.order_number = "TEST-123456"
+            self.total_amount = 5000.00
+            self.subtotal = 4500.00
+            self.delivery_fee = 500.00
+            self.shipping_name = "Test User"
+            self.shipping_address = "123 Test St"
+            self.shipping_city = "Lagos"
+            self.shipping_state = "Lagos"
+            self.shipping_phone = "08012345678"
+            self.customer_notes = "Test order"
+    
+    fake_user = FakeUser()
+    fake_order = FakeOrder()
+    
+    try:
+        result = send_order_notifications(app, fake_order, fake_user)
+        return f"Email test result: {result}"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 # Order Tracking Routes
 @app.route('/track', methods=['GET', 'POST'])
