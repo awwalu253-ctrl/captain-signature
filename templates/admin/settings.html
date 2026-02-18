@@ -17,253 +17,244 @@
     </div>
 
     <!-- Settings Grid -->
-    <div class="settings-grid">
-        <!-- Maintenance Mode Card -->
-        <div class="settings-card maintenance-card">
-            <div class="card-header">
-                <div class="header-icon">
-                    <i class="fas fa-shield-halved"></i>
-                </div>
-                <div class="header-title">
-                    <h3>Maintenance Mode</h3>
-                    <p>Control site accessibility</p>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <div class="toggle-section">
-                    <div class="toggle-info">
-                        <span class="toggle-label">Site Status</span>
-                        <span class="status-badge {% if maintenance_config and maintenance_config.enabled %}status-active{% else %}status-inactive{% endif %}">
-                            {% if maintenance_config and maintenance_config.enabled %}Active{% else %}Inactive{% endif %}
-                        </span>
+    <form method="POST" action="{{ url_for('admin_settings') }}" id="settingsForm">
+        <div class="settings-grid">
+            <!-- Maintenance Mode Card -->
+            <div class="settings-card maintenance-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-shield-halved"></i>
                     </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="maintenance_enabled" id="maintenanceSwitch" 
-                               {% if maintenance_config and maintenance_config.enabled %}checked{% endif %}>
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <div class="header-title">
+                        <h3>Maintenance Mode</h3>
+                        <p>Control site accessibility</p>
+                    </div>
                 </div>
-
-                <div class="maintenance-options" id="maintenanceOptions" style="{% if not maintenance_config or not maintenance_config.enabled %}opacity: 0.5; pointer-events: none;{% endif %}">
-                    <div class="input-group">
-                        <label>
-                            <i class="fas fa-message"></i>
-                            <span>Message</span>
+                
+                <div class="card-body">
+                    <div class="toggle-section">
+                        <div class="toggle-info">
+                            <span class="toggle-label">Site Status</span>
+                            <span class="status-badge {% if maintenance_config and maintenance_config.enabled %}status-active{% else %}status-inactive{% endif %}">
+                                {% if maintenance_config and maintenance_config.enabled %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="maintenance_enabled" id="maintenanceSwitch" 
+                                   {% if maintenance_config and maintenance_config.enabled %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
                         </label>
-                        <textarea name="maintenance_message" placeholder="Enter maintenance message">{{ maintenance_config.message if maintenance_config and maintenance_config.message else 'We are currently performing scheduled maintenance.' }}</textarea>
                     </div>
 
-                    <div class="input-group">
-                        <label>
-                            <i class="fas fa-clock"></i>
-                            <span>Estimated Return</span>
-                        </label>
-                        <input type="text" name="estimated_return" value="{{ maintenance_config.estimated_return if maintenance_config and maintenance_config.estimated_return else '2-3 hours' }}" placeholder="e.g., 2 hours">
-                    </div>
+                    <div class="maintenance-options" id="maintenanceOptions" style="{% if not maintenance_config or not maintenance_config.enabled %}opacity: 0.5; pointer-events: none;{% endif %}">
+                        <div class="input-group">
+                            <label>
+                                <i class="fas fa-message"></i>
+                                <span>Message</span>
+                            </label>
+                            <textarea name="maintenance_message" placeholder="Enter maintenance message">{{ maintenance_config.message if maintenance_config and maintenance_config.message else 'We are currently performing scheduled maintenance.' }}</textarea>
+                        </div>
 
-                    <div class="ips-section">
-                        <label>
-                            <i class="fas fa-shield"></i>
-                            <span>Bypass IPs</span>
-                        </label>
-                        <div class="ip-list">
-                            {% if maintenance_config and maintenance_config.allowed_ips %}
-                                {% for ip in maintenance_config.allowed_ips %}
-                                    <span class="ip-badge">{{ ip }}</span>
-                                {% endfor %}
-                            {% else %}
-                                <span class="no-ips">No IPs configured</span>
-                            {% endif %}
+                        <div class="input-group">
+                            <label>
+                                <i class="fas fa-clock"></i>
+                                <span>Estimated Return</span>
+                            </label>
+                            <input type="text" name="estimated_return" value="{{ maintenance_config.estimated_return if maintenance_config and maintenance_config.estimated_return else '2-3 hours' }}" placeholder="e.g., 2 hours">
+                        </div>
+
+                        <div class="ips-section">
+                            <label>
+                                <i class="fas fa-shield"></i>
+                                <span>Bypass IPs</span>
+                            </label>
+                            <div class="ip-list">
+                                {% if maintenance_config and maintenance_config.allowed_ips %}
+                                    {% for ip in maintenance_config.allowed_ips %}
+                                        <span class="ip-badge">{{ ip }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="no-ips">No IPs configured</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Delivery Settings Card -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="header-title">
+                        <h3>Delivery Settings</h3>
+                        <p>Manage shipping costs</p>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-tag"></i>
+                            <span>Delivery Fee</span>
+                        </label>
+                        <div class="currency-input">
+                            <span class="currency-symbol">{{ settings.currency }}</span>
+                            <input type="number" name="delivery_fee" value="{{ settings.delivery_fee }}" step="100" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-gift"></i>
+                            <span>Free Delivery Threshold</span>
+                        </label>
+                        <div class="currency-input">
+                            <span class="currency-symbol">{{ settings.currency }}</span>
+                            <input type="number" name="free_delivery_threshold" value="{{ settings.free_delivery_threshold }}" step="1000" min="0">
+                        </div>
+                        <span class="input-hint">Set to 0 to disable</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Store Information Card -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="header-title">
+                        <h3>Store Information</h3>
+                        <p>Basic store details</p>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-heading"></i>
+                            <span>Store Name</span>
+                        </label>
+                        <input type="text" name="site_name" value="{{ settings.site_name }}" placeholder="Enter store name" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-coins"></i>
+                            <span>Currency Symbol</span>
+                        </label>
+                        <input type="text" name="currency" value="{{ settings.currency }}" maxlength="5" placeholder="₦, $, €" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Card -->
+            <div class="settings-card analytics-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="header-title">
+                        <h3>Quick Analytics</h3>
+                        <p>Real-time store performance</p>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">Avg. Order Value</span>
+                            <span class="metric-value">{{ settings.currency }}{{ "%.0f"|format(avg_order_value|default(0)) }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Orders (30d)</span>
+                            <span class="metric-value">{{ orders_30_days|default(0) }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Conversion Rate</span>
+                            <span class="metric-value">{{ "%.1f"|format(conversion_rate|default(0)) }}%</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Active Products</span>
+                            <span class="metric-value">{{ active_products|default(0) }}</span>
+                        </div>
+                    </div>
+                    <div class="metric-footer" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(184, 155, 94, 0.1);">
+                        <div class="metric-item" style="background: none; padding: 0;">
+                            <span class="metric-label">Total Revenue (30d)</span>
+                            <span class="metric-value" style="font-size: 1.2rem;">{{ settings.currency }}{{ "%.0f"|format(revenue_30_days|default(0)) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Status Card -->
+            <div class="settings-card security-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="header-title">
+                        <h3>Security Status</h3>
+                        <p>System protection</p>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="security-item">
+                        <div class="security-info">
+                            <i class="fas fa-check-circle"></i>
+                            <span>SSL Certificate</span>
+                        </div>
+                        <span class="security-status valid">Valid</span>
+                    </div>
+                    <div class="security-item">
+                        <div class="security-info">
+                            <i class="fas fa-shield"></i>
+                            <span>Firewall</span>
+                        </div>
+                        <span class="security-status active">Active</span>
+                    </div>
+                    <div class="security-item">
+                        <div class="security-info">
+                            <i class="fas fa-database"></i>
+                            <span>Daily Backups</span>
+                        </div>
+                        <span class="security-status enabled">Enabled</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Updated Card -->
+            <div class="settings-card update-card">
+                <div class="card-body">
+                    <i class="fas fa-clock"></i>
+                    <div class="update-info">
+                        <span class="update-label">Last Updated</span>
+                        <span class="update-time">
+                            {% if settings.updated_at %}
+                                {{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Delivery Settings Card -->
-        <div class="settings-card">
-            <div class="card-header">
-                <div class="header-icon">
-                    <i class="fas fa-truck"></i>
-                </div>
-                <div class="header-title">
-                    <h3>Delivery Settings</h3>
-                    <p>Manage shipping costs</p>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <div class="input-group">
-                    <label>
-                        <i class="fas fa-tag"></i>
-                        <span>Delivery Fee</span>
-                    </label>
-                    <div class="currency-input">
-                        <span class="currency-symbol">{{ settings.currency }}</span>
-                        <input type="number" name="delivery_fee" value="{{ settings.delivery_fee }}" step="100" min="0">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>
-                        <i class="fas fa-gift"></i>
-                        <span>Free Delivery Threshold</span>
-                    </label>
-                    <div class="currency-input">
-                        <span class="currency-symbol">{{ settings.currency }}</span>
-                        <input type="number" name="free_delivery_threshold" value="{{ settings.free_delivery_threshold }}" step="1000" min="0">
-                    </div>
-                    <span class="input-hint">Set to 0 to disable</span>
-                </div>
-            </div>
+        <!-- Form Footer -->
+        <div class="settings-footer">
+            <button type="submit" class="btn-save">
+                <i class="fas fa-check"></i>
+                <span>Save Changes</span>
+            </button>
         </div>
-
-        <!-- Store Information Card -->
-        <div class="settings-card">
-            <div class="card-header">
-                <div class="header-icon">
-                    <i class="fas fa-store"></i>
-                </div>
-                <div class="header-title">
-                    <h3>Store Information</h3>
-                    <p>Basic store details</p>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <div class="input-group">
-                    <label>
-                        <i class="fas fa-heading"></i>
-                        <span>Store Name</span>
-                    </label>
-                    <input type="text" name="site_name" value="{{ settings.site_name }}" placeholder="Enter store name">
-                </div>
-
-                <div class="input-group">
-                    <label>
-                        <i class="fas fa-coins"></i>
-                        <span>Currency Symbol</span>
-                    </label>
-                    <input type="text" name="currency" value="{{ settings.currency }}" maxlength="5" placeholder="₦, $, €">
-                </div>
-            </div>
-        </div>
-
-        <!-- Analytics Card -->
-        <div class="settings-card analytics-card">
-            <div class="card-header">
-                <div class="header-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="header-title">
-                    <h3>Quick Analytics</h3>
-                    <p>Real-time store performance</p>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <div class="metric-grid">
-                    <div class="metric-item">
-                        <span class="metric-label">Avg. Order Value</span>
-                        <span class="metric-value">{{ settings.currency }}{{ "%.0f"|format(avg_order_value|default(0)) }}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Orders (30d)</span>
-                        <span class="metric-value">{{ orders_30_days|default(0) }}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Conversion Rate</span>
-                        <span class="metric-value">{{ "%.1f"|format(conversion_rate|default(0)) }}%</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Active Products</span>
-                        <span class="metric-value">{{ active_products|default(0) }}</span>
-                    </div>
-                </div>
-                <div class="metric-footer" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(184, 155, 94, 0.1);">
-                    <div class="metric-item" style="background: none; padding: 0;">
-                        <span class="metric-label">Total Revenue (30d)</span>
-                        <span class="metric-value" style="font-size: 1.2rem;">{{ settings.currency }}{{ "%.0f"|format(revenue_30_days|default(0)) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Security Status Card -->
-        <div class="settings-card security-card">
-            <div class="card-header">
-                <div class="header-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="header-title">
-                    <h3>Security Status</h3>
-                    <p>System protection</p>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <div class="security-item">
-                    <div class="security-info">
-                        <i class="fas fa-check-circle"></i>
-                        <span>SSL Certificate</span>
-                    </div>
-                    <span class="security-status valid">Valid</span>
-                </div>
-                <div class="security-item">
-                    <div class="security-info">
-                        <i class="fas fa-shield"></i>
-                        <span>Firewall</span>
-                    </div>
-                    <span class="security-status active">Active</span>
-                </div>
-                <div class="security-item">
-                    <div class="security-info">
-                        <i class="fas fa-database"></i>
-                        <span>Daily Backups</span>
-                    </div>
-                    <span class="security-status enabled">Enabled</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Last Updated Card -->
-        <div class="settings-card update-card">
-            <div class="card-body">
-                <i class="fas fa-clock"></i>
-                <div class="update-info">
-                    <span class="update-label">Last Updated</span>
-                    <span class="update-time">
-                        {% if settings.updated_at %}
-                            {{ settings.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
-                        {% else %}
-                            Never
-                        {% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Form Footer -->
-    <div class="settings-footer">
-        <button type="submit" form="settingsForm" class="btn-save">
-            <i class="fas fa-check"></i>
-            <span>Save Changes</span>
-        </button>
-    </div>
+    </form>
 </div>
-
-<!-- Hidden Form -->
-<form id="settingsForm" method="POST" action="{{ url_for('admin_settings') }}" style="display: none;">
-    <input type="hidden" name="maintenance_enabled" id="maintenanceEnabledInput">
-    <input type="hidden" name="maintenance_message" id="maintenanceMessageInput">
-    <input type="hidden" name="estimated_return" id="estimatedReturnInput">
-    <input type="hidden" name="delivery_fee" id="deliveryFeeInput">
-    <input type="hidden" name="free_delivery_threshold" id="freeDeliveryInput">
-    <input type="hidden" name="site_name" id="siteNameInput">
-    <input type="hidden" name="currency" id="currencyInput">
-</form>
 
 <style>
 /* Premium Settings Page Styles */
@@ -823,10 +814,6 @@ input:checked + .toggle-slider:before {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form handling
-    const form = document.getElementById('settingsForm');
-    const saveButton = document.querySelector('.btn-save');
-    
     // Maintenance toggle
     const maintenanceSwitch = document.getElementById('maintenanceSwitch');
     const maintenanceOptions = document.getElementById('maintenanceOptions');
@@ -847,23 +834,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Save button click handler
-    saveButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Collect all values
-        document.getElementById('maintenanceEnabledInput').value = maintenanceSwitch.checked ? 'on' : '';
-        document.getElementById('maintenanceMessageInput').value = document.querySelector('textarea[name="maintenance_message"]')?.value || '';
-        document.getElementById('estimatedReturnInput').value = document.querySelector('input[name="estimated_return"]')?.value || '';
-        document.getElementById('deliveryFeeInput').value = document.querySelector('input[name="delivery_fee"]')?.value || '';
-        document.getElementById('freeDeliveryInput').value = document.querySelector('input[name="free_delivery_threshold"]')?.value || '';
-        document.getElementById('siteNameInput').value = document.querySelector('input[name="site_name"]')?.value || '';
-        document.getElementById('currencyInput').value = document.querySelector('input[name="currency"]')?.value || '';
-        
-        // Submit form
-        form.submit();
-    });
     
     // Auto-hide flash messages
     const alerts = document.querySelectorAll('.alert');
